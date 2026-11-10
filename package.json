@@ -1,0 +1,51 @@
+{
+  "name": "orin",
+  "productName": "Orin",
+  "version": "0.1.0",
+  "description": "Orin · iş raporu masaüstü uygulaması",
+  "main": "main.js",
+  "author": "Çağlar",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "smoke": "electron . --smoke",
+    "icon": "electron tools/make-icon.js",
+    "dist": "electron-builder --win nsis",
+    "seed": "electron . --seed"
+  },
+  "dependencies": {
+    "@tabler/icons-webfont": "3.19.0"
+  },
+  "build": {
+    "appId": "com.caglar.orin",
+    "productName": "Orin",
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**",
+      "assets/**",
+      "node_modules/@tabler/icons-webfont/dist/**",
+      "!renderer/js/kisisel.js"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "Orin"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "caglarbozkurt350-creator",
+      "repo": "Orin"
+    }
+  },
+  "devDependencies": {
+    "electron": "^45.3.0",
+    "electron-builder": "^26.18.0"
+  },
+  "repository": "https://github.com/caglarbozkurt350-creator/Orin"
+}

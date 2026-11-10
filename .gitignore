@@ -1,0 +1,7 @@
+node_modules/
+dist/
+test-sonuc/
+*.log
+# kişisel veri: depoya girmez
+renderer/js/kisisel.js
+onizleme/

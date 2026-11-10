@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' file: data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; script-src 'self' 'unsafe-inline'">
+<title>Orin</title>
+<link rel="stylesheet" href="../node_modules/@tabler/icons-webfont/dist/tabler-icons.min.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="w" id="app">
+<div class="mb" id="mb">
+<span class="nb off" id="nbk" data-tip="Geri  Ctrl+[" onclick="back()"><i class="ti ti-arrow-left"></i></span>
+<span class="nb off" id="nfw" data-tip="İleri  Alt+→" onclick="fwd()"><i class="ti ti-arrow-right"></i></span>
+<span class="nb" id="nsb" data-tip="Kenar çubuğunu gizle  Ctrl+Shift+S" onclick="togSb()"><i class="ti ti-layout-sidebar"></i></span>
+<span class="mi" id="m_Dosya" onmousedown="event.preventDefault()" onclick="menu('Dosya')">Dosya</span>
+<span class="mi" id="m_Düzenle" onmousedown="event.preventDefault()" onclick="menu('Düzenle')">Düzenle</span>
+<span class="mi" id="m_Görünüm" onmousedown="event.preventDefault()" onclick="menu('Görünüm')">Görünüm</span>
+<span class="mi" id="m_Yardım" onmousedown="event.preventDefault()" onclick="menu('Yardım')">Yardım</span>
+<span class="ttl"><img src="../assets/logo.png" alt="">Orin</span>
+<span id="sy" class="sy"></span>
+</div>
+<div class="dd" id="dd" style="display:none"></div>
+<div class="bd" id="bd">
+<div class="rail" id="rail">
+<div class="rb" id="r_home" onclick="openArea('home')" title="Anasayfa"><i class="ti ti-home"></i></div>
+<div class="rb" id="r_msg" onclick="openArea('msg')" title="Haberler"><i class="ti ti-news"></i></div>
+<div class="rb" id="r_cal" onclick="openArea('cal')" title="Takvim"><i class="ti ti-calendar"></i></div>
+<div class="rb" id="r_img" onclick="openArea('img')" title="Görseller"><i class="ti ti-photo"></i></div>
+<div class="rb" id="r_plan" onclick="openArea('plan')" title="Planlar"><i class="ti ti-notebook"></i></div>
+<div class="rb" id="r_set" onclick="openArea('set')" title="Ayarlar" style="margin-top:auto;margin-bottom:10px"><i class="ti ti-settings"></i></div>
+</div>
+<div class="sb" id="sb"></div>
+<div class="mn"><div class="top"><span id="tl"></span><span class="hn" id="tr"></span></div>
+<div id="fb" style="display:none;padding:8px 18px;border-bottom:0.5px solid #2c2c30;gap:8px;align-items:center"><input id="fi" placeholder="Sayfada ara" style="flex:1" onkeydown="if(event.key=='Enter')doFind()"><button class="bt" onclick="doFind()">Sonraki</button><button class="bt" onclick="closeFind()">Kapat</button></div>
+<div id="bn"></div><div class="ct" id="ct"></div></div>
+</div>
+<div class="cx" id="cx" style="display:none"></div>
+<div class="ov" id="ov" style="display:none"></div>
+<div class="ts" id="ts"></div>
+</div>
+<script src="js/data.js"></script>
+<script src="js/kisisel.js" onerror="void 0"></script>
+<script src="js/app.js"></script>
+<script src="js/pages.js"></script>
+<script src="js/sync.js"></script>
+<script src="js/test.js"></script>
+</body>
+</html>

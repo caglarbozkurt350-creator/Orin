@@ -75,3 +75,6 @@ table.it{width:100%;border-collapse:collapse;font-size:12.5px}table.it td,table.
 /* Açık tema: koyu paleti tersine çevirir, görselleri korur */
 html.light{filter:invert(1) hue-rotate(180deg);background:#181818}
 html.light img,html.light .tile img{filter:invert(1) hue-rotate(180deg)}
+/* Hareketli tema: içerik canvas üstünde, yüzeyler hafif saydam */
+.mb,.bd{position:relative;z-index:1}
+html.motion .mb{background:rgba(18,18,20,.88)}html.motion .rail{background:rgba(20,20,22,.82)}html.motion .sb{background:rgba(27,27,31,.8)}html.motion .card,html.motion .pc,html.motion .kpi div{background:rgba(35,35,39,.86)}html.motion .bx{background:rgba(53,53,56,.92)}

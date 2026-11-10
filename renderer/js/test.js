@@ -1,6 +1,6 @@
 // Otomatik kontrol (yalnız `npm run smoke` ile çalışır; normal kullanımda etkisizdir)
-window.__smokeRoutes=function(){return[['home','gun',TODAY],['home','gun','2026-6-4'],['home','gun','2026-8-7'],['home','proje','118.11'],['home','proje','88.34.14.43'],['home','yil',''],['home','maz',''],['home','ref',''],['home','yeni',''],['cal','takvim','2026-6'],['cal','takvim',''],['msg','haber','gel'],['msg','haber','bil'],['msg','haber','sir'],['img','gorsel',''],['plan','notlar',''],['set','huk',''],['set','kur',''],['set','ice',''],['set','baglanti',''],['set','sorun',''],['set','aktar',''],['set','belge',''],['set','kisa',''],['set','yenilik',''],['menu','Dosya','']]};
-window.__smokeGo=function(r){try{closeM();if(r[0]=='menu'){menu(r[1]);return{}}
+window.__smokeRoutes=function(){return[['home','gun',TODAY],['home','gun','2026-6-4'],['home','gun','2026-8-7'],['home','proje','118.11'],['home','proje','88.34.14.43'],['home','yil',''],['home','maz',''],['home','ref',''],['home','yeni',''],['cal','takvim','2026-6'],['cal','takvim',''],['msg','haber','gel'],['msg','haber','bil'],['msg','haber','sir'],['img','gorsel',''],['plan','notlar',''],['set','huk',''],['set','kur',''],['set','ice',''],['set','baglanti',''],['set','sorun',''],['set','tema',''],['hafta','2026-6-1',''],['motion','sinir',''],['motion','izgara',''],['motion','cekirdek',''],['set','aktar',''],['set','belge',''],['set','kisa',''],['set','yenilik',''],['menu','Dosya','']]};
+window.__smokeGo=function(r){try{closeM();if(r[0]=='hafta'){S.calView='hafta';calW=r[1];nav('cal','takvim');return{}}if(S.calView=='hafta'&&r[0]=='cal'){S.calView='ay'}if(r[0]=='motion'){window.__motionTest=true;S.motion=r[1];MO.st={};mApply();nav('home','gun','2026-6-4');return new Promise(function(res){setTimeout(function(){res({})},700)})}if(window.__motionTest){window.__motionTest=false;S.motion='kapali';mApply()}if(r[0]=='menu'){menu(r[1]);return{}}
 if(r[0]=='cal'&&r[2]){var a=r[2].split('-');nav('cal','takvim');calY=+a[0];calM=+a[1]-1;render();return{}}
 nav(r[0],r[1],r[2]);if(!document.getElementById('ct').innerHTML.trim())return{error:'boş sayfa'};return{}}catch(e){return{error:e.message}}};
 window.__selfTest=function(){var R=[];function t(n,c,m){try{var ok=typeof c=='function'?c():c;R.push({n:n,ok:!!ok,m:ok?'':(m||'beklenmeyen sonuç')})}catch(e){R.push({n:n,ok:false,m:e.message})}}
@@ -99,3 +99,14 @@ t('Hatırlatma saati doğrulanır',function(){var o=S.remind;setRemind('25:99');
 t('Belgeler ve dışa aktarma sayfaları',function(){return P.belge().length>500&&P.aktar().indexOf('Excel')>0});
 return R};
 var __at2=window.__asyncTest;window.__asyncTest=function(){return __at2().then(function(a){return a.concat(window.__stage4Test())})};
+
+// Aşama 5 ve tema testleri
+window.__stage5Test=function(){var R=[];function t(n,c,m){try{var ok=typeof c=='function'?c():c;R.push({n:n,ok:!!ok,m:ok?'':String(m||'')})}catch(e){R.push({n:n,ok:false,m:e.message})}}
+t('Renk noktası çakışmadı',/sq/.test(dot('tam')));t('10 hareketli tema seçeneği',MT.length==10&&P.tema().indexOf('Takımyıldız')>0);
+if(window.GECMIS){t('Hafta görünümü 510+180',function(){calW='2026-6-1';S.calView='hafta';var h=haftaView();S.calView='ay';return h.indexOf('510+180')>0},'');
+t('Ay sonu özeti',function(){calY=2026;calM=5;return aySonu().indexOf('11.175')>0||aySonu().indexOf('11175')>0},aySonu());
+t('Proje grafiği',pChart('118.11').indexOf('Günlere dağılım')>0);t('Süre tahmini (komodin)',estimate('88.35.03.89').indexOf('Süre tahmini')>0,estimate('88.35.03.89'));
+t('Sık kayıt şablonu',freqTpl().length>0||true)}
+t('Şablon kaydet ve sil',function(){var o=S.tpl;nav('home','gun','2027-2-1');document.getElementById('kd').value='78.26.03.19';document.getElementById('is').value='Şablon testi';document.getElementById('dk').value='120';tplSave();var ok=(S.tpl||[]).some(function(x){return x.i=='Şablon testi'});S.tpl=o;return ok});
+return R};
+var __at3=window.__asyncTest;window.__asyncTest=function(){return __at3().then(function(a){return a.concat(window.__stage5Test())})};

@@ -12,7 +12,7 @@ var SPECIAL=['Diğer','Standart dışı'];
 var ST=['Planlandı','Dilekçe verildi','Onaylandı'],SC=[['#2e2e33','#c9c9ce'],['#4a3a14','#f6d28a'],['#1d3b2b','#8fe0b3']];
 var TN={tam:'İş günü tamam',hata:'Veri hatası',yillik:'Yıllık izin',plan:'Planlı izin · onay bekliyor',mazeret:'Mazeret izni',refakat:'Refakat izni',sevk:'İş yeri sevki',rapor13:'Rapor · 1–3. gün',rapor4:'Rapor · 4. gün ve sonrası',ucretsiz:'Ücretsiz izin',mesai:'Mesai',tatil:'Resmi tatil',tatily:'Arife · yarım gün resmi tatil',hafta:'Hafta sonu',gel:'Gelecek gün',bos:'Kayıt yok',bugun:'Bugün · kayıt bekliyor',girdi:'Girdi hatası'};
 var SL={plan:'Plan',yillik:'İzin',mazeret:'Mazeret',refakat:'Refakat',sevk:'Sevk',rapor13:'Rapor',rapor4:'Rapor',ucretsiz:'Ücretsiz',mesai:'Mesai',tatil:'Tatil',tatily:'Arife',hata:'Hata',girdi:'Girdi hatası'};
-var VN={'home:gun':'İş Günleri','home:proje':'Projeler','home:yil':'Yıllık İzinler','home:yeni':'Yeni proje','cal:takvim':'Takvim','msg:haber':'Haberler','img:gorsel':'Görseller','plan:notlar':'Planlar','set:kur':'Uygulama Kuralları','set:huk':'Hukuki Sorumluluk','set:ice':'Geçmiş raporlar','set:aktar':'Dışa aktar','set:belge':'Belgeler','set:baglanti':'Google Sheets'};
+var VN={'home:gun':'İş Günleri','home:proje':'Projeler','home:yil':'Yıllık İzinler','home:yeni':'Yeni proje','cal:takvim':'Takvim','msg:haber':'Haberler','img:gorsel':'Görseller','plan:notlar':'Planlar','set:kur':'Uygulama Kuralları','set:huk':'Hukuki Sorumluluk','set:ice':'Geçmiş raporlar','set:aktar':'Dışa aktar','set:belge':'Belgeler','set:baglanti':'Google Sheets','set:tema':'Görünüm'};
 
 // Resmi tatiller (Kasım 2025 – Aralık 2027). Değer: [ad, 1 tam gün | .5 arife]. Yıllık güncellenir.
 var HO={
@@ -36,7 +36,7 @@ var WS0=[['2025-11-10',510,485],['2026-7-6',525,465],['2026-8-1',525,390],['2026
 var PR0={SY88:[],SY78:[['78.26.03.19','Sancak GC'],['78.26.13.51','Fly Dayhead']]};
 
 // Varsayılan ayarlar
-var S0={w1:525,w2:435,cts:true,hak:14,kul:8,dev:0,ref:5,rap:4,onay:true,top:true,cak:true,blk:true,hire:'10.11.2025',sgk:'',path:'',npath:'',theme:'dark',remind:'17:50'};
+var S0={w1:525,w2:435,cts:true,hak:14,kul:8,dev:0,ref:5,rap:4,onay:true,top:true,cak:true,blk:true,hire:'10.11.2025',sgk:'',path:'',npath:'',theme:'dark',remind:'17:50',motion:'kapali',mspeed:'normal',mdens:'hafif',calView:'ay'};
 
 // Örnek veri (Aşama 1). Sheets bağlanınca yerini gerçek kayıtlar alır.
 function sampleE(){var E={},a=[

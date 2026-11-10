@@ -72,3 +72,6 @@ select{background:#353538;color:#fff;border:0.5px solid #4a4a50;border-radius:8p
 #fi{background:#353538;color:#fff;border:0.5px solid #4a4a50;border-radius:8px;padding:6px 10px}
 table.it{width:100%;border-collapse:collapse;font-size:12.5px}table.it td,table.it th{padding:5px 6px;border-top:0.5px solid #2f2f34;text-align:left}table.it th{color:#8a8a90;font-weight:400}
 ::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:#34343a;border-radius:6px;border:2px solid transparent;background-clip:padding-box}::-webkit-scrollbar-track{background:transparent}
+/* Açık tema: koyu paleti tersine çevirir, görselleri korur */
+html.light{filter:invert(1) hue-rotate(180deg);background:#181818}
+html.light img,html.light .tile img{filter:invert(1) hue-rotate(180deg)}

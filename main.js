@@ -13,6 +13,9 @@ const STATE_FILE = () => path.join(dataDir(), 'durum.json');
 const IMG_EXT = /\.(jpe?g|png|webp|gif|bmp)$/i;
 
 if (!SMOKE && !SEED && !app.requestSingleInstanceLock()) app.quit();
+app.setAppUserModelId('com.caglar.orin'); // Windows bildirimleri için
+const exp = require('./export');
+let updater = null; try { updater = require('electron-updater').autoUpdater; } catch (e) {}
 
 function readJSON(f, def) { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { return def; } }
 function writeJSON(f, v) {
@@ -46,7 +49,7 @@ function smoke(win) {
   win.webContents.on('console-message', (e, level, msg) => { if (level >= 3) errors.push(msg); });
   win.webContents.on('render-process-gone', (e, d) => errors.push('render-gone ' + d.reason));
   win.webContents.on('did-finish-load', async () => {
-    const out = path.join(__dirname, 'test-sonuc');
+    const out = app.isPackaged ? path.join(app.getPath('temp'), 'orin-test-sonuc') : path.join(__dirname, 'test-sonuc');
     try { const a = await win.webContents.executeJavaScript('window.__asyncTest ? window.__asyncTest() : []'); a.forEach(x => { if (!x.ok) errors.push('TEST ' + x.n + ': ' + x.m); }); fs.mkdirSync(out, { recursive: true }); fs.writeFileSync(path.join(out, 'async.json'), JSON.stringify(a, null, 1)); } catch (e) { errors.push('async ' + e.message); }
     fs.mkdirSync(out, { recursive: true });
     try {
@@ -131,7 +134,37 @@ ipcMain.on('win:cmd', (e, cmd, arg) => {
   else if (cmd === 'fullscreen') w.setFullScreen(!w.isFullScreen());
   else if (cmd === 'zoom') w.webContents.setZoomFactor(arg);
   else if (cmd === 'devtools') w.webContents.toggleDevTools();
+  else if (cmd === 'theme') { try { w.setTitleBarOverlay(arg === 'light' ? { color: '#ededeb', symbolColor: '#333333' } : { color: '#121214', symbolColor: '#c9c9ce' }); } catch (e) {} }
 });
+
+// ---- Yedek, dışa aktarma, haberler, güncelleme ----
+ipcMain.handle('data:backup', () => {
+  try {
+    const src = STATE_FILE(); if (!fs.existsSync(src)) return { ok: false, err: 'Veri dosyası yok' };
+    const dir = path.join(dataDir(), 'Yedekler'); fs.mkdirSync(dir, { recursive: true });
+    const d = new Date(), name = 'durum-' + d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') + '.json';
+    fs.copyFileSync(src, path.join(dir, name));
+    fs.readdirSync(dir).filter(f => /^durum-\d{4}-\d{2}-\d{2}\.json$/.test(f)).sort().reverse().slice(8).forEach(f => fs.unlinkSync(path.join(dir, f)));
+    return { ok: true, file: path.join(dir, name), dir };
+  } catch (e) { return { ok: false, err: e.message }; }
+});
+async function saveAs(e, name, ext, label) {
+  const r = await dialog.showSaveDialog(BrowserWindow.fromWebContents(e.sender), { defaultPath: path.join(app.getPath('documents'), name.replace(/[\\/:*?"<>|]/g, '-')), filters: [{ name: label, extensions: [ext] }] });
+  return r.canceled ? null : r.filePath;
+}
+ipcMain.handle('exp:xlsx', async (e, o) => { try { const f = await saveAs(e, o.name, 'xlsx', 'Excel'); if (!f) return { canceled: true }; fs.writeFileSync(f, exp.xlsx(o.sheets)); return { ok: true, file: f }; } catch (er) { return { ok: false, err: er.message }; } });
+ipcMain.handle('exp:pdf', async (e, o) => { try { const f = await saveAs(e, o.name, 'pdf', 'PDF'); if (!f) return { canceled: true }; await exp.pdf(o.html, f); return { ok: true, file: f }; } catch (er) { return { ok: false, err: er.message }; } });
+ipcMain.handle('news', async () => { try { return { ok: true, items: await exp.news() }; } catch (er) { return { ok: false, err: er.message }; } });
+function updSend(s) { BrowserWindow.getAllWindows().forEach(w => w.webContents.send('upd', s)); }
+if (updater) {
+  updater.autoDownload = true;
+  updater.on('update-available', i => updSend({ s: 'indiriliyor', v: i.version }));
+  updater.on('update-not-available', () => updSend({ s: 'guncel' }));
+  updater.on('update-downloaded', i => updSend({ s: 'hazir', v: i.version }));
+  updater.on('error', er => updSend({ s: 'hata', m: String(er && er.message || er).slice(0, 200) }));
+}
+ipcMain.handle('update:check', async () => { if (!app.isPackaged || !updater) return { s: 'gelistirme' }; try { await updater.checkForUpdates(); return { s: 'denetleniyor' }; } catch (er) { return { s: 'hata', m: er.message }; } });
+ipcMain.handle('update:install', () => { if (updater) updater.quitAndInstall(); });
 
 // ---- Google Sheets ----
 const sheets = require('./sheets');
@@ -157,5 +190,5 @@ ipcMain.handle('sheets:pickClient', wrap(async (a, e) => {
 }));
 
 app.on('second-instance', () => { const w = BrowserWindow.getAllWindows()[0]; if (w) { if (w.isMinimized()) w.restore(); w.focus(); } });
-app.whenReady().then(() => { Menu.setApplicationMenu(null); createWindow(); });
+app.whenReady().then(() => { Menu.setApplicationMenu(null); createWindow(); if (app.isPackaged && updater && !SMOKE) { setTimeout(() => updater.checkForUpdates().catch(() => {}), 15000); setInterval(() => updater.checkForUpdates().catch(() => {}), 6 * 3600e3); } });
 app.on('window-all-closed', () => app.quit());

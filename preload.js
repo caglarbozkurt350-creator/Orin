@@ -13,8 +13,12 @@ contextBridge.exposeInMainWorld('api', {
   images: dir => ipcRenderer.invoke('images:list', dir),
   data: {
     info: () => ipcRenderer.invoke('data:info'),
-    move: (dir, mode) => ipcRenderer.invoke('data:move', { dir, mode })
+    move: (dir, mode) => ipcRenderer.invoke('data:move', { dir, mode }),
+    backup: () => ipcRenderer.invoke('data:backup')
   },
+  exp: { xlsx: o => ipcRenderer.invoke('exp:xlsx', o), pdf: o => ipcRenderer.invoke('exp:pdf', o) },
+  news: () => ipcRenderer.invoke('news'),
+  update: { check: () => ipcRenderer.invoke('update:check'), install: () => ipcRenderer.invoke('update:install'), on: fn => ipcRenderer.on('upd', (e, s) => fn(s)) },
   pickFolder: cur => ipcRenderer.invoke('fs:pickFolder', cur),
   openPath: p => ipcRenderer.invoke('fs:open', p),
   external: url => ipcRenderer.invoke('shell:external', url),

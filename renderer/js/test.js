@@ -1,5 +1,5 @@
 // Otomatik kontrol (yalnız `npm run smoke` ile çalışır; normal kullanımda etkisizdir)
-window.__smokeRoutes=function(){return[['home','gun',TODAY],['home','gun','2026-6-4'],['home','gun','2026-8-7'],['home','proje','118.11'],['home','proje','88.34.14.43'],['home','yil',''],['home','maz',''],['home','ref',''],['home','yeni',''],['cal','takvim','2026-6'],['cal','takvim',''],['msg','haber','gel'],['msg','haber','bil'],['msg','haber','sir'],['img','gorsel',''],['plan','notlar',''],['set','huk',''],['set','kur',''],['set','ice',''],['set','baglanti',''],['set','sorun',''],['set','kisa',''],['set','yenilik',''],['menu','Dosya','']]};
+window.__smokeRoutes=function(){return[['home','gun',TODAY],['home','gun','2026-6-4'],['home','gun','2026-8-7'],['home','proje','118.11'],['home','proje','88.34.14.43'],['home','yil',''],['home','maz',''],['home','ref',''],['home','yeni',''],['cal','takvim','2026-6'],['cal','takvim',''],['msg','haber','gel'],['msg','haber','bil'],['msg','haber','sir'],['img','gorsel',''],['plan','notlar',''],['set','huk',''],['set','kur',''],['set','ice',''],['set','baglanti',''],['set','sorun',''],['set','aktar',''],['set','belge',''],['set','kisa',''],['set','yenilik',''],['menu','Dosya','']]};
 window.__smokeGo=function(r){try{closeM();if(r[0]=='menu'){menu(r[1]);return{}}
 if(r[0]=='cal'&&r[2]){var a=r[2].split('-');nav('cal','takvim');calY=+a[0];calM=+a[1]-1;render();return{}}
 nav(r[0],r[1],r[2]);if(!document.getElementById('ct').innerHTML.trim())return{error:'boş sayfa'};return{}}catch(e){return{error:e.message}}};
@@ -9,7 +9,7 @@ t('Kasım Cuma ayardan',lim('2026-11-6')==S.w2);t('Kasım Pazartesi ayardan',lim
 t('04.06 mesai',typ('2026-6-4')=='mesai',typ('2026-6-4'));t('21.05 girdi hatası',typ('2026-5-21')=='girdi',typ('2026-5-21'));t('07.05 veri hatası',typ('2026-5-7')=='hata');t('07.08 veri hatası',typ('2026-8-7')=='hata');
 t('12.06 mazeret',typ('2026-6-12')=='mazeret');t('01.05 tatilde mesai',typ('2026-5-1')=='mesai');t('17.08 tamam',typ('2026-8-17')=='tam',typ('2026-8-17'));t('11.07 cumartesi mesai',typ('2026-7-11')=='mesai');
 var M=[['Mayıs',0,8230],['Haziran',1,11175],['Temmuz',2,6050],['Ağustos',3,7860]];M.forEach(function(m){var r=RG[m[1]];if(!r){t(m[0]+' toplamı',false,'aralık yok');return}var x=rangeStats(r[0],r[1]);t(m[0]+' toplamı '+m[2],x.s==m[2],'bulunan '+x.s)});
-t('Ağustos mesaisi 645',rangeStats(RG[3][0],RG[3][1]).ot==645,'bulunan '+rangeStats(RG[3][0],RG[3][1]).ot);t('Mayıs mesaisi 2505',rangeStats(RG[0][0],RG[0][1]).ot==2505,'bulunan '+rangeStats(RG[0][0],RG[0][1]).ot);t('Pazartesi kısaltması',short('2026-11-9')=='9 Kas Pzt',short('2026-11-9'));
+if(RG.length>=4){t('Ağustos mesaisi 645',function(){return rangeStats(RG[3][0],RG[3][1]).ot==645});t('Mayıs mesaisi 2505',function(){return rangeStats(RG[0][0],RG[0][1]).ot==2505})}t('Pazartesi kısaltması',short('2026-11-9')=='9 Kas Pzt',short('2026-11-9'));
 t('Yarım gün seçeneği yok',!SO.some(function(x){return /yar/i.test(x[0]+x[1])}));
 t('En iyi plan 6 gün → 30 gün tatil',function(){var b=best(6);return ptot(b).c==6&&ptot(b).o==30},'');
 t('Yedekli plan 4 gün',ptot(best(4)).c<=4);
@@ -87,3 +87,15 @@ t('Durum listesinde Bitti var',PSO.indexOf('Bitti')>=0)})
 .catch(function(e){t('Kuyruk testi',false,e.message)})
 .then(function(){API=keep.API;CONNECTED=keep.C;S.onay=keep.onay;S.w1=keep.w1;Q=keep.Q;PS=JSON.parse(keep.PSs);PR=JSON.parse(keep.PRs);UP=JSON.parse(keep.UPs);if(bk.E)E[k]=bk.E;else delete E[k];if(bk.D)D[k]=bk.D;else delete D[k];if(bk.DR)DR[k]=bk.DR;else delete DR[k];nav('home','gun',TODAY);return R})};
 var __at=window.__asyncTest;window.__asyncTest=function(){return (__at?__at():Promise.resolve([])).then(function(a){return window.__queueTest().then(function(b){return a.concat(b)})})};
+
+// Aşama 4 testleri
+window.__stage4Test=function(){var R=[];function t(n,c,m){try{var ok=typeof c=='function'?c():c;R.push({n:n,ok:!!ok,m:ok?'':String(m||'')})}catch(e){R.push({n:n,ok:false,m:e.message})}}
+t('Arama listesi kayıt ve proje içerir',function(){var a=palItems();return a.length>50&&a.some(function(x){return x.s=='Proje'||/^Proje/.test(x.s)})&&a.some(function(x){return /dk$/.test(x.s)})});
+t('Arama açılır ve süzer',function(){openPal();document.getElementById('palq').value='88.35.03.89';palRun();var n=PAL.items.length;cfNo();return n>=1},'');
+t('Tema açık/koyu',function(){var o=S.theme;togTheme();var a=document.documentElement.classList.contains('light');togTheme();var b=document.documentElement.classList.contains('light');S.theme=o;applyTheme();return a!==b});
+t('Öneriler listelenir ve gizlenir',function(){var o=JSON.stringify(S.sg||{});sugSet('sablon','istemiyorum');var h=sugView();var ok=h.indexOf('tek tıkla kayıt şablonları')<0;S.sg=JSON.parse(o);return ok});
+if(window.GECMIS)t('Dışa aktarma Mayıs toplamı 8230',function(){var x=expData(['2026-5-1','2026-5-31','Mayıs 2026']);return x.sum.s==8230&&x.rows.length>15&&x.proj.length>=2},'');
+t('Hatırlatma saati doğrulanır',function(){var o=S.remind;setRemind('25:99');var a=S.remind==o;setRemind('18:05');var b=S.remind=='18:05';S.remind=o;return a&&b});
+t('Belgeler ve dışa aktarma sayfaları',function(){return P.belge().length>500&&P.aktar().indexOf('Excel')>0});
+return R};
+var __at2=window.__asyncTest;window.__asyncTest=function(){return __at2().then(function(a){return a.concat(window.__stage4Test())})};

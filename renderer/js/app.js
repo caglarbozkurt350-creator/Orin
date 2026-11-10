@@ -14,10 +14,12 @@ function loadState(){var st=null;try{st=API?API.load():JSON.parse(localStorage.g
 st=st||{};S=Object.assign({},S0,st.S||{});E=st.E||{};D=st.D||{};OT=st.OT||{};PR=st.PR||JSON.parse(JSON.stringify(PR0));UP=st.UP||{};UM=st.UM||{};PS=st.PS||{};PT=st.PT||[];PL=st.PL||{};PA=st.PA||'';CL=st.CL||{};V=st.V||{};WS=st.WS&&st.WS.length?st.WS:WS0.map(function(x){return x.slice()});RG=st.RG||[];res=st.res||2;
 sbOn=st.sbOn!==false;railOn=st.railOn!==false;zoom=st.zoom||1;
 if(!st.gecmis)importGecmis();
+Q=st.Q||[];DR=st.DR||{};
+Object.keys(PS).forEach(function(c){if(PS[c]=='Tamamlandı')PS[c]='Bitti'}); // eski adlandırma
 var t=pk(TODAY);calY=t.getFullYear();calM=t.getMonth()}
 var _sv=null;
 function save(){clearTimeout(_sv);_sv=setTimeout(saveNow,250)}
-function saveNow(){var st={v:1,gecmis:1,S:S,E:E,D:D,OT:OT,PR:PR,UP:UP,UM:UM,PS:PS,PT:PT,PL:PL,PA:PA,CL:CL,V:V,WS:WS,RG:RG,res:res,sbOn:sbOn,railOn:railOn,zoom:zoom};
+function saveNow(){var st={v:1,gecmis:1,Q:Q,DR:DR,S:S,E:E,D:D,OT:OT,PR:PR,UP:UP,UM:UM,PS:PS,PT:PT,PL:PL,PA:PA,CL:CL,V:V,WS:WS,RG:RG,res:res,sbOn:sbOn,railOn:railOn,zoom:zoom};
 try{if(API)API.save(st);else localStorage.setItem('orin',JSON.stringify(st))}catch(e){toast('Kaydedilemedi: '+e.message)}}
 // Geçmiş raporları (Mayıs–Ağustos 2026) bir kez içe aktarır; mevcut kayıtların üzerine yazmaz
 function importGecmis(){WS=WS0.map(function(x){return x.slice()});if(!window.GECMIS)return;var G=GECMIS;RG=G.ranges.map(function(x){return x.slice()});
@@ -89,7 +91,9 @@ function banner(){var r=rk(),b=document.getElementById('bn');if(r.l==0){b.innerH
 var c=r.l==2?['#4a1f1f','#f4a3a3','#d23b3b']:['#4a3a14','#f6d28a','#f0a030'];
 b.innerHTML='<div class="bn" onclick="nav(\'set\',\'huk\')" style="background:'+c[0]+';color:'+c[1]+';border:0.5px solid '+c[2]+'"><i class="ti ti-alert-triangle" style="font-size:20px"></i><span><b style="font-weight:500">Hukuki uyarı · </b>'+r.m+'</span></div>'}
 function toast(m){var t=document.getElementById('ts');t.textContent=m;t.style.opacity=1;clearTimeout(window._tt);window._tt=setTimeout(function(){t.style.opacity=0},2600)}
-function syncLabel(){var y=document.getElementById('sy');y.textContent=CONNECTED?'Senkron açık':'Sheets bağlı değil · yerel kayıt';y.style.color=CONNECTED?GRN:'#8a8a90';y.onclick=function(){nav('set','baglanti')}}
+function syncLabel(){var y=document.getElementById('sy');if(!y)return;var nq=(typeof Q!='undefined')?Q.length:0,cf=nq?Q.filter(function(o){return o.conflict}).length:0,t,c;
+if(!CONNECTED){t='Sheets bağlı değil · yerel kayıt';c='#8a8a90'}else if(cf){t='Çakışma · '+cf;c=ORG}else if(!navigator.onLine){t='Çevrimdışı'+(nq?' · '+nq+' bekliyor':'');c=ORG}else if(SYN.busy){t='Eşitleniyor…';c='#8a8a90'}else if(nq){t=nq+' kayıt gönderilecek';c=ORG}else{t='Senkron açık'+(SYN.last?' · '+SYN.last.toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}):'');c=GRN}
+y.textContent=t;y.style.color=c;y.title='Ayarlar › Google Sheets';y.onclick=function(){nav('set','baglanti')}}
 
 // ---------- Gezinme ----------
 function nav(a,p,g,noh){EDIT=null;closeCx();if(!noh){hist=hist.slice(0,hp+1);hist.push([a,p,g]);hp=hist.length-1;V[a+':'+p]=(V[a+':'+p]||0)+1}area=a;pg=p;arg=g||'';if(a=='home'&&p=='gun'){if(g)sel=g;else arg=sel}
@@ -172,11 +176,11 @@ if(ty=='p')return id+' · '+pname(id)+' · '+pmodel(id);
 if(ty=='g')return id+':\n'+(PR[id]||[]).map(function(p){return p[0]+' · '+p[1]}).join('\n');
 var e=(E[sel]||[])[id];return e?lab(sel)+' · '+e.k+' · '+e.i+' · '+e.d+' dk':''}
 function cp(t){if(navigator.clipboard)navigator.clipboard.writeText(t).then(function(){toast('Panoya kopyalandı')},function(){toast('Panoya kopyalanamadı')});else toast('Panoya kopyalanamadı')}
-function edE(i){EDIT=i;render();var e=E[sel][i];document.getElementById('kd').value=e.k=='?'?'':e.k;document.getElementById('is').value=e.i;document.getElementById('dk').value=e.d;document.getElementById('er').innerHTML='<span style="color:#f6d28a">Kayıt düzenleniyor · </span><a onclick="EDIT=null;render()" style="cursor:pointer;text-decoration:underline">Vazgeç</a>'}
+function edE(i){EDIT=i;render();var e=E[sel][i];document.getElementById('kd').value=e.k=='?'?'':e.k;document.getElementById('is').value=e.i;document.getElementById('dk').value=e.d;if(document.getElementById('pn2'))document.getElementById('pn2').value=e.pn||'';if(document.getElementById('ds2'))document.getElementById('ds2').value=e.ds||'';document.getElementById('er').innerHTML='<span style="color:#f6d28a">Kayıt düzenleniyor · </span><a onclick="EDIT=null;render()" style="cursor:pointer;text-decoration:underline">Vazgeç</a>'}
 function cap(k){var L=lim(k),o=OT[k]||0;return L?L+o:(o||null)}
-function dupE(i){var k=sel,e=E[k][i],c=cap(k);if(c&&S.cak&&tot(k)+e.d>c){toast('Gün süresi aşılır, çoğaltılamadı');return}E[k].splice(i+1,0,{k:e.k,i:e.i,d:e.d,st:S.onay?0:1});UN=[];RE=[];render();save();toast('Kayıt çoğaltıldı')}
-function delProj(id){Object.keys(PR).forEach(function(m){PR[m]=PR[m].filter(function(p){return p[0]!=id});if(!PR[m].length&&UM[m]){delete PR[m];delete UM[m]}});Object.keys(E).forEach(function(k){E[k]=E[k].filter(function(e){return e.k!=id})});PT=PT.filter(function(x){return x[0]!=id});delete UP[id];delete PS[id];UN=[];RE=[];save();toast('Proje silindi');nav('home','gun',sel)}
-function delGrp(m){(PR[m]||[]).forEach(function(p){delete UP[p[0]];delete PS[p[0]];PT=PT.filter(function(x){return x[0]!=p[0]});Object.keys(E).forEach(function(k){E[k]=E[k].filter(function(e){return e.k!=p[0]})})});delete PR[m];delete UM[m];UN=[];RE=[];save();toast(m+' grubu silindi');nav('home','gun',sel)}
+function dupE(i){var k=sel,e=E[k][i],c=cap(k);if(c&&S.cak&&tot(k)+e.d>c){toast('Gün süresi aşılır, çoğaltılamadı');return}var n={k:e.k,i:e.i,d:e.d,pn:e.pn,st:S.onay?0:1};E[k].splice(i+1,0,n);entryAdded(k,n);UN=[];RE=[];render();save();toast('Kayıt çoğaltıldı')}
+function delProj(id){Object.keys(PR).forEach(function(m){PR[m]=PR[m].filter(function(p){return p[0]!=id});if(!PR[m].length&&UM[m]){delete PR[m];delete UM[m]}});Object.keys(E).forEach(function(k){E[k]=E[k].filter(function(e){if(e.k==id){entryRemoved(e);return false}return true});if(!E[k].length)delete E[k]});PT=PT.filter(function(x){return x[0]!=id});delete UP[id];delete PS[id];projRemoved(id);UN=[];RE=[];save();toast('Proje silindi');nav('home','gun',sel)}
+function delGrp(m){(PR[m]||[]).forEach(function(p){delete UP[p[0]];delete PS[p[0]];PT=PT.filter(function(x){return x[0]!=p[0]});Object.keys(E).forEach(function(k){E[k]=E[k].filter(function(e){if(e.k==p[0]){entryRemoved(e);return false}return true});if(!E[k].length)delete E[k]});projRemoved(p[0])});delete PR[m];delete UM[m];UN=[];RE=[];save();toast(m+' grubu silindi');nav('home','gun',sel)}
 function confirmBox(msg,fn,yes){CFN=fn;var o=document.getElementById('ov');o.innerHTML='<div class="dl"><div style="color:#fff;margin-bottom:12px;line-height:1.45">'+msg+'</div><div style="display:flex;gap:8px;justify-content:flex-end"><button class="bt" onclick="cfNo()">Vazgeç</button><button class="bt d" onclick="cfYes()">'+(yes||'Evet, sil')+'</button></div></div>';o.style.display='flex'}
 function cfNo(){CFN=null;document.getElementById('ov').style.display='none'}
 function cfYes(){var f=CFN;cfNo();if(f)f()}
@@ -184,7 +188,7 @@ function askDel(ty,id){
 if(ty=='n'){var n=nobj(id);if(n)confirmBox('“'+esc(ntitle(n))+'” notu silinsin mi?'+(n.file?' Dosya Geri Dönüşüm Kutusu’na taşınır.':''),function(){delNote(id)})}
 else if(ty=='p'){var c=0;Object.keys(E).forEach(function(k){E[k].forEach(function(e){if(e.k==id)c++})});confirmBox(esc(id)+' projesi silinsin mi? Bu projeye girilmiş '+c+' kayıt da silinir.',function(){delProj(id)})}
 else if(ty=='g')confirmBox(esc(id)+' grubu ve içindeki tüm projeler silinsin mi? Bu projelere girilmiş kayıtlar da silinir.',function(){delGrp(id)});
-else confirmBox('Bu kayıt silinsin mi?',function(){E[sel].splice(id,1);if(!E[sel].length)delete E[sel];UN=[];RE=[];EDIT=null;render();save();toast('Kayıt silindi')})}
+else confirmBox('Bu kayıt silinsin mi?'+(CONNECTED&&E[sel][id]&&E[sel][id].row?' Sheets’teki satırı da temizlenir.':''),function(){var e=E[sel].splice(id,1)[0];entryRemoved(e);if(!E[sel].length)delete E[sel];UN=[];RE=[];EDIT=null;render();save();toast('Kayıt silindi')})}
 function CA(ty,id){var a=[['Kopyala',function(){cp(itemText(ty,id))},'ti-copy']];
 if(ty=='n')a.push(['Çoğalt',function(){dupNote(id)},'ti-copy-plus'],['Düzenle',function(){nav('plan','notlar',id);setTimeout(function(){var e=document.getElementById('nt');if(e)e.focus()},50)},'ti-pencil']);
 if(ty=='p')a.push(['Çoğalt',function(){PRE=pname(id);nav('home','yeni');toast('Ad hazır, yeni proje kodunu yaz')},'ti-copy-plus'],['Düzenle',function(){EP=id;nav('home','proje',id)},'ti-pencil']);
@@ -224,6 +228,6 @@ if(e.shiftKey){var K=k.toLowerCase();if(K=='s'){e.preventDefault();togSb()}else 
 var K=k.toLowerCase();
 if(K=='s'){e.preventDefault();saveNote()}else if(K=='f'){e.preventDefault();openFind()}else if(K=='n'){e.preventDefault();newRec()}else if(K=='o'){e.preventDefault();openPath()}else if(K=='r'){e.preventDefault();syncNow()}else if(K=='w'){e.preventDefault();winCmd('close','')}
 else if(k=='/'){e.preventDefault();nav('set','kisa')}else if(k==','){e.preventDefault();nav('set','kur')}else if(k=='0'){e.preventDefault();zoomSet(1)}else if(k=='-'){e.preventDefault();zoomSet(zoom-.1)}else if(k=='+'||k=='='){e.preventDefault();zoomSet(zoom+.1)}else if(k=='[')back();else if(!fl&&K=='z')undo();else if(!fl&&K=='y')redo()});
-function undo(){var u=UN.pop();if(!u){toast('Geri alınacak işlem yok');return}E[u.k].pop();if(!E[u.k].length)delete E[u.k];RE.push(u);render();save();toast('Son kayıt geri alındı')}
-function redo(){var u=RE.pop();if(!u){toast('Yinelenecek işlem yok');return}(E[u.k]=E[u.k]||[]).push(u.e);UN.push(u);render();save()}
+function undo(){var u=UN.pop();if(!u){toast('Geri alınacak işlem yok');return}var a=E[u.k]||[],i=a.indexOf(u.e);if(i>=0){a.splice(i,1);entryRemoved(u.e)}if(!a.length)delete E[u.k];RE.push(u);render();save();toast('Son kayıt geri alındı')}
+function redo(){var u=RE.pop();if(!u){toast('Yinelenecek işlem yok');return}var e={k:u.e.k,i:u.e.i,d:u.e.d,pn:u.e.pn,st:u.e.st};(E[u.k]=E[u.k]||[]).push(e);entryAdded(u.k,e);u.e=e;UN.push(u);render();save()}
 function newRec(){nav('home','gun',TODAY);setTimeout(function(){var e=document.getElementById('kd');if(e)e.focus()},50)}

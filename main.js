@@ -145,6 +145,11 @@ ipcMain.handle('sheets:authUrl', wrap(() => sheets.authUrl()));
 ipcMain.handle('sheets:logout', wrap(() => sheets.logout()));
 ipcMain.handle('sheets:meta', wrap(() => sheets.meta()));
 ipcMain.handle('sheets:read', wrap(r => sheets.read(r)));
+ipcMain.handle('sheets:add', wrap(r => sheets.addRec(r)));
+ipcMain.handle('sheets:upd', wrap(o => sheets.updRec(o)));
+ipcMain.handle('sheets:del', wrap(o => sheets.delRec(o)));
+ipcMain.handle('sheets:upsert', wrap(o => sheets.upsertKey(o)));
+ipcMain.handle('sheets:delKey', wrap(o => sheets.deleteKey(o)));
 ipcMain.handle('sheets:pickClient', wrap(async (a, e) => {
   const r = await dialog.showOpenDialog(BrowserWindow.fromWebContents(e.sender), { title: 'OAuth istemci dosyası (client_secret….json)', filters: [{ name: 'JSON', extensions: ['json'] }], properties: ['openFile'] });
   if (r.canceled) return sheets.status();

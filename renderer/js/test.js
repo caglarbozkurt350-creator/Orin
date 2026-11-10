@@ -40,3 +40,50 @@ return API.data.info().then(function(i){tmp=i.def+'\\tasima-testi';saveNow();ret
 .then(function(){return API.data.move(tmp)}).then(function(r){t('Veri klasörüne taşı',r.ok&&r.info.custom&&/tasima-testi/.test(r.info.file),r);return API.data.move(tmp)})
 .then(function(r){t('Aynı klasör tekrar seçilince sorun yok',r.ok,r);return API.data.info()})
 .then(function(i){return API.data.move(i.def,'overwrite')}).then(function(r){t('Varsayılana geri dön',r.ok&&!r.info.custom,r);return R})};
+
+// Aşama 3 kuyruk testi: gerçek Sheets yerine bellek içi sahte tablo (main'deki kurallarla aynı)
+window.__queueTest=function(){var R=[];function t(n,ok,m){R.push({n:n,ok:!!ok,m:ok?'':String(m||'')})}
+var MAP={tab:'Günlük Kayıt',tarih:0,kod:1,parca:2,is:3,dk:4,izin:8,verilis:6,baslama:7,durum:-1};
+var rows=[['Tarih','Proje kodu','Parça no','İş tanımı','Süre (dk)','Ay','G','H','İzin türü']],tabs={},F=['tarih','kod','parca','is','dk','izin'];
+function fpRow(r){var g=function(i){return i>=0?String(r[i]==null?'':r[i]).trim():''};return [parseDate(g(0)),g(1),g(3),String(parseMin(g(4)))].join('|')}
+function put(rowNo,rec){var r=rows[rowNo-1]||[];F.forEach(function(f){if(MAP[f]>=0&&rec[f]!==undefined)r[MAP[f]]=rec[f]===null?'':String(rec[f])});rows[rowNo-1]=r}
+function ok(v){return Promise.resolve({ok:true,v:v})}
+var mock={add:function(rec){var n=rows.length+1;put(n,rec);return ok({row:n})},
+upd:function(o){var cur=rows[o.row-1]||[];if(!o.force&&fpRow(cur)!==o.fp)return ok({conflict:true,current:cur.slice()});put(o.row,o.rec);return ok({row:o.row})},
+del:function(o){var cur=rows[o.row-1]||[];if(!o.force&&fpRow(cur)!==o.fp)return ok({conflict:true,current:cur.slice()});var b={};F.forEach(function(f){b[f]=''});put(o.row,b);return ok({row:o.row})},
+upsert:function(o){if(!tabs[o.tab]){tabs[o.tab]=[o.header].concat(o.seed||[]);if(o.tab=='Projeler')return ok({created:true})}var T=tabs[o.tab],i=T.findIndex(function(x){return x[0]==o.key});if(i<0)T.push([o.key].concat(o.values));else T[i]=[o.key].concat(o.values);return ok({})},
+delKey:function(o){var T=tabs[o.tab]||[],i=T.findIndex(function(x){return x[0]==o.key});if(i>=0)T[i]=['','',''];return ok({})},
+status:function(){return ok({loggedIn:true,map:MAP,lastSync:'x',sheetId:'x',hasClient:true})},config:function(){return ok({})},read:function(){return ok([])},meta:function(){return ok({tabs:Object.keys(tabs),title:'x'})}};
+var keep={API:API,C:CONNECTED,onay:S.onay,w1:S.w1,Q:Q.slice(),PSs:JSON.stringify(PS),PRs:JSON.stringify(PR),UPs:JSON.stringify(UP)},k='2027-3-2',bk={E:E[k],D:D[k],DR:DR[k]};
+API=Object.assign({},keep.API||{},{sheets:mock,win:function(){},save:function(){return Promise.resolve(true)}});CONNECTED=true;Q=[];delete E[k];delete D[k];delete DR[k];
+function idle(){return new Promise(function(res){var n=0;(function w(){n++;if((!SYN.busy&&!Q.some(function(o){return !o.conflict}))||n>60)return res();setTimeout(w,50)})()})}
+function form(kd,is,dk){document.getElementById('kd').value=kd;document.getElementById('is').value=is;document.getElementById('dk').value=dk}
+var e1;
+return Promise.resolve().then(function(){S.onay=true;nav('home','gun',k);form('78.26.03.19','Kuyruk testi',200);add();e1=E[k][0];
+t('Önce onayla: yazılmadan bekler',e1.st===0&&!Q.length,JSON.stringify(Q));okk(0);return idle()})
+.then(function(){t('Onaylanınca Sheets’e eklenir',e1.row==2&&rows[1][1]=='78.26.03.19'&&rows[1][4]=='200'&&!rows[1][5],JSON.stringify(rows[1]));
+t('Ay sütununa (F) yazılmaz',rows[1][5]===undefined,rows[1][5]);
+t('Parmak izi tutuyor',e1.fp==fpRow(rows[1]),e1.fp+' / '+fpRow(rows[1]));
+EDIT=0;render();form('78.26.03.19','Kuyruk testi düzeltildi',250);add();okk(0);return idle()})
+.then(function(){var e=E[k][0];t('Düzenleme aynı satıra yazılır',rows[1][3]=='Kuyruk testi düzeltildi'&&rows[1][4]=='250'&&rows.length==2&&e.row==2,JSON.stringify(rows));
+rows[1][3]='Telefondan değişti';EDIT=0;render();form('78.26.03.19','Benim düzeltmem',260);add();okk(0);return idle()})
+.then(function(){var o=Q.filter(function(x){return x.conflict})[0];t('Sheets’te değişmişse çakışma uyarısı',!!o&&rows[1][3]=='Telefondan değişti',JSON.stringify(Q));if(o)qForce(o.id);return idle()})
+.then(function(){t('Benimkini yaz ile çakışma çözülür',rows[1][3]=='Benim düzeltmem'&&!Q.length,JSON.stringify(rows[1]));
+askDel('e',0);cfYes();return idle()})
+.then(function(){t('Silince satır temizlenir (silinmez)',rows.length==2&&rows[1][1]===''&&rows[1][4]==='',JSON.stringify(rows));
+setT('yillik');return idle()})
+.then(function(){var r=rows[2]||[];t('İzin günü satırı yazılır',r[1]=='Standart dışı'&&r[4]=='?'&&r[8]=='Yıllık izin'&&DR[k]&&DR[k].row==3,JSON.stringify(rows));
+setT('');return idle()})
+.then(function(){t('İzin kaldırılınca satırı temizlenir',(rows[2]||[])[8]===''&&!DR[k],JSON.stringify(rows[2]));
+S.onay=false;form('78.26.03.19','Hızlı kayıt',100);add();var e=E[k][E[k].length-1];var a=E[k].indexOf(e);E[k].splice(a,1);entryRemoved(e);return idle()})
+.then(function(){t('Gönderilmeden silinen kayıt Sheets’e gitmez',rows.length==3,JSON.stringify(rows));
+nav('home','yeni');document.getElementById('nk').value='999.26.01.01';document.getElementById('pn').value='Test projesi';addP();return idle()})
+.then(function(){var T=tabs['Projeler']||[];t('Yeni proje Projeler sekmesine yazılır (sekme açılır)',T[0]&&T[0][0]=='Proje kodu'&&T.some(function(x){return x[0]=='999.26.01.01'&&x[2]=='Başlandı'}),JSON.stringify(T.slice(0,3)));
+t('Sekme açılırken tüm projeler yazılır',T.length>=allP().length+1,T.length+' / '+allP().length);
+sv('w1',S.w1+1);return idle()})
+.then(function(){var T=tabs['Ayarlar ve Bilgiler']||[];t('Ayar değişikliği Ayarlar ve Bilgiler’e yazılır',T.some(function(x){return x[0]=='Orin ayarları (otomatik)'&&/Pzt–Per/.test(x[1])}),JSON.stringify(T));
+t('Eski "Tamamlandı" durumu "Bitti" oldu',!Object.keys(PS).some(function(c){return PS[c]=='Tamamlandı'}));
+t('Durum listesinde Bitti var',PSO.indexOf('Bitti')>=0)})
+.catch(function(e){t('Kuyruk testi',false,e.message)})
+.then(function(){API=keep.API;CONNECTED=keep.C;S.onay=keep.onay;S.w1=keep.w1;Q=keep.Q;PS=JSON.parse(keep.PSs);PR=JSON.parse(keep.PRs);UP=JSON.parse(keep.UPs);if(bk.E)E[k]=bk.E;else delete E[k];if(bk.D)D[k]=bk.D;else delete D[k];if(bk.DR)DR[k]=bk.DR;else delete DR[k];nav('home','gun',TODAY);return R})};
+var __at=window.__asyncTest;window.__asyncTest=function(){return (__at?__at():Promise.resolve([])).then(function(a){return window.__queueTest().then(function(b){return a.concat(b)})})};

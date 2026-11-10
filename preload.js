@@ -29,6 +29,11 @@ contextBridge.exposeInMainWorld('api', {
     reopen: () => ipcRenderer.invoke('sheets:reopen'),
     authUrl: () => ipcRenderer.invoke('sheets:authUrl'),
     meta: () => ipcRenderer.invoke('sheets:meta'),
-    read: r => ipcRenderer.invoke('sheets:read', r)
+    read: r => ipcRenderer.invoke('sheets:read', r),
+    add: r => ipcRenderer.invoke('sheets:add', r),
+    upd: o => ipcRenderer.invoke('sheets:upd', o),
+    del: o => ipcRenderer.invoke('sheets:del', o),
+    upsert: o => ipcRenderer.invoke('sheets:upsert', o),
+    delKey: o => ipcRenderer.invoke('sheets:delKey', o)
   }
 });

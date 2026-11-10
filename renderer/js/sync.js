@@ -2,7 +2,7 @@
 var SH={st:null,tabs:null,head:null,rows:null,tab:'',busy:''};
 // Başlık tahminleri (Türkçe İ için i bayrağına güvenme)
 var MF=[['tarih','Tarih',/^tarih$|^date$/i,1],['kod','Proje kodu',/proje/i,1],['parca','Parça no',/parça/i,0],['is','İş tanımı',/tanım|yapılan|açıklama/i,1],['dk','Süre (dk)',/süre|dakika|dk/i,1],['izin','İzin türü',/izin/i,0],['verilis','İş veriliş tarihi',/veriliş/i,0],['baslama','İşe başlama tarihi',/başlama/i,0],['durum','Durum',/durum|status/i,0]];
-function izinType(s){s=String(s||'').toLocaleLowerCase('tr');if(!s.trim())return null;if(/yıllık/.test(s))return 'yillik';if(/ücretsiz/.test(s))return 'ucretsiz';if(/rapor/.test(s))return 'rapor13';if(/sevk/.test(s))return 'sevk';if(/refakat/.test(s))return 'refakat';return 'mazeret'}
+function izinType(s){s=String(s||'').toLocaleLowerCase('tr');if(!s.trim())return null;if(/yıllık/.test(s))return 'yillik';if(/ücretsiz/.test(s))return 'ucretsiz';if(/rapor/.test(s))return /4\.?\s*gün|sonrası/.test(s)?'rapor4':'rapor13';if(/sevk/.test(s))return 'sevk';if(/refakat/.test(s))return 'refakat';return 'mazeret'}
 function shCall(p){return p.then(function(r){if(!r.ok)throw new Error(r.err);return r.v})}
 function shRefresh(){if(!API||!API.sheets)return;shCall(API.sheets.status()).then(function(s){if(!s.sheetId&&window.DEFAULT_SHEET){API.sheets.config({sheet:DEFAULT_SHEET}).then(function(r){if(r.ok){SH.st=r.v;render()}})}SH.st=s;CONNECTED=!!(s.loggedIn&&s.map&&s.lastSync);syncLabel();if(area=='set'&&pg=='baglanti')render()},function(){})}
 function shErr(e){SH.busy='';if(!/iptal|Yeni giriş/.test(e.message))toast(e.message);render()}
@@ -23,15 +23,26 @@ function shConfirm(){var miss=MF.filter(function(x){return x[3]&&!(SH.sel[x[0]]>
 var map={tab:SH.tab};MF.forEach(function(x){map[x[0]]=SH.sel[x[0]]});shCall(API.sheets.config({map:map})).then(function(s){SH.st=s;toast('Eşleme onaylandı');render()},shErr)}
 function colL(i){return String.fromCharCode(65+i)}
 // Tüm kayıtları okur ve yerel önbelleğe yazar. Sheets yetkilidir: o günün rapor/csv/sheets kayıtları yenilenir, onay bekleyen yerel kayıtlar korunur.
-function shReadAll(){var m=SH.st&&SH.st.map;if(!m){toast('Önce sütun eşlemesini onayla');return}SH.busy='read';render();
-shCall(API.sheets.read("'"+m.tab.replace(/'/g,"''")+"'!A2:Z")).then(function(v){var by={},bad=0,first=null;
-var izn={};v.forEach(function(r){var k=parseDate(r[m.tarih]),d=parseMin(r[m.dk]),c=String(r[m.kod]||'').trim(),i=String(r[m.is]||'').trim(),it=m.izin>=0?izinType(r[m.izin]):null;if(k&&!inRange(k)&&(!first||pk(k)<pk(first)))first=k; // takip başlangıcı: rapor aylarının dışındaki ilk kayıtif(k&&it)izn[k]=it;
-if(!k||!d){if(!(k&&it)&&r.join('').trim())bad++;if(k)by[k]=by[k]||[];return}if(DG.indexOf(i)>=0)c='Diğer';if(!c)c='?';var pn=m.parca>=0?String(r[m.parca]||'').trim():'';(by[k]=by[k]||[]).push({k:c,i:(i||'—')+(pn?' · parça '+pn:''),d:d,st:1,src:'sheets',ds:m.durum>=0?String(r[m.durum]||''):''})});Object.keys(izn).forEach(function(k){D[k]=izn[k]});
-var n=0,np=0;Object.keys(by).forEach(function(k){var keep=(E[k]||[]).filter(function(e){return !e.src});E[k]=by[k].concat(keep);n+=by[k].length;by[k].forEach(function(e){if(e.k!='?'&&SPECIAL.indexOf(e.k)<0&&!pexists(e.k)&&/^\d+(\.\d+)+$/.test(e.k)){var md=pmodel(e.k);if(!PR[md]){PR[md]=[];UM[md]=true}PR[md].push([e.k,'Sheets’ten · adı yok']);UP[e.k]=true;np++}})});
-S.sheetStart=first;Object.keys(by).forEach(function(k){if(!E[k].length)delete E[k]});return readProjects().then(function(pp){var now=new Date();return shCall(API.sheets.config({lastSync:now.toISOString()})).then(function(s){SH.st=s;SH.busy='';CONNECTED=true;save();render();toast(n+' kayıt okundu'+(np+pp?' · '+(np+pp)+' yeni proje':'')+(bad?' · '+bad+' satır okunamadı':''))})})},shErr)}
+// Tüm kayıtları okur. Önce bekleyen gönderimler yapılır. Sheets yetkilidir; bekleyen işlemi olan günler ve henüz gönderilmemiş yerel kayıtlar korunur.
+function shReadAll(){var m=SH.st&&SH.st.map;if(!m){toast('Önce sütun eşlemesini onayla');return Promise.resolve()}SH.busy='read';if(area=='set')render();
+return flush().then(function(){return shCall(API.sheets.read("'"+m.tab.replace(/'/g,"''")+"'!A2:Z"))}).then(function(v){var by={},bad=0,first=null,izn={};
+v.forEach(function(r,ix){var row=ix+2,k=parseDate(r[m.tarih]),d=parseMin(r[m.dk]),c=String(r[m.kod]||'').trim(),i=String(r[m.is]||'').trim(),it=m.izin>=0?izinType(r[m.izin]):null;
+if(k&&!inRange(k)&&(!first||pk(k)<pk(first)))first=k;
+if(k&&it){izn[k]={t:it,row:row,fp:[k,c,i,String(d)].join('|')}}
+if(!k||!d){if(!(k&&it)&&r.join('').trim())bad++;if(k)by[k]=by[k]||[];return}
+if(!c)c='?';(by[k]=by[k]||[]).push({k:c,i:i||'—',d:d,pn:m.parca>=0?String(r[m.parca]||'').trim():'',st:1,src:'sheets',row:row,fp:[k,c,i,String(d)].join('|'),u:uid()})});
+var busy={};Q.forEach(function(o){if(o.k)busy[o.k]=1;if(o.u){var f=findE(o.u);if(f)busy[f.k]=1}});
+Object.keys(izn).forEach(function(k){if(busy[k])return;D[k]=izn[k].t;DR[k]={row:izn[k].row,fp:izn[k].fp}});
+Object.keys(DR).forEach(function(k){if(!izn[k]&&!busy[k]){delete DR[k];if(IZL[D[k]])delete D[k]}}); // Sheets'te izin satırı silinmişse
+var n=0,np=0;Object.keys(by).forEach(function(k){if(busy[k])return;var keep=(E[k]||[]).filter(function(e){return !e.row&&(!e.src||e.src=='csv'||!e.st)});E[k]=by[k].concat(keep);if(!E[k].length)delete E[k];n+=by[k].length;
+by[k].forEach(function(e){if(e.k!='?'&&SPECIAL.indexOf(e.k)<0&&!pexists(e.k)&&/^\d+(\.\d+)+$/.test(e.k)){var md=pmodel(e.k);if(!PR[md]){PR[md]=[];UM[md]=true}PR[md].push([e.k,'Sheets’ten · adı yok']);UP[e.k]=true;np++}})});
+// Sheets'te artık olmayan senkron kayıtlar (biri satırı sildiyse) kaldırılır
+Object.keys(E).forEach(function(k){if(by[k]||busy[k])return;var a=E[k].filter(function(e){return !(e.src=='sheets'&&e.row)});if(a.length!=E[k].length){if(a.length)E[k]=a;else delete E[k]}});
+if(first)S.sheetStart=first;return readProjects().then(function(pp){return shCall(API.sheets.config({lastSync:new Date().toISOString()})).then(function(s){SH.st=s;SH.busy='';CONNECTED=true;SYN.last=new Date();save();render();toast(n+' kayıt okundu'+(np+pp?' · '+(np+pp)+' yeni proje':'')+(bad?' · '+bad+' satır okunamadı':''))})})},shErr)}
 // Projeler sekmesi varsa: A sütunu kod, B sütunu ad
-function readProjects(){var t=(SH.tabs||[]).filter(function(x){return /^projeler$/i.test(x.trim())})[0];if(!t)return Promise.resolve(0);
-return shCall(API.sheets.read("'"+t+"'!A2:B")).then(function(v){var n=0;v.forEach(function(r){var c=String(r[0]||'').trim(),nm=String(r[1]||'').trim();if(!/^\d+(\.\d+)+$/.test(c))return;if(pexists(c)){if(nm)allP().forEach(function(p){if(p[0]==c&&/adı yok/.test(p[1]))p[1]=nm});return}var md=pmodel(c);if(!PR[md]){PR[md]=[];UM[md]=true}PR[md].push([c,nm||'Adı yok']);UP[c]=true;n++});return n},function(){return 0})}
+function readProjects(){var go=function(tabs){var t=(tabs||[]).filter(function(x){return /^projeler$/i.test(x.trim())})[0];if(!t)return Promise.resolve(0);
+return shCall(API.sheets.read("'"+t+"'!A2:C")).then(function(v){var n=0,pend={};Q.forEach(function(o){if(o.op=='pup'||o.op=='pdel')pend[o.key]=1});v.forEach(function(r){var c=String(r[0]||'').trim(),nm=String(r[1]||'').trim(),ds=String(r[2]||'').trim();if(!/^\d+(\.\d+)+$/.test(c)||pend[c])return;if(ds)PS[c]=ds;if(pexists(c)){if(nm)allP().forEach(function(p){if(p[0]==c&&p[1]!=nm)p[1]=nm});return}var md=pmodel(c);if(!PR[md]){PR[md]=[];UM[md]=true}PR[md].push([c,nm||'Adı yok']);UP[c]=true;n++});return n},function(){return 0})};
+if(SH.tabs)return go(SH.tabs);return shCall(API.sheets.meta()).then(function(mt){SH.tabs=mt.tabs;SH.title=mt.title;return go(mt.tabs)},function(){return 0})}
 function step(n,t,ok,body){return '<div class="card"><div class="ch"><span class="pill" style="background:'+(ok?'#1d3b2b;color:#8fe0b3':'#2e2e33;color:#c9c9ce')+'">'+(ok?'✓':n)+'</span>'+t+'</div>'+body+'</div>'}
 P.baglanti=function(){var s=SH.st,h='<p class="h">Google Sheets bağlantısı</p><p class="s">“İş Günü Raporu” tablosu · okuma Aşama 2, yazma Aşama 3</p>';
 if(!API||!API.sheets)return h+'<div class="card hn">Bu sayfa yalnız masaüstü uygulamasında çalışır.</div>';
@@ -48,3 +59,6 @@ h+=step(4,'Sütun eşlemesi',!!s.map,s.loggedIn?mb:'<div class="hn">Google hesab
 h+=step(5,'Kayıtları oku',!!s.lastSync,s.map?'<div style="display:flex;gap:8px;align-items:center"><button class="bt p" onclick="shReadAll()">'+(SH.busy=='read'?'Okunuyor…':'<i class="ti ti-refresh"></i> Şimdi oku')+'</button><span class="hn">'+(s.lastSync?'Son okuma: '+new Date(s.lastSync).toLocaleString('tr-TR'):'Henüz okunmadı')+' · Ctrl+R</span></div><div class="ft">Okunan kayıtlar bu bilgisayarda önbelleğe alınır; internet yokken de görünür. Sheets yetkilidir: aynı güne ait rapor/CSV kayıtlarının yerini Sheets kayıtları alır, onay bekleyen yerel kayıtların korunur.</div>':'<div class="hn">Eşleme onaylanınca açılır.</div>');
 return h};
 shRefresh();
+setTimeout(function(){if(!API||!API.sheets||INFO.smoke)return;shCall(API.sheets.status()).then(function(s){SH.st=s;CONNECTED=!!(s.loggedIn&&s.map&&s.lastSync);syncLabel();if(!CONNECTED||!navigator.onLine)return;
+if(!S.projSeeded){S.projSeeded=true;var p=allP()[0];if(p)projChanged(p[0])}
+shReadAll()}).catch(function(){})},1500);

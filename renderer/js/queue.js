@@ -45,7 +45,7 @@ return call(S2.add(rec3)).then(function(r){DR[k]={row:r.row,fp:fpRec(k,rec3)}})}
 if(cur)return call(S2.del({row:cur.row,fp:cur.fp,force:o.force})).then(function(r){if(r.conflict){o.conflict=r.current;return}delete DR[k]});return Promise.resolve()}
 if(o.op=='pup'){var nm=pname(o.key);if(!nm)return Promise.resolve();return call(S2.upsert({tab:'Projeler',header:PHEAD,key:o.key,values:[nm,PS[o.key]||''],seed:projRows()}))}
 if(o.op=='pdel')return call(S2.delKey({tab:'Projeler',key:o.key,width:3}));
-if(o.op=='info')return call(S2.upsert({tab:INFOTAB,header:['Başlık','Bilgi'],key:o.key,values:[/izin planı/.test(o.key)?planText():settingsText()]}));
+if(o.op=='info')return call(S2.upsert({tab:INFOTAB,header:['Başlık','Bilgi'],key:o.key,values:[/izin planı/.test(o.key)?planText():/istenen/.test(o.key)?wantedText():settingsText()]}));
 return Promise.resolve()}
 function flush(){if(SYN.busy||!Q.length||!canSync())return Promise.resolve();SYN.busy=true;SYN.err='';syncLabel();
 var list=Q.filter(function(o){return !o.conflict&&!(o.n>=5)}),i=0;

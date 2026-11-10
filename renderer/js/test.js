@@ -110,3 +110,8 @@ t('Sık kayıt şablonu',freqTpl().length>0||true)}
 t('Şablon kaydet ve sil',function(){var o=S.tpl;nav('home','gun','2027-2-1');document.getElementById('kd').value='78.26.03.19';document.getElementById('is').value='Şablon testi';document.getElementById('dk').value='120';tplSave();var ok=(S.tpl||[]).some(function(x){return x.i=='Şablon testi'});S.tpl=o;return ok});
 return R};
 var __at3=window.__asyncTest;window.__asyncTest=function(){return __at3().then(function(a){return a.concat(window.__stage5Test())})};
+window.__wantTest=function(){var R=[];function t(n,c,m){try{var ok=typeof c=='function'?c():c;R.push({n:n,ok:!!ok,m:ok?'':String(m||'')})}catch(e){R.push({n:n,ok:false,m:e.message})}}
+var o=JSON.stringify(S.sg||{}),q=Q.slice();t('Öneri işaretlenince sonraki sürüm listesine girer',function(){sugWant('ses',true);var a=S.sg.ses=='istek'&&wantedText().indexOf('Sesli kayıt')>=0&&Q.some(function(x){return x.op=='info'&&/istenen/.test(x.key)});sugWant('ses',false);return a&&!S.sg.ses});
+t('Öneri sayfasında onay kutuları',function(){nav('msg','haber','gel');return document.querySelectorAll('#ct input[type=checkbox]').length>3});
+S.sg=JSON.parse(o);Q=q;return R};
+var __at4=window.__asyncTest;window.__asyncTest=function(){return __at4().then(function(a){return a.concat(window.__wantTest())})};

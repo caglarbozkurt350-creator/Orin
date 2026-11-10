@@ -30,5 +30,13 @@ t('Refakat sınırı',function(){var y=2031,ks=[];for(var i=1;i<=S.ref;i++){var 
 t('Hukuki uyarı hesaplanır',typeof rk().m=='string');
 var HD=['Tarih','Proje kodu','Parça no','İş tanımı','Süre (dk)','Ay (otomatik)','İş veriliş tarihi','İşe başlama tarihi','İzin türü'];
 t('Sheets eşleme tahmini',function(){var g={};MF.forEach(function(x){g[x[0]]=guess(HD,x[2])});return g.tarih==0&&g.kod==1&&g.parca==2&&g.is==3&&g.dk==4&&g.izin==8&&g.verilis==6&&g.baslama==7},JSON.stringify(MF.map(function(x){return x[0]+'='+guess(HD,x[2])})));
-t('Sheets tarih okuma',parseDate('09.11.2026')=='2026-11-9'&&parseDate('2026-11-10')=='2026-11-10');t('Soru işareti süre 0',parseMin('?')===0&&parseMin('525')==525);t('İzin türü sevk',izinType('İş yeri sevki')=='sevk'&&izinType('Yıllık')=='yillik');t('Standart dışı geçerli kod',SPECIAL.indexOf('Standart dışı')>=0);
+t('Sheets tarih okuma',parseDate('09.11.2026')=='2026-11-9'&&parseDate('2026-11-10')=='2026-11-10');t('Soru işareti süre 0',parseMin('?')===0&&parseMin('525')==525);t('İzin türü sevk',izinType('İş yeri sevki')=='sevk'&&izinType('Yıllık')=='yillik');t('Takip başlangıcı rapor ayları dışında',function(){var o=S.sheetStart,c=CONNECTED;S.sheetStart='2026-11-9';CONNECTED=true;var a=typ('2026-9-15'),b=typ('2026-5-21');S.sheetStart=o;CONNECTED=c;return a=='bos'&&b=='girdi'},'');t('Standart dışı geçerli kod',SPECIAL.indexOf('Standart dışı')>=0);
 nav('home','gun',TODAY);return R};
+
+// Veri klasörü taşıma testi (yalnız geçici test klasöründe çalışır)
+window.__asyncTest=function(){var R=[],tmp=null;if(!API||!API.data)return Promise.resolve(R);
+function t(n,ok,r){R.push({n:n,ok:!!ok,m:ok?'':JSON.stringify(r)})}
+return API.data.info().then(function(i){tmp=i.def+'\\tasima-testi';saveNow();return new Promise(function(r){setTimeout(r,400)})})
+.then(function(){return API.data.move(tmp)}).then(function(r){t('Veri klasörüne taşı',r.ok&&r.info.custom&&/tasima-testi/.test(r.info.file),r);return API.data.move(tmp)})
+.then(function(r){t('Aynı klasör tekrar seçilince sorun yok',r.ok,r);return API.data.info()})
+.then(function(i){return API.data.move(i.def,'overwrite')}).then(function(r){t('Varsayılana geri dön',r.ok&&!r.info.custom,r);return R})};

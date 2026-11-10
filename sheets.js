@@ -6,6 +6,10 @@ const SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
 const CFG = () => path.join(app.getPath('userData'), 'sheets.json');
 const TOK = () => path.join(app.getPath('userData'), 'google-token.bin');
 let access = null; // { token, exp }
+let pending = null; // süren giriş: { srv, url, reject }
+function cancel() { if (pending) { try { pending.srv.close(); } catch (e) {} const r = pending.reject; pending = null; r(new Error('Giriş iptal edildi')); } return true; }
+function authUrl() { return pending ? pending.url : null; }
+function reopen() { if (pending) shell.openExternal(pending.url); return !!pending; }
 
 function readCfg() { try { return JSON.parse(fs.readFileSync(CFG(), 'utf8')); } catch (e) { return {}; } }
 function writeCfg(c) { fs.writeFileSync(CFG(), JSON.stringify(c, null, 1)); }
@@ -44,11 +48,12 @@ function login() {
   const verifier = crypto.randomBytes(48).toString('base64url');
   const challenge = crypto.createHash('sha256').update(verifier).digest('base64url');
   const state = crypto.randomBytes(16).toString('hex');
+  if (pending) cancel();
   return new Promise((resolve, reject) => {
     const srv = http.createServer(async (req, res) => {
       const u = new URL(req.url, 'http://127.0.0.1');
       if (u.pathname !== '/cb') { res.writeHead(404); res.end(); return; }
-      const done = (ok, msg) => { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); res.end('<html><body style="font-family:Segoe UI;background:#181818;color:#ececec;padding:40px"><h2>' + (ok ? 'Orin bağlandı ✓' : 'Bağlantı kurulamadı') + '</h2><p>' + msg + '</p><p>Bu sekmeyi kapatabilirsin.</p></body></html>'); srv.close(); };
+      const done = (ok, msg) => { pending = null; res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); res.end('<html><body style="font-family:Segoe UI;background:#181818;color:#ececec;padding:40px"><h2>' + (ok ? 'Orin bağlandı ✓' : 'Bağlantı kurulamadı') + '</h2><p>' + msg + '</p><p>Bu sekmeyi kapatabilirsin.</p></body></html>'); srv.close(); };
       if (u.searchParams.get('state') !== state) { done(false, 'Güvenlik kontrolü tutmadı.'); return reject(new Error('state uyuşmadı')); }
       if (u.searchParams.get('error')) { done(false, u.searchParams.get('error')); return reject(new Error('Google: ' + u.searchParams.get('error'))); }
       try {
@@ -62,9 +67,11 @@ function login() {
     srv.listen(0, '127.0.0.1', () => {
       redirect = 'http://127.0.0.1:' + srv.address().port + '/cb';
       const q = new URLSearchParams({ client_id: c.clientId, redirect_uri: redirect, response_type: 'code', scope: SCOPE, access_type: 'offline', prompt: 'consent', code_challenge: challenge, code_challenge_method: 'S256', state });
-      shell.openExternal('https://accounts.google.com/o/oauth2/v2/auth?' + q);
+      const url = 'https://accounts.google.com/o/oauth2/v2/auth?' + q;
+      pending = { srv, url, reject };
+      shell.openExternal(url);
     });
-    setTimeout(() => { try { srv.close(); } catch (e) {} reject(new Error('Zaman aşımı: 5 dakika içinde giriş yapılmadı')); }, 300000).unref();
+    setTimeout(() => { if (pending && pending.srv === srv) pending = null; try { srv.close(); } catch (e) {} reject(new Error('Zaman aşımı: 5 dakika içinde giriş yapılmadı')); }, 300000).unref();
   });
 }
 function logout() { access = null; try { fs.unlinkSync(TOK()); } catch (e) {} return status(); }
@@ -85,4 +92,4 @@ async function api(p) {
 async function meta() { const j = await api('?fields=properties.title,sheets.properties(title,gridProperties.rowCount)'); return { title: j.properties.title, tabs: j.sheets.map(s => s.properties.title) }; }
 async function read(range) { const j = await api('/values/' + encodeURIComponent(range) + '?valueRenderOption=FORMATTED_VALUE'); return j.values || []; }
 
-module.exports = { status, setConfig, login, logout, meta, read, sheetIdFrom, parseClient };
+module.exports = { cancel, authUrl, reopen, status, setConfig, login, logout, meta, read, sheetIdFrom, parseClient };

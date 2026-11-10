@@ -11,6 +11,10 @@ contextBridge.exposeInMainWorld('api', {
     del: o => ipcRenderer.invoke('notes:delete', o)
   },
   images: dir => ipcRenderer.invoke('images:list', dir),
+  data: {
+    info: () => ipcRenderer.invoke('data:info'),
+    move: (dir, mode) => ipcRenderer.invoke('data:move', { dir, mode })
+  },
   pickFolder: cur => ipcRenderer.invoke('fs:pickFolder', cur),
   openPath: p => ipcRenderer.invoke('fs:open', p),
   external: url => ipcRenderer.invoke('shell:external', url),
@@ -21,6 +25,9 @@ contextBridge.exposeInMainWorld('api', {
     pickClient: () => ipcRenderer.invoke('sheets:pickClient'),
     login: () => ipcRenderer.invoke('sheets:login'),
     logout: () => ipcRenderer.invoke('sheets:logout'),
+    cancel: () => ipcRenderer.invoke('sheets:cancel'),
+    reopen: () => ipcRenderer.invoke('sheets:reopen'),
+    authUrl: () => ipcRenderer.invoke('sheets:authUrl'),
     meta: () => ipcRenderer.invoke('sheets:meta'),
     read: r => ipcRenderer.invoke('sheets:read', r)
   }

@@ -5,8 +5,11 @@ const fs = require('fs');
 
 const SMOKE = process.argv.includes('--smoke');
 const SEED = process.argv.includes('--seed'); // gizli açılış: kişisel geçmişi yerel veriye yazar ve kapanır
+if (SMOKE) app.setPath('userData', path.join(app.getPath('temp'), 'orin-smoke-' + process.pid)); // testler gerçek veriye dokunmaz
 const DATA = () => app.getPath('userData');
-const STATE_FILE = () => path.join(DATA(), 'durum.json');
+const LOC = () => path.join(DATA(), 'konum.json'); // seçilen veri klasörü (yalnız yol)
+function dataDir() { try { const d = JSON.parse(fs.readFileSync(LOC(), 'utf8')).dir; if (d && fs.existsSync(d)) return d; } catch (e) {} return DATA(); }
+const STATE_FILE = () => path.join(dataDir(), 'durum.json');
 const IMG_EXT = /\.(jpe?g|png|webp|gif|bmp)$/i;
 
 if (!SMOKE && !SEED && !app.requestSingleInstanceLock()) app.quit();
@@ -44,6 +47,7 @@ function smoke(win) {
   win.webContents.on('render-process-gone', (e, d) => errors.push('render-gone ' + d.reason));
   win.webContents.on('did-finish-load', async () => {
     const out = path.join(__dirname, 'test-sonuc');
+    try { const a = await win.webContents.executeJavaScript('window.__asyncTest ? window.__asyncTest() : []'); a.forEach(x => { if (!x.ok) errors.push('TEST ' + x.n + ': ' + x.m); }); fs.mkdirSync(out, { recursive: true }); fs.writeFileSync(path.join(out, 'async.json'), JSON.stringify(a, null, 1)); } catch (e) { errors.push('async ' + e.message); }
     fs.mkdirSync(out, { recursive: true });
     try {
       const shots = await win.webContents.executeJavaScript('window.__smokeRoutes ? window.__smokeRoutes() : []');
@@ -58,6 +62,7 @@ function smoke(win) {
       t.forEach(x => { if (!x.ok) errors.push('TEST ' + x.n + ': ' + x.m); });
       fs.writeFileSync(path.join(out, 'rapor.json'), JSON.stringify({ errors, tests: t }, null, 1));
     } catch (e) { errors.push('smoke ' + e.message); fs.writeFileSync(path.join(out, 'rapor.json'), JSON.stringify({ errors }, null, 1)); }
+    try { fs.rmSync(DATA(), { recursive: true, force: true }); } catch (e) {}
     console.log(errors.length ? 'SMOKE HATA\n' + errors.join('\n') : 'SMOKE TAMAM');
     app.exit(errors.length ? 1 : 0);
   });
@@ -65,7 +70,26 @@ function smoke(win) {
 
 // ---- IPC ----
 ipcMain.on('state:load', e => { e.returnValue = readJSON(STATE_FILE(), null); });
-ipcMain.handle('state:save', (e, v) => { if (SMOKE) return true; writeJSON(STATE_FILE(), v); return true; });
+ipcMain.handle('state:save', (e, v) => { writeJSON(STATE_FILE(), v); return true; });
+// Veri klasörü: bilgi, taşıma, varsayılana dönüş
+function dataInfo() { const d = dataDir(); return { dir: d, def: DATA(), custom: d !== DATA(), file: path.join(d, 'durum.json') }; }
+ipcMain.handle('data:info', () => dataInfo());
+ipcMain.handle('data:move', (e, { dir, mode }) => {
+  try {
+    if (!dir) throw new Error('Klasör seçilmedi');
+    fs.mkdirSync(dir, { recursive: true });
+    fs.accessSync(dir, fs.constants.W_OK);
+    const src = STATE_FILE(), dst = path.join(dir, 'durum.json');
+    if (path.resolve(src) === path.resolve(dst)) return { ok: true, info: dataInfo() };
+    if (fs.existsSync(dst) && !mode) return { ok: false, exists: true };
+    if (mode !== 'use' && fs.existsSync(src)) {
+      fs.copyFileSync(src, dst);
+      fs.renameSync(src, src.replace(/\.json$/, '.yedek-' + new Date().toISOString().slice(0, 10) + '.json'));
+    }
+    if (path.resolve(dir) === path.resolve(DATA())) { try { fs.unlinkSync(LOC()); } catch (er) {} } else fs.writeFileSync(LOC(), JSON.stringify({ dir }));
+    return { ok: true, info: dataInfo() };
+  } catch (err) { return { ok: false, err: err.message }; }
+});
 ipcMain.on('app:info', e => { e.returnValue = { version: app.getVersion(), userData: DATA(), smoke: SMOKE }; });
 
 ipcMain.handle('notes:list', (e, dir) => {
@@ -115,6 +139,9 @@ const wrap = fn => async (e, a) => { try { return { ok: true, v: await fn(a, e) 
 ipcMain.handle('sheets:status', wrap(() => sheets.status()));
 ipcMain.handle('sheets:config', wrap(p => sheets.setConfig(p)));
 ipcMain.handle('sheets:login', wrap(() => sheets.login()));
+ipcMain.handle('sheets:cancel', wrap(() => sheets.cancel()));
+ipcMain.handle('sheets:reopen', wrap(() => sheets.reopen()));
+ipcMain.handle('sheets:authUrl', wrap(() => sheets.authUrl()));
 ipcMain.handle('sheets:logout', wrap(() => sheets.logout()));
 ipcMain.handle('sheets:meta', wrap(() => sheets.meta()));
 ipcMain.handle('sheets:read', wrap(r => sheets.read(r)));

@@ -7,7 +7,7 @@ const path = require('path');
 
 const CFG = () => path.join(app.getPath('userData'), 'bulut.json');
 const SES = () => path.join(app.getPath('userData'), 'bulut-oturum.bin');
-const VARSAYILAN = { url: '', anahtar: '' }; // Orvane Supabase projesi bağlanınca doldurulur
+const VARSAYILAN = { url: 'https://fhoakoxqvhmqvvovsbfo.supabase.co', anahtar: 'sb_publishable_MlUnQDC2yHt2xMVITQyDFA_f0J1MLj0' }; // Orvane Supabase projesi (herkese açık anahtar; güvenlik RLS ile)
 
 function cfg() { try { const c = JSON.parse(fs.readFileSync(CFG(), 'utf8')); return { url: c.url || VARSAYILAN.url, anahtar: c.anahtar || VARSAYILAN.anahtar }; } catch (e) { return { ...VARSAYILAN }; } }
 function setCfg(c) { fs.writeFileSync(CFG(), JSON.stringify({ url: String(c.url || '').trim().replace(/\/+$/, ''), anahtar: String(c.anahtar || '').trim() })); return status(); }

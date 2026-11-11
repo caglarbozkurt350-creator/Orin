@@ -7,7 +7,7 @@ import { AppState, Platform } from 'react-native';
 import { durum, guncelle, Ozet } from '@/lib/depo';
 
 // Masaüstüyle aynı Supabase projesi. Ayarlar ekranından değiştirilebilir.
-export const VARSAYILAN = { url: '', anahtar: '' };
+export const VARSAYILAN = { url: 'https://fhoakoxqvhmqvvovsbfo.supabase.co', anahtar: 'sb_publishable_MlUnQDC2yHt2xMVITQyDFA_f0J1MLj0' };
 
 let _c: SupabaseClient | null = null, _ck = '';
 export function istemci(): SupabaseClient | null {

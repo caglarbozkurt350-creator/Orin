@@ -42,6 +42,10 @@
         "projectId": "6d799722-ce59-4713-a7b2-1b1e663ab274"
       }
     },
-    "owner": "caglarbozkurt350-2"
+    "owner": "caglarbozkurt350-2",
+    "updates": {
+      "url": "https://u.expo.dev/6d799722-ce59-4713-a7b2-1b1e663ab274"
+    },
+    "runtimeVersion": "1"
   }
 }

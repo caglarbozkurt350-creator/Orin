@@ -117,7 +117,7 @@ export function Dugme({ yazi, onPress, tur = 'ana', stil, ikon, kapali }: { yazi
 }
 
 export function Rozet({ yazi, renk = R.soluk }: { yazi: string; renk?: string }) {
-  return <View style={{ borderWidth: 1, borderColor: saydam(renk, 0.45), borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 }}><Text style={{ color: renk, fontSize: 11.5 }}>{yazi}</Text></View>;
+  return <View style={{ alignSelf: 'flex-start', borderWidth: 1, borderColor: saydam(renk, 0.45), borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 }}><Text style={{ color: renk, fontSize: 11.5 }}>{yazi}</Text></View>;
 }
 
 export const s = StyleSheet.create({

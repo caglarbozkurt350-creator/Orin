@@ -1,6 +1,6 @@
 // Orvane Mobil · alttan açılan formlar: doğrudan görev, gelişim isteği
-import { useState } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Keyboard, Modal, Platform, Pressable, ScrollView, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Dugme, Foto, Ikon, s } from '@/bilesen/ortak';
 import { olayEkle, uid } from '@/lib/depo';
@@ -9,17 +9,24 @@ import { Ozet } from '@/lib/depo';
 import { esitleSonra } from '@/lib/senk';
 import { R, saydam } from '@/lib/tema';
 
+// Alttan açılan pencere. Android'de Modal penceresi klavyeyle küçülmediği için klavye yüksekliği kadar elle yukarı kaydırılır.
 export function AltPencere({ acik, kapat, children }: { acik: boolean; kapat: () => void; children: React.ReactNode }) {
-  const alt = useSafeAreaInsets().bottom;
+  const alt = useSafeAreaInsets().bottom, { height: H } = useWindowDimensions();
+  const [kb, setKb] = useState(0);
+  useEffect(() => {
+    const g = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow', (e) => setKb(e.endCoordinates.height));
+    const k = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide', () => setKb(0));
+    return () => { g.remove(); k.remove(); };
+  }, []);
   return (
     <Modal visible={acik} transparent animationType="slide" onRequestClose={kapat}>
-      <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)' }} onPress={kapat} accessibilityLabel="Kapat" />
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={{ backgroundColor: '#1f1f22', borderTopLeftRadius: 26, borderTopRightRadius: 26, borderTopWidth: 1, borderColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 18, paddingTop: 10, paddingBottom: Math.max(alt, 16) + 10, maxHeight: 640 }}>
+      <View style={{ flex: 1, justifyContent: 'flex-end', paddingBottom: kb }}>
+        <Pressable style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.45)' }} onPress={() => { Keyboard.dismiss(); kapat(); }} accessibilityLabel="Kapat" />
+        <View style={{ backgroundColor: '#1f1f22', borderTopLeftRadius: 26, borderTopRightRadius: 26, borderTopWidth: 1, borderColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 18, paddingTop: 10, paddingBottom: kb ? 14 : Math.max(alt, 16) + 10, maxHeight: Math.max(260, H - kb - 60) }}>
           <View style={{ width: 40, height: 5, borderRadius: 99, backgroundColor: '#4a4a50', alignSelf: 'center', marginBottom: 12 }} />
-          <ScrollView keyboardShouldPersistTaps="handled">{children}</ScrollView>
+          <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">{children}</ScrollView>
         </View>
-      </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }
@@ -54,7 +61,7 @@ export function GorevFormu({ c, kapat }: { c: Calisan; kapat: () => void }) {
         <Text style={{ flex: 1, color: '#fff', fontSize: 16, fontWeight: '600' }}>{c.ad}’ya doğrudan görev</Text>
         {c.grup !== 'yonetim' && <View style={{ borderWidth: 1, borderColor: 'rgba(255,179,91,0.45)', borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3 }}><Text style={{ color: R.turuncu, fontSize: 11, fontWeight: '600' }}>Orin ve Orla atlanır</Text></View>}
       </View>
-      <TextInput value={metin} onChangeText={setMetin} multiline placeholder="Görevi yaz…" placeholderTextColor={R.solukk} accessibilityLabel="Görev"
+      <TextInput autoFocus value={metin} onChangeText={setMetin} multiline placeholder="Görevi yaz…" placeholderTextColor={R.solukk} accessibilityLabel="Görev"
         style={{ minHeight: 84, backgroundColor: '#18181b', borderWidth: 1, borderColor: 'rgba(255,255,255,0.09)', borderRadius: 14, color: '#e4e4e8', fontSize: 14.5, padding: 12, textAlignVertical: 'top' }} />
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><Text style={{ color: R.yazi2, fontSize: 13.5, flex: 1 }}>Öncelik</Text><Secim secenek={[['normal', 'Normal'], ['acil', 'Acil']]} deger={onc} sec={setOnc} /></View>
       {c.id !== 'orin' && (

@@ -31,6 +31,17 @@
     ],
     "experiments": {
       "typedRoutes": false
-    }
+    },
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "6d799722-ce59-4713-a7b2-1b1e663ab274"
+      }
+    },
+    "owner": "caglarbozkurt350-2"
   }
 }

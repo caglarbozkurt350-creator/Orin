@@ -60,3 +60,6 @@ var __at19=window.__asyncTest;window.__asyncTest=function(){return __at19().then
 // Telefona ileri tarihli günler de gider (0.7.12)
 window.__ileriTest=function(){var R=[],o=bulutOzet(),d=pk(TODAY),k=null;for(var i=1;i<=7&&!k;i++){d.setDate(d.getDate()+1);if(lim(key(d)))k=key(d)}R.push({n:"Telefon özetinde ileri tarihli iş günü ("+k+")",ok:!!(k&&o.gun[k]&&o.gun[k].L==lim(k)),m:k?JSON.stringify(o.gun[k]):"7 günde iş günü yok"});return R};
 var __at20=window.__asyncTest;window.__asyncTest=function(){return __at20().then(function(a){return a.concat(window.__ileriTest())})};
+// Yapay zekâ durumu yazısı testi (0.7.13)
+window.__yzTest=function(){var R=[],b=ABN.st,z=ZK.st;ABN.st={kurulu:true,acik:true,gunluk:5,bugun:0,gunlukSohbet:60,sohbetBugun:0};ZK.st={anahtar:true,harcama:{kisi:{}}};R.push({n:"Abonelik+API bağlıyken durum yazısı",ok:yzDurum("ada")=="yapay zekâ: Claude aboneliği + API",m:yzDurum("ada")});ABN.st=null;ZK.st=null;R.push({n:"Bağlı değilken durum yazısı",ok:yzDurum("ada")=="yapay zekâ bağlı değil",m:yzDurum("ada")});ABN.st=b;ZK.st=z;return R};
+var __at21=window.__asyncTest;window.__asyncTest=function(){return __at21().then(function(a){return a.concat(window.__yzTest())})};

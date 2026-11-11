@@ -34,7 +34,7 @@ export default function KokDuzen() {
   useEffect(() => {
     SystemUI.setBackgroundColorAsync(R.zemin).catch(() => {});
     esitle();
-    const t = setInterval(esitle, 60000); // bir dakikada bir masaüstüyle eşitle
+    const t = setInterval(esitle, 20000); // 20 sn'de bir masaüstüyle eşitle (mesaj gönderince 3 sn'de bir)
     return () => clearInterval(t);
   }, []);
   return (

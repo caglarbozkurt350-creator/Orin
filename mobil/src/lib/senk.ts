@@ -70,3 +70,6 @@ export async function esitle(): Promise<void> {
 }
 let _p: ReturnType<typeof setTimeout> | null = null;
 export function esitleSonra(ms = 400) { if (_p) clearTimeout(_p); _p = setTimeout(esitle, ms); }
+// Mesaj gönderince cevap gelene kadar 3 sn'de bir eşitle (en fazla 90 sn): çalışan cevabı hızlı görünür
+let _h: ReturnType<typeof setInterval> | null = null, _hBit = 0;
+export function hizliBekle(sn = 90) { _hBit = Date.now() + sn * 1000; if (_h) return; _h = setInterval(() => { if (Date.now() > _hBit) { if (_h) clearInterval(_h); _h = null; return; } esitle(); }, 3000); }

@@ -79,7 +79,7 @@ return '<div class="kp5"><div><small><i class="ti ti-list-check"></i> Açık gö
 
 // ---------- Sohbet ----------
 function tmMsgs(c){var a=tmChat(c.id),on=tmOnline(),h='';
-if(!a.length)h+=tmBot(c,'Merhaba, ben '+c.ad+'. '+c.gorev+' işlerine bakıyorum.'+(c.id=='echo'?' Kayıtlarına bakıp hemen özet çıkarabilirim.':' Yapay zekâ bağlantısı kurulunca sohbet edebileceğiz; şimdiden mesaj ya da not bırakabilirsin.'),null,c.id=='echo'?['Bu haftanın raporu','Eksik günler','Bu ayın özeti']:null);
+if(!a.length)h+=tmBot(c,'Merhaba, ben '+c.ad+'. '+c.gorev+' işlerine bakıyorum.'+(c.id=='echo'?' Kayıtlarına bakıp hemen özet çıkarabilirim.':(typeof zekaHazir=='function'&&zekaHazir()?' Bana yazabilirsin; birkaç saniyede cevaplarım.':' Yapay zekâ bağlantısı kurulunca sohbet edebileceğiz; şimdiden mesaj ya da not bırakabilirsin.')),null,c.id=='echo'?['Bu haftanın raporu','Eksik günler','Bu ayın özeti']:null);
 a.forEach(function(m){if(m.r=='ben'){if(m.tur=='not')h+='<div class="nt"><i class="ti ti-note"></i><div style="flex:1">'+esc(m.t)+'<div class="nm">'+tmTime(m.ts)+' · not olarak kaydedildi</div></div><span class="qb ok"><i class="ti ti-check"></i> '+(m.ilt?'İletildi':'Kaydedildi')+'</span></div>';
 else h+='<div class="mr"><div class="bme">'+esc(m.t)+'<small>'+(m.tur=='ses'?'<i class="ti ti-microphone"></i> sesli · ':'')+tmTime(m.ts)+(m.bek?' · cevap bekliyor':'')+'</small></div></div>'}
 else if(m.r=='sys')h+='<div class="inf"><i class="ti ti-info-circle"></i><div>'+esc(m.t)+'<div class="nm">'+tmTime(m.ts)+'</div></div></div>';

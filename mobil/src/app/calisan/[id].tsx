@@ -9,7 +9,7 @@ import { GelisimSatiri } from '@/bilesen/gelisim';
 import { Dugme, Ekran, Foto, Ikon, Nokta, Rozet, s } from '@/bilesen/ortak';
 import { olayEkle, useDurum } from '@/lib/depo';
 import { aciklama, beceriler, Calisan, calisanlar, durumNoktasi, echoCevap, GT, hafiza, LVL, useGorunum } from '@/lib/ekip';
-import { esitleSonra } from '@/lib/senk';
+import { esitleSonra, hizliBekle } from '@/lib/senk';
 import { R, saydam } from '@/lib/tema';
 
 const saat = (ts: number) => { const d = new Date(ts), b = new Date(); const t = d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }); return d.toDateString() === b.toDateString() ? t : d.getDate() + '.' + (d.getMonth() + 1) + ' ' + t; };
@@ -96,7 +96,7 @@ function Sohbet({ c }: { c: Calisan }) {
     const md = metin != null ? 'mesaj' : mod, r = md === 'mesaj' && c.id === 'echo' && (metin != null || !o.zeka?.bagli) ? echoCevap(o, x) : null; // yapay zekâ bağlıysa yazılan mesajı Echo cevaplar
     olayEkle('mesaj', { kim: c.id, t: x, mod: md, bek: md === 'mesaj' && !r ? 1 : 0 });
     if (r) olayEkle('cevap', { kim: c.id, t: r.t, qr: r.qr });
-    esitleSonra(); setTimeout(() => sc.current?.scrollToEnd({ animated: true }), 80);
+    esitleSonra(); if (md === 'mesaj' && !r) hizliBekle(); setTimeout(() => sc.current?.scrollToEnd({ animated: true }), 80);
   };
   return (
     <View ref={kl.ref} style={{ flex: 1 }}>

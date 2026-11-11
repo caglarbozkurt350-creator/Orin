@@ -120,3 +120,6 @@ t('Gelen kutusu öğeleri işlenir',n==3,n);t('Gelişim talepleri Nika onayına 
 t('Mesaj çalışanın sohbetine düşer (öğrenilenler satırı gizli)',son&&/Rapor/.test(son.t)&&!/ÖĞRENİLENLER/.test(son.t),son&&son.t);
 return gelenIsle()}).then(function(n2){t('İşlenen dosya tekrar işlenmez',n2==0,n2);t('Bozuk gelen dosyası bildirilir',ABN.gelenHata&&ABN.gelenHata.some(function(x){return x.dosya=='bozuk.json'}),JSON.stringify(ABN.gelenHata))}).catch(function(e){t('Gelen kutusu testi',false,e.stack)})
 .then(function(){T.gel=bk.gel;T.sohbet=JSON.parse(bk.ch);save();return R})};
+
+// Yapay zekâ durumu yazısı (0.7.13): abonelik ve/veya API bağlıysa öyle gösterilir
+function yzDurum(id){var a=abnAcik(),k=!!(ZK.st&&ZK.st.anahtar),t=id&&ZK.st&&ZK.st.harcama&&ZK.st.harcama.kisi&&ZK.st.harcama.kisi[id];return (a||k)?'yapay zekâ: '+(a?'Claude aboneliği':'')+(a&&k?' + ':'')+(k?'API'+(t&&t.token?' · '+fmtTok(t.token)+' token':''):''):'yapay zekâ bağlı değil'}

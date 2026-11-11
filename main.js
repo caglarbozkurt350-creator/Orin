@@ -170,6 +170,8 @@ function mainTests() {
     const tk1 = gl.testKarsilastir({ dusen: ['A', 'B'], gecen: 8, toplam: 10 }, { dusen: ['A', 'B'], gecen: 9, toplam: 11 }), tk2 = gl.testKarsilastir({ dusen: ['A'] }, { dusen: ['A', 'C'], gecen: 9, toplam: 11, hatalar: ['TEST C: x'] });
     t('İş emri testi: yalnız yeni düşen testler hata sayılır (kişisel veri eksikliği değil)', tk1.ok && tk1.kisiselEksik === 2 && !tk2.ok && tk2.yeniHata.join() === 'C' && tk2.hatalar.length === 1, JSON.stringify([tk1, tk2]));
     const tx = tcmbAyikla('<Tarih_Date Tarih="12.11.2026"><Currency CrossOrder="0" Kod="USD" CurrencyCode="USD"><Unit>1</Unit><ForexBuying>41.1000</ForexBuying><ForexSelling>41.2000</ForexSelling></Currency><Currency CurrencyCode="EUR"><ForexBuying>47.5</ForexBuying><ForexSelling>47.6</ForexSelling></Currency></Tarih_Date>');
+    const ex = ecbAyikla({ base: 'USD', date: '2026-11-11', rates: { TRY: 50, EUR: 0.9, GBP: 0.75 } });
+    t('Yedek kur kaynağı (ECB) okunur', ex.kur.usd.satis === 50 && Math.abs(ex.kur.eur.satis - 55.5556) < 0.001 && ex.tarih === '11.11.2026' && /ECB/.test(ex.kaynak), JSON.stringify(ex));
     t('TCMB kur listesi okunur (dolar, euro)', tx.tarih === '12.11.2026' && tx.kur.usd.satis === 41.2 && tx.kur.eur.alis === 47.5 && !tx.kur.gbp, JSON.stringify(tx));
     t('İş emri durumu güncellenir', gl.emirGuncelle(e1.dosya, { durum: 'inceleme', dal: 'is-emri/ada-x' }).durum === 'inceleme' && gl.emirler().some(x => x.id === 'test1' && x.dal === 'is-emri/ada-x'));
   } catch (e) { t('Ana süreç testleri', false, e.stack); }
@@ -395,8 +397,14 @@ function tcmbAyikla(xml) { const tarih = (String(xml).match(/Tarih="([\d.]+)"/) 
   if (!kur.usd) throw new Error('TCMB kur listesi okunamadı'); return { tarih, kur, kaynak: 'TCMB', alindi: Date.now() }; }
 ipcMain.handle('piyasa:tcmb', wrap(async zorla => { const f = path.join(DATA(), 'tcmb-kur.json'), o = readJSON(f, null);
   if (!zorla && o && Date.now() - o.alindi < 6 * 3600e3) return o; if (SMOKE) throw new Error('Testte ağ yok');
-  const r = await fetch('https://www.tcmb.gov.tr/kurlar/today.xml', { cache: 'no-store', signal: AbortSignal.timeout(10000) }); if (!r.ok) throw new Error('TCMB ' + r.status);
-  const v = tcmbAyikla(await r.text()); writeJSON(f, v); return v; }));
+  let v = null, hata = '';
+  try { const r = await fetch('https://www.tcmb.gov.tr/kurlar/today.xml', { cache: 'no-store', signal: AbortSignal.timeout(8000) }); if (!r.ok) throw new Error('TCMB ' + r.status); v = tcmbAyikla(await r.text()); } catch (e) { hata = e.message; }
+  // Yedek: Avrupa Merkez Bankası referans kurları (Frankfurter, anahtarsız) — TCMB'ye ulaşılamazsa
+  if (!v) { const r = await fetch('https://api.frankfurter.app/latest?from=USD&to=TRY,EUR,GBP', { cache: 'no-store', signal: AbortSignal.timeout(10000) }); if (!r.ok) throw new Error('Kur alınamadı (TCMB: ' + hata + ', ECB ' + r.status + ')'); v = ecbAyikla(await r.json()); }
+  writeJSON(f, v); return v; }));
+function ecbAyikla(j) { const t = j && j.rates && +j.rates.TRY; if (!t) throw new Error('ECB kur listesi okunamadı'); const kur = { usd: { alis: null, satis: Math.round(t * 10000) / 10000 } };
+  if (j.rates.EUR) kur.eur = { alis: null, satis: Math.round(t / j.rates.EUR * 10000) / 10000 }; if (j.rates.GBP) kur.gbp = { alis: null, satis: Math.round(t / j.rates.GBP * 10000) / 10000 };
+  const d = String(j.date || ''); return { tarih: d.split('-').reverse().join('.'), kur, kaynak: 'ECB (Frankfurter)', alindi: Date.now() }; }
 // Toplantı kayıtları (0.7.16): Belgeler\Orin\Toplantılar\<ad>.md — kişisel veri dosyasına dokunmadan okunabilsin
 const TOPLANTI_DIR = () => path.join(SMOKE ? DATA() : app.getPath('documents'), 'Orin', 'Toplantılar');
 ipcMain.handle('toplanti:kaydet', wrap(o => { const ad = String(o && o.ad || ''); if (!/^[\w.-]{5,90}\.md$/.test(ad)) throw new Error('Geçersiz toplantı dosya adı'); fs.mkdirSync(TOPLANTI_DIR(), { recursive: true });

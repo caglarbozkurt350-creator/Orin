@@ -359,8 +359,9 @@ const abonelik = require('./abonelik');
 abonelik.init(DATA(), app.getPath('documents'));
 ipcMain.handle('abonelik:status', wrap(() => abonelik.status()));
 ipcMain.handle('abonelik:ayar', wrap(a => abonelik.setAyar(a)));
+ipcMain.handle('abonelik:isler', wrap(() => abonelik.isler()));
 ipcMain.handle('abonelik:test', wrap(() => SMOKE ? abonelik.status() : abonelik.test()));
-ipcMain.handle('abonelik:calistir', wrap(o => { if (SMOKE) throw new Error('Testte abonelik çalıştırılmaz'); return abonelik.calistir(o); }));
+ipcMain.handle('abonelik:calistir', wrap(o => { if (SMOKE) throw new Error('Testte abonelik çalıştırılmaz'); return abonelik.calistirIzle(o); }));
 // İş emirleri (0.7.14): onaylı iş isteği → Belgeler\Orin\Giden; tam otomatik kipte Claude Code ayrı git dalında yapar (main'e dokunmaz)
 const gelistir = require('./gelistir');
 gelistir.init(SMOKE ? DATA() : app.getPath('documents'), abonelik, kay => [dataDir(), DATA(), path.join(app.getPath('documents'), 'Orin', 'Veriler'), kay && path.join(kay, 'renderer', 'js', 'kisisel.js')].filter(Boolean));
@@ -385,7 +386,7 @@ function jarvisIstem(o) {
   return (G ? 'Sohbetin şimdiye kadarki kısmı:\n\n' + G + '\n\n' : '') + 'Çağlar’ın son mesajı: ' + String(o.mesaj || '') + '\n\nJarvis olarak cevap ver (başına adını yazma).';
 }
 ipcMain.handle('jarvis:sor', wrap(o => { if (SMOKE) throw new Error('Testte Jarvis çalıştırılmaz'); if (!fs.existsSync(JARVIS_DIR())) throw new Error('Jarvis klasörü bulunamadı: ' + JARVIS_DIR());
-  return abonelik.calistir({ kim: 'jarvis', tur: 'sohbet', mod: 'jarvis', cwd: JARVIS_DIR(), sistemTam: true, araclar: 'Read,Glob,Grep', maxTur: 8, model: (o && o.model) || 'sonnet', zamanAsimiMs: 240000, sistem: jarvisSistem(), istem: jarvisIstem(o || {}) }); }));
+  return abonelik.calistirIzle({ kim: 'jarvis', tur: 'sohbet', mod: 'jarvis', cwd: JARVIS_DIR(), sistemTam: true, araclar: 'Read,Glob,Grep', maxTur: 8, model: (o && o.model) || 'sonnet', zamanAsimiMs: 240000, sistem: jarvisSistem(), istem: jarvisIstem(o || {}) }); }));
 // Toplantı kayıtları (0.7.16): Belgeler\Orin\Toplantılar\<ad>.md — kişisel veri dosyasına dokunmadan okunabilsin
 const TOPLANTI_DIR = () => path.join(SMOKE ? DATA() : app.getPath('documents'), 'Orin', 'Toplantılar');
 ipcMain.handle('toplanti:kaydet', wrap(o => { const ad = String(o && o.ad || ''); if (!/^[\w.-]{5,90}\.md$/.test(ad)) throw new Error('Geçersiz toplantı dosya adı'); fs.mkdirSync(TOPLANTI_DIR(), { recursive: true });

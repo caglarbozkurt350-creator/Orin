@@ -187,3 +187,13 @@ html.light .tpkk{background:#fff;border-color:#dcdce2;color:#333}html.light .tpc
 .tpgt{position:relative;flex:1;height:7px;border-radius:5px;background:#26262a}.tpgt i{position:absolute;top:0;height:7px;width:1.5%;min-width:4px;border-radius:3px}
 .tpgx{display:flex;justify-content:space-between;margin-left:92px;font-size:10.5px;color:#777}
 html.light .tpust,html.light .tpbil{background:#fff;border-color:#dcdce2;color:#333}html.light .tpgt{background:#ececf0}html.light .tpgb{background:#e5e5ea}
+/* 0.7.17: arka plan işleri */
+.apt{width:100%;border-collapse:collapse;font-size:12.5px}.apt th{text-align:left;color:#8e8e95;font-weight:500;padding:4px 6px;border-bottom:1px solid rgba(255,255,255,.08)}
+.apt td{padding:6px;border-bottom:1px solid rgba(255,255,255,.05);color:#ddd;vertical-align:middle;white-space:nowrap}.apt td.apet{white-space:normal;max-width:320px}
+.aps{cursor:pointer}.aps:hover td{background:rgba(255,255,255,.03)}.aps.cal td{background:rgba(63,185,80,.06)}.apcal{color:#8ee6a9}
+html.light .apt td{color:#333}
+/* 0.7.17: arka plan işleri */
+.apt{width:100%;border-collapse:collapse;font-size:12.5px}.apt th{text-align:left;color:#8e8e95;font-weight:500;padding:4px 6px;border-bottom:1px solid rgba(255,255,255,.08)}
+.apt td{padding:6px;border-bottom:1px solid rgba(255,255,255,.05);color:#ddd;vertical-align:middle;white-space:nowrap}.apt td.apet{white-space:normal;max-width:320px}
+.aps{cursor:pointer}.aps:hover td{background:rgba(255,255,255,.03)}.aps.cal td{background:rgba(63,185,80,.06)}.apcal{color:#8ee6a9}
+html.light .apt td{color:#333}

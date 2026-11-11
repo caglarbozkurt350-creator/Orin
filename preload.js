@@ -42,7 +42,8 @@ contextBridge.exposeInMainWorld('api', {
     status: () => ipcRenderer.invoke('abonelik:status'),
     ayar: a => ipcRenderer.invoke('abonelik:ayar', a),
     test: () => ipcRenderer.invoke('abonelik:test'),
-    calistir: o => ipcRenderer.invoke('abonelik:calistir', o)
+    calistir: o => ipcRenderer.invoke('abonelik:calistir', o),
+    isler: () => ipcRenderer.invoke('abonelik:isler')
   },
   isEmri: {
     yaz: o => ipcRenderer.invoke('isemri:yaz', o),

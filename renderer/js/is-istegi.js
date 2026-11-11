@@ -44,7 +44,7 @@ else{it.durum='hata';it.hata=s.hata;tmPush(it.kim,{r:'sys',t:'Claude Code işi b
 .then(function(){ISG.mesgul=null;save();isRr()})}
 function isTara(){if(ISG.mesgul||!isAyar().oto||typeof abnHazir!='function')return;var L=isS();
 L.forEach(function(it){if(it.durum=='calisiyor'){it.durum=(it.deneme||0)<2?'onaylandi':'hata';if(it.durum=='hata')it.hata='Program kapandığı için yarıda kaldı'}});
-if(!abnHazir())return;var it=L.filter(function(x){return x.durum=='onaylandi'&&x.emri&&(!x.sonraki||Date.now()>x.sonraki)&&(x.deneme||0)<3})[0];if(it)isGelistir(it)}
+if(!abnHazir())return;var it=L.filter(function(x){return x.durum=='onaylandi'&&x.emri&&!x.otoYok&&(!x.sonraki||Date.now()>x.sonraki)&&(x.deneme||0)<3})[0];if(it)isGelistir(it)}
 
 // ---------- Ada'nın güncelleme listesi ----------
 function isAdaEsitle(){var L=isS(),var_=function(id){return L.some(function(x){return x.id==id})};

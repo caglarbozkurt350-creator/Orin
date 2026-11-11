@@ -93,7 +93,7 @@ async function gelistir(o) {
     // Önce temel test: çalışma kopyasında kişisel veri (kisisel.js) yok → ona bağlı testler zaten düşer; sonra yalnız YENİ hatalar sayılır
     const once = await smoke(kay, yol);
     let r = null, hata = null;
-    try { r = await AB.calistir({ kim: j.kim, mod: 'gelistir', cwd: yol, model: o.model || 'sonnet', maxTur: o.maxTur || 40, zamanAsimiMs: (o.sureDk || 20) * 60000, istem: istem(j), sistem: SISTEM, koru: KORU(kay) }); }
+    try { r = await (AB.calistirIzle || AB.calistir)({ etiket: 'İş emri: ' + j.baslik, kim: j.kim, mod: 'gelistir', cwd: yol, model: o.model || 'sonnet', maxTur: o.maxTur || 40, zamanAsimiMs: (o.sureDk || 20) * 60000, istem: istem(j), sistem: SISTEM, koru: KORU(kay) }); }
     catch (e) { hata = e; }
     const test = testKarsilastir(once, await smoke(kay, yol));
     await git(yol, ['add', '-A']);

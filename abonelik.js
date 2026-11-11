@@ -128,4 +128,19 @@ async function test() {
   catch (e) { c.test = { ok: false, ts: Date.now(), hata: e.message, kod: e.kod || null }; }
   kaydet(); return status();
 }
-module.exports = { kaynak, koruKurallari, kuralYolu, kaynakGecerli, raporYaz, init, status, setAyar, test, calistir, bul, temizEnv, argsOf, sonucOku, MODELLER };
+// Arka plan işleri (0.7.17): Orvane'nin başlattığı her Claude Code işi kaydedilir (çalışan, tür, süre, token, sonuç); Çalışanlarım › Arka plan işleri
+const ISLER = [], ISTUR = { sohbet: 'Sohbet cevabı', toplanti: 'Toplantı cevabı', inceleme: 'Program incelemesi', gelistir: 'İş emri (geliştirme)', jarvis: 'Jarvis sohbeti' };
+let ISYUK = false;
+function islerDosya() { return path.join(DIR, 'arkaplan.json'); }
+function islerYukle() { if (ISYUK || !DIR) return; ISYUK = true; try { JSON.parse(fs.readFileSync(islerDosya(), 'utf8')).forEach(x => { if (x.durum === 'calisiyor') { x.durum = 'hata'; x.hata = 'Orvane kapanınca yarıda kaldı'; } ISLER.push(x); }); } catch (e) {} }
+function islerKaydet() { try { const f = islerDosya(), t = f + '.tmp'; fs.writeFileSync(t, JSON.stringify(ISLER.slice(-60))); fs.renameSync(t, f); } catch (e) {} }
+function calistirIzle(o) {
+  o = o || {}; islerYukle();
+  const tur = o.mod === 'inceleme' || o.mod === 'gelistir' || o.mod === 'jarvis' ? o.mod : o.tur === 'sohbet' || o.tur === 'toplanti' ? o.tur : 'gorev';
+  const j = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), kim: String(o.kim || 'genel'), tur, etiket: String(o.etiket || ISTUR[tur] || String(o.istem || '').split(/\r?\n/).find(x => x.trim()) || 'Görev').slice(0, 90), model: o.model || cfg().model, basla: Date.now(), durum: 'calisiyor' };
+  if (!o.test) { ISLER.push(j); if (ISLER.length > 60) ISLER.splice(0, ISLER.length - 60); }
+  const bitir = (r, e) => { j.bitis = Date.now(); j.sureMs = j.bitis - j.basla; if (r) { j.durum = 'bitti'; j.token = r.token || 0; j.adim = r.tur || 0; if (r.model) j.model = r.model; } else { j.durum = 'hata'; j.hata = String(e && e.message || e).slice(0, 200); } if (!o.test) islerKaydet(); };
+  return calistir(o).then(r => { bitir(r); return r; }, e => { bitir(null, e); throw e; });
+}
+function isler() { islerYukle(); return ISLER.slice().reverse(); }
+module.exports = { isler, calistirIzle, kaynak, koruKurallari, kuralYolu, kaynakGecerli, raporYaz, init, status, setAyar, test, calistir, bul, temizEnv, argsOf, sonucOku, MODELLER };

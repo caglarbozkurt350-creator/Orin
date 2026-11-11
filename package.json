@@ -11,8 +11,9 @@
     "start": "electron .",
     "smoke": "electron . --smoke",
     "icon": "electron tools/make-icon.js",
-    "dist": "electron-builder --win nsis",
-    "seed": "electron . --seed"
+    "dist": "electron-builder --win nsis && node tools/arsivle.js",
+    "seed": "electron . --seed",
+    "arsivle": "node tools/arsivle.js"
   },
   "dependencies": {
     "electron-updater": "^6.8.11"

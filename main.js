@@ -167,6 +167,8 @@ function mainTests() {
     t('İş emri Giden klasörüne .md + .json yazılır', /^is-emri-ada-\d{4}/.test(e1.dosya) && ej.durum === 'onaylandi' && /Giden/.test(e1.md) && /main dalına dokunma/.test(em) && /is_sonuc/.test(em) && /kisisel\.js/.test(em), e1.md);
     let ge = null; try { gl.emirOku('..\\durum'); } catch (e) { ge = e; }
     t('İş emri adı doğrulanır (klasör dışı okunmaz)', ge && /Geçersiz/.test(ge.message));
+    const tk1 = gl.testKarsilastir({ dusen: ['A', 'B'], gecen: 8, toplam: 10 }, { dusen: ['A', 'B'], gecen: 9, toplam: 11 }), tk2 = gl.testKarsilastir({ dusen: ['A'] }, { dusen: ['A', 'C'], gecen: 9, toplam: 11, hatalar: ['TEST C: x'] });
+    t('İş emri testi: yalnız yeni düşen testler hata sayılır (kişisel veri eksikliği değil)', tk1.ok && tk1.kisiselEksik === 2 && !tk2.ok && tk2.yeniHata.join() === 'C' && tk2.hatalar.length === 1, JSON.stringify([tk1, tk2]));
     t('İş emri durumu güncellenir', gl.emirGuncelle(e1.dosya, { durum: 'inceleme', dal: 'is-emri/ada-x' }).durum === 'inceleme' && gl.emirler().some(x => x.id === 'test1' && x.dal === 'is-emri/ada-x'));
   } catch (e) { t('Ana süreç testleri', false, e.stack); }
   try { fs.unlinkSync(LOC()); } catch (e) {}

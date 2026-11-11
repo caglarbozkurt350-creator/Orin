@@ -65,3 +65,6 @@ window.__yzTest=function(){var R=[],b=ABN.st,z=ZK.st;ABN.st={kurulu:true,acik:tr
 var __at21=window.__asyncTest;window.__asyncTest=function(){return __at21().then(function(a){return a.concat(window.__yzTest())})};
 // 0.7.14: iş istekleri, Ada güncelleme listesi, demirbaş, gelen talimat/gorev, sohbet silme, hiyerarşi, Jarvis
 var __at22=window.__asyncTest;window.__asyncTest=function(){return __at22().then(function(a){return (window.__v0714Test?window.__v0714Test():Promise.resolve([])).then(function(b){return a.concat(b)})})};
+// 0.7.14 ekran görüntüleri: İK hiyerarşi görünümü ve Jarvis sayfası
+var __sr8=window.__smokeRoutes;window.__smokeRoutes=function(){return __sr8().concat([['team','ik','hiy'],['team','jarvis','']])};
+var __sg8=window.__smokeGo;window.__smokeGo=function(r){if(r[0]=='team'&&r[1]=='ik')HRV=r[2]=='hiy'?'hiy':'kart';return __sg8(r)};

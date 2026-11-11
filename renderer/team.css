@@ -160,3 +160,5 @@ html.light .snc .ha{background:#fdeceb;border-color:#f3b0ab;color:#a40e26}
 .hyk.sur{opacity:.45}.hyk.hov{border-color:#5b8cff;box-shadow:0 0 0 2px #5b8cff55}.hyk.mini{min-width:0;padding:3px 10px}
 .hya{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:#3a3320;color:#f6d28a;font-size:18px;flex:none}
 html.light .hyk{background:#fff;border-color:#dcdce2}html.light .hyk b{color:#222}html.light .msil .mdel{background:#fff}
+.hyt ul.yap{margin-left:12px;padding-left:18px;border-left:1px dashed rgba(255,255,255,.18)}.hyt ul.yap>li::before,.hyt ul.yap>li::after{display:none}
+#jvm{text-align:left;font-family:inherit;font-size:13.5px;line-height:1.5}

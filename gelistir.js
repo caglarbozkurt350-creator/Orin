@@ -60,9 +60,16 @@ function smoke(kay, yol) {
       if (bitti) return; bitti = true; clearTimeout(z);
       let r = {}, a = []; try { r = JSON.parse(fs.readFileSync(path.join(yol, 'test-sonuc', 'rapor.json'), 'utf8')); } catch (e) {} try { a = JSON.parse(fs.readFileSync(path.join(yol, 'test-sonuc', 'async.json'), 'utf8')); } catch (e) {}
       const T = (r.tests || []).concat(a || []);
-      res({ ok: code === 0, toplam: T.length, gecen: T.filter(x => x.ok).length, hatalar: (r.errors || []).slice(0, 10) });
+      try { fs.rmSync(path.join(yol, 'test-sonuc'), { recursive: true, force: true }); } catch (e) {}
+      res({ ok: code === 0, toplam: T.length, gecen: T.filter(x => x.ok).length, hatalar: (r.errors || []).slice(0, 40), dusen: T.filter(x => !x.ok).map(x => x.n) });
     });
   });
+}
+// Değişiklik öncesi/sonrası test karşılaştırması: ok = yeni düşen test yok ve test çalıştı
+function testKarsilastir(once, sonra) {
+  const eski = new Set((once && once.dusen) || []), yeni = (sonra.dusen || []).filter(n => !eski.has(n));
+  return { ok: !sonra.calismadi && !!sonra.toplam && yeni.length === 0, toplam: sonra.toplam || 0, gecen: sonra.gecen || 0, onceGecen: once ? once.gecen || 0 : null, onceToplam: once ? once.toplam || 0 : null,
+    yeniHata: yeni.slice(0, 10), kisiselEksik: eski.size, hatalar: yeni.length ? (sonra.hatalar || []).filter(h => yeni.some(n => h.indexOf(n) >= 0)).slice(0, 10) : [] };
 }
 function istem(j) {
   return 'İş emri (Çağlar onayladı): ' + j.baslik + '\nİsteyen çalışan: ' + j.kimAd + '\n\n' + j.metin + (j.maddeler && j.maddeler.length ? '\n\nMaddeler:\n' + j.maddeler.map((m, i) => (i + 1) + '. ' + m).join('\n') : '') +
@@ -83,10 +90,12 @@ async function gelistir(o) {
     await git(kay, ['worktree', 'add', '-b', dal, yol, 'main'], 120000);
     try { fs.symlinkSync(path.join(kay, 'node_modules'), path.join(yol, 'node_modules'), 'junction'); } catch (e) {}
     emirGuncelle(j.dosya, { durum: 'calisiyor', dal, yol, basla: new Date().toISOString() });
+    // Önce temel test: çalışma kopyasında kişisel veri (kisisel.js) yok → ona bağlı testler zaten düşer; sonra yalnız YENİ hatalar sayılır
+    const once = await smoke(kay, yol);
     let r = null, hata = null;
     try { r = await AB.calistir({ kim: j.kim, mod: 'gelistir', cwd: yol, model: o.model || 'sonnet', maxTur: o.maxTur || 40, zamanAsimiMs: (o.sureDk || 20) * 60000, istem: istem(j), sistem: SISTEM, koru: KORU(kay) }); }
     catch (e) { hata = e; }
-    const test = await smoke(kay, yol);
+    const test = testKarsilastir(once, await smoke(kay, yol));
     await git(yol, ['add', '-A']);
     const degisen = (await git(yol, ['diff', '--cached', '--name-only'])).split(/\r?\n/).filter(Boolean);
     if (degisen.some(f => /kisisel\.js$/i.test(f))) { await git(yol, ['reset', '-q']); throw new Error('Kişisel dosyaya dokunulmuş; iş emri durduruldu, değişiklik kaydedilmedi'); }
@@ -99,4 +108,4 @@ async function gelistir(o) {
   finally { MESGUL = null; }
 }
 function durum() { return { mesgul: MESGUL }; }
-module.exports = { init, emirYaz, emirOku, emirGuncelle, emirler, emirMetni, gelistir, durum, smoke, adGuvenli, istem, SISTEM };
+module.exports = { init, emirYaz, emirOku, emirGuncelle, emirler, emirMetni, gelistir, durum, smoke, testKarsilastir, adGuvenli, istem, SISTEM };

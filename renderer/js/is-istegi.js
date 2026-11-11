@@ -29,7 +29,7 @@ it.durum='onaylandi';it.karar=Date.now();save();
 return ISG.yaz({id:it.id,kim:it.kim,kimAd:c.ad,baslik:it.baslik,metin:it.metin,tur:it.tur,maddeler:it.maddeler,onaylanirsa:isSonuc(it).evet,onaylanmazsa:isSonuc(it).hayir}).then(function(r){if(!r.ok)throw new Error(r.err);it.emri=r.v.dosya;it.md=r.v.md;
 var oto=isAyar().oto&&abnAcik();tmPush(it.kim,{r:'sys',t:'Çağlar onayladı · iş emri yazıldı (Belgeler\\Orin\\Giden\\'+it.emri+'.md). '+(oto?'Claude Code ayrı dalda başlıyor.':'Claude Code bir sonraki oturumda yapacak.')});save();isRr();if(oto)return isGelistir(it)},
 function(e){it.durum='onay';toast('İş emri yazılamadı: '+e.message);save();isRr()})}
-function isTestYazi(t){return t?(t.toplam?t.gecen+'/'+t.toplam+(t.ok?' geçti':' · hata var'):(t.ok?'geçti':'çalışmadı')):'—'}
+function isTestYazi(t){if(!t)return '—';if(!t.toplam)return t.ok?'geçti':'çalışmadı';if(t.yeniHata)return t.gecen+'/'+t.toplam+(t.ok?' · yeni hata yok':' · '+t.yeniHata.length+' yeni hata')+(t.kisiselEksik?' (kişisel veri olmadan)':'');return t.gecen+'/'+t.toplam+(t.ok?' geçti':' · hata var')}
 function isKisa(t,n){t=String(t||'').trim();return t.length>(n||700)?t.slice(0,n||700)+'…':t}
 // Tam otomatik: Claude Code ayrı dalda yapar (aynı anda tek iş; günlük abonelik sınırına sayılır)
 function isGelistir(it){if(ISG.mesgul||!it||!it.emri||(it.durum!='onaylandi'))return Promise.resolve();
@@ -161,8 +161,12 @@ function hyKart(c,kok){return '<div class="hyk'+(kok?' kok':'')+'" '+(kok?'':'dr
 (kok?'<span class="hya"><i class="ti ti-crown"></i></span>':av(c,34,false))+'<div style="min-width:0"><b>'+esc(kok?'Çağlar':c.ad)+'</b><small>'+esc(kok?'Şirketin sahibi':c.gorev)+'</small></div>'+(!kok&&isDemirbas(c.id)?'':'')+'</div>'}
 function hyDal(ad,g){if(g>8)return '';var L=hyCocuk(ad);if(!L.length)return '';var yap=L.length>2&&L.every(function(c){return !hyCocuk(c.ad).length});return '<ul'+(yap?' class="yap"':'')+'>'+L.map(function(c){return '<li>'+hyKart(c)+hyDal(c.ad,g+1)+'</li>'}).join('')+'</ul>'}
 function hyYetim(){var A=tmAll(),adlar={'Çağlar':1};A.forEach(function(c){adlar[c.ad]=1});return A.filter(function(c){return !adlar[c.bagli||'Orla']})}
-function hiyerarsiPage(){var y=hyYetim();
-return '<div class="hrh"><span class="hya" style="width:52px;height:52px;font-size:24px"><i class="ti ti-hierarchy-2"></i></span><div style="flex:1;min-width:0"><div class="en">Şirket hiyerarşisi</div><div class="es">Kartı sürükleyip başka bir kartın üstüne bırak: o kişiye bağlanır. Yeni çalışanı ekleyip buradan yerleştir.</div></div><button class="bt p" onclick="hrNew()"><i class="ti ti-user-plus"></i> Yeni çalışan</button></div>'+
+// İnsan Kaynakları sayfasında "Kartlar | Hiyerarşi" görünümü (Çağlar: hiyerarşi İK sayfasında)
+var HRV='kart';
+function hrSeg(){return '<div class="seg" style="margin-top:14px;display:inline-flex"><span class="'+(HRV!='hiy'?'on':'')+'" onclick="HRV=\'kart\';render()"><i class="ti ti-id-badge-2"></i> Kartlar</span><span class="'+(HRV=='hiy'?'on':'')+'" onclick="HRV=\'hiy\';render()"><i class="ti ti-hierarchy-2"></i> Hiyerarşi</span></div>'}
+var _isHr=hrPage;hrPage=function(){var h=_isHr(),i=h.indexOf('<div class="gs">');if(i<0)return h;return h.slice(0,i)+hrSeg()+(HRV=='hiy'?hiyerarsiIc():h.slice(i))};
+function hiyerarsiIc(){var y=hyYetim();
+return '<div class="hn" style="margin-top:10px">Kartı sürükleyip başka bir kartın üstüne bırak: o kişiye bağlanır. Yeni çalışanı “Yeni çalışan” ile ekleyip buradan yerleştir.</div>'+
 '<div class="hyw"><div class="hyt"><ul><li><div class="hyr">'+hyKart(null,true)+'<span class="hyj-cizgi"></span>'+
 '<div class="hyk hyj" onclick="nav(\'team\',\'jarvis\',\'\')" title="Kişisel asistan: yalnız Çağlar ile konuşur, şirket hiyerarşisinin dışında"><span class="hya" style="background:#2a2140;color:#c9b6ff"><i class="ti ti-sparkles"></i></span><div style="min-width:0"><b>Jarvis</b><small>Kişisel asistan · yalnız Çağlar</small></div></div></div>'+
 hyDal('Çağlar',0)+'</li></ul></div></div>'+
@@ -196,10 +200,9 @@ confirmBox('Prompt CEO Orin’e gönderilsin mi?<div class="hn" style="margin-to
 function jvIlet(t){isTalimat('orin',t,'jarvis');jvS().gonderilen.push({ts:Date.now(),metin:t.slice(0,2000)});jvS().gonderilen=jvS().gonderilen.slice(-20);save()}
 
 // Kenar çubuğu ve başlıklar
-var _isSb=teamSb;teamSb=function(){var h=_isSb(),ek='<div class="si'+(pg=='hiyerarsi'?' on':'')+'" data-nav="1" onclick="nav(\'team\',\'hiyerarsi\',\'\')"><span class="hri"><i class="ti ti-hierarchy-2"></i></span><div style="flex:1;min-width:0"><div>Şirket hiyerarşisi</div><div class="rl">Sürüklenebilir kartlar</div></div></div>'+
-'<div class="si'+(pg=='jarvis'?' on':'')+'" data-nav="1" onclick="nav(\'team\',\'jarvis\',\'\')"><span class="hri" style="background:#2a2140;color:#c9b6ff"><i class="ti ti-sparkles"></i></span><div style="flex:1;min-width:0"><div>Jarvis</div><div class="rl">Kişisel asistan · yalnız Çağlar</div></div></div>',i=h.indexOf('<div class="g">Yönetim</div>');return i>=0?h.slice(0,i)+ek+h.slice(i):h+ek};
-var _isTp=teamPage;teamPage=function(){if(pg=='hiyerarsi')return hiyerarsiPage();if(pg=='jarvis')return jarvisPage();return _isTp()};
-var _isTt=teamTitle;teamTitle=function(){if(pg=='hiyerarsi')return 'Çalışanlarım › Şirket hiyerarşisi';if(pg=='jarvis')return 'Jarvis · kişisel asistan';return _isTt()};
+var _isSb=teamSb;teamSb=function(){var h=_isSb(),ek='<div class="si'+(pg=='jarvis'?' on':'')+'" data-nav="1" onclick="nav(\'team\',\'jarvis\',\'\')"><span class="hri" style="background:#2a2140;color:#c9b6ff"><i class="ti ti-sparkles"></i></span><div style="flex:1;min-width:0"><div>Jarvis</div><div class="rl">Kişisel asistan · yalnız Çağlar</div></div></div>',i=h.indexOf('<div class="g">Yönetim</div>');return i>=0?h.slice(0,i)+ek+h.slice(i):h+ek};
+var _isTp=teamPage;teamPage=function(){if(pg=='jarvis')return jarvisPage();return _isTp()};
+var _isTt=teamTitle;teamTitle=function(){if(pg=='ik'&&HRV=='hiy')return 'Çalışanlarım › İnsan Kaynakları › Hiyerarşi';if(pg=='jarvis')return 'Jarvis · kişisel asistan';return _isTt()};
 
 // ---------- Testler (yalnız smoke) ----------
 window.__v0714Test=function(){var R=[],T=TMS(),bk={is:S.isler?JSON.stringify(S.isler):null,ay:S.isAyar?JSON.stringify(S.isAyar):null,ch:JSON.stringify(T.sohbet),gor:T.gorev.slice(),m:JSON.stringify(T.m),ada:S.ada?JSON.stringify(S.ada):null,jv:S.jarvis?JSON.stringify(S.jarvis):null,st:ABN.st,cg:ISG.cagir,yz:ISG.yaz,zh:window.zekaHazir,zc:window.zekaCevapla};
@@ -248,8 +251,8 @@ cfNo();tmDelMember('echo');t('Demirbaş silme engellenir (onay penceresi bile a�
 nav('team','calisan','echo');TMTAB='prof';render();var hp=document.getElementById('ct').innerHTML;t('Demirbaş profilde silme düğmesi yok, kilit notu var',!/Çalışanı sil/.test(hp)&&/Demirbaş çalışan · silinemez/.test(hp));TMTAB='genel';
 tmSet('cdeneme',{yeni:1,ad:'Nova',gorev:'Deneme',grup:'ekip',bagli:'Orla',renk:'#5bb8ff'});nav('team','calisan','cdeneme');TMTAB='prof';render();t('Sonradan eklenen çalışan silinebilir',/Çalışanı sil/.test(document.getElementById('ct').innerHTML));TMTAB='genel';
 // 6) Hiyerarşi
-nav('team','hiyerarsi');var hy=document.getElementById('ct').innerHTML;t('Hiyerarşi sayfası: Çağlar, Jarvis (dışarıda), sürüklenebilir kartlar',/Şirket hiyerarşisi/.test(hy)&&/Jarvis/.test(hy)&&/draggable="true"/.test(hy)&&hy.indexOf('Orin')>0&&/hyj/.test(hy));
-t('Kenar çubuğunda hiyerarşi ve Jarvis',/Şirket hiyerarşisi/.test(document.getElementById('sb').innerHTML)&&/Kişisel asistan · yalnız Çağlar/.test(document.getElementById('sb').innerHTML));
+HRV='hiy';nav('team','ik');var hy=document.getElementById('ct').innerHTML;HRV='kart';t('İK sayfasında Hiyerarşi görünümü: Çağlar, Jarvis (dışarıda), sürüklenebilir kartlar',/class="hyt"/.test(hy)&&/Şirketin sahibi/.test(hy)&&/Jarvis/.test(hy)&&/draggable="true"/.test(hy)&&hy.indexOf('Orin')>0&&/hyj/.test(hy));
+t('İK sayfasında Kartlar | Hiyerarşi seçimi, kenar çubuğunda Jarvis',/Hiyerarşi<\/span>/.test(hy)&&/Kartlar<\/span>/.test(hy)&&/Kişisel asistan · yalnız Çağlar/.test(document.getElementById('sb').innerHTML));
 t('Kart kendi altındakine bağlanamaz (döngü yok)',hyBagla('orla','echo',false)===false&&tm('orla').bagli!='Echo');
 t('Sürükle-bırak bağlılığı değiştirir (yeni çalışan yerleşir)',hyBagla('cdeneme','nika',false)===true&&tm('cdeneme').bagli=='Nika'&&tmChain(tm('cdeneme')).join('>').indexOf('Nika>Nova')>0,tmChain(tm('cdeneme')).join('>'));
 t('Jarvis çalışan listesinde yok (çalışanlar Jarvis’e ulaşamaz)',!tmAll().some(function(c){return /jarvis/i.test(c.id+c.ad)})&&!/Jarvis/.test(zekaSistem(tm('sage'))));

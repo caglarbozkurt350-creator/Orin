@@ -43,7 +43,7 @@ call(API.bulut.config({url:u,anahtar:a})).then(function(s){BL.st=s;toast('Adres 
 function bulutGiris(yeni){var ep=document.getElementById('be').value.trim(),sf=document.getElementById('bs').value;if(!ep||!sf){toast('E-posta ve şifreyi yaz');return}
 call(API.bulut[yeni?'signup':'login']({eposta:ep,sifre:sf})).then(function(s){BL.st=s;if(yeni&&!s.hemen){toast('Onay e-postası gönderildi; bağlantıya tıklayıp giriş yap');return}toast('Giriş yapıldı');BL.yayin='';bulutTick(true);render()},function(e){toast(e.message)})}
 function bulutCikis(){confirmBox('Telefon eşitlemesinden çıkılsın mı? Kayıtların bu bilgisayarda kalır.',function(){call(API.bulut.logout()).then(function(s){BL.st=s;render()})},'Çıkış')}
-P.telefon=function(){var s=BL.st||{},b=BLS();if(!BL.st&&API&&API.bulut)bulutDurum().then(function(){if(pg=='telefon')render()});
+P.telefon=function(){var s=BL.st||{},b=BLS();if(!BL.st&&!BL.denendi&&API&&API.bulut){BL.denendi=1;setTimeout(function(){BL.denendi=0},30000);bulutDurum().then(function(){if(pg=='telefon'&&BL.st)render()})}
 return '<p class="h">Telefon eşitleme</p><p class="s">Orvane Mobil ile görevler, sohbetler, onaylar ve iş günü kayıtları eşitlenir. Telefondan girilen kayıtları bu bilgisayar Sheets’e yazar.</p>'+
 '<div class="card"><div class="ch"><i class="ti ti-device-mobile"></i>Durum</div><div class="kr"><span>Giriş</span><span class="hn">'+(s.eposta?esc(s.eposta):'yapılmadı')+'</span></div>'+
 '<div class="kr"><span>Son eşitleme</span><span class="hn">'+(b.son?new Date(b.son).toLocaleString('tr-TR'):'—')+'</span></div>'+(b.hata?'<div class="kr"><span style="color:#f1c88a">'+esc(b.hata)+'</span></div>':'')+

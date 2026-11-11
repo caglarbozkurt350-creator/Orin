@@ -59,7 +59,7 @@ function zekaModel(id,m){tmSet(id,{model:m});toast((tm(id)||{}).ad+': '+MODEL_AD
 var CONSOLE={kredi:'https://console.anthropic.com/settings/billing',sinir:'https://console.anthropic.com/settings/limits',anahtar:'https://console.anthropic.com/settings/keys'};
 function zekaConsole(k){if(API&&API.external)API.external(CONSOLE[k]);else window.open(CONSOLE[k])}
 function zekaKisayollar(){return '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="bt p" data-k="kredi" onclick="zekaConsole(this.dataset.k)"><i class="ti ti-credit-card"></i> Kredi yükle</button><button class="bt" data-k="sinir" onclick="zekaConsole(this.dataset.k)"><i class="ti ti-gauge"></i> Harcama sınırı</button><button class="bt" data-k="anahtar" onclick="zekaConsole(this.dataset.k)"><i class="ti ti-key"></i> API anahtarları</button></div><div class="hn" style="margin-top:6px">Kredi Anthropic Console’dan alınır; Orvane ödeme yapmaz. Bakiye azalınca kendiliğinden yüklemek için Console › Billing › Auto-reload’u açabilirsin.</div>'}
-P.zeka=function(){var s=ZK.st;if(!s&&API&&API.zeka)zekaDurum().then(function(){if(pg=='zeka')render()});s=s||{harcama:{usd:0,kisi:{},gun:{}},butce:10,aylar:{}};var h=s.harcama,A=tmAll();
+P.zeka=function(){var s=ZK.st;if(!s&&!ZK.denendi&&API&&API.zeka){ZK.denendi=1;setTimeout(function(){ZK.denendi=0},30000);zekaDurum().then(function(){if(pg=='zeka'&&ZK.st)render()})}s=s||{harcama:{usd:0,kisi:{},gun:{}},butce:10,aylar:{}};var h=s.harcama,A=tmAll();
 var ch=GRF.harcama({renk:'#2f7bf5'}),ck=GRF.harcamaKisi({}),ay=Object.keys(s.aylar||{});
 return '<p class="h">Yapay zekâ</p><p class="s">Çalışanlar Claude API ile cevap verir. Harcama her cevaptan sonra güncellenir.</p>'+
 '<div class="card"><div class="ch"><i class="ti ti-key"></i>API anahtarı</div>'+(s.anahtar?'<div class="kr"><span>Kayıtlı anahtar <span class="hn">'+esc(s.ipucu)+' · Windows şifrelemesiyle saklanıyor</span></span><button class="bt" onclick="zekaAnahtarSil()">Sil</button></div>':
@@ -89,7 +89,8 @@ tmPush(g.kim,{r:'o',t:'Görev tamamlandı: '+g.metin+'\n\n'+r.metin,model:r.mode
 function(e){g.durum='acik';g.hata=e.message;toast((c.ad||'')+': '+e.message)}).then(function(){save();if(area=='team'||area=='home')render()})}
 // Bilgisayar açılınca ya da bağlantı gelince yarım kalan sınırlı görevleri yeniden dene; süre dolanları işaretle
 function zekaGorevTara(){var T=TMS();T.gorev.forEach(function(g){if(g.durum=='calisiyor'&&!ZK.yaz['g'+g.id])g.durum='acik';if(g.durum=='acik'&&!g.sonuc&&(g.tokenLimit||g.sureDk)&&!g.hata)zekaGorev(g)})}
-setInterval(function(){if(area=='team'&&TMS().gorev.some(function(g){return g.sureDk&&g.durum!='bitti'}))render()},60000);
+function yaziyor(){var a=document.activeElement,t=document.getElementById('tmi');return !!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))||!!(t&&t.value)||!!document.querySelector('#ov[style*="flex"]')}
+setInterval(function(){if(area=='team'&&!document.hidden&&!yaziyor()&&TMS().gorev.some(function(g){return g.sureDk&&g.durum!='bitti'}))render()},60000);
 if(typeof bulutUygula=='function'){var _zkBu2=bulutUygula;bulutUygula=function(e){_zkBu2(e);if(e.tur=='gorev'&&e.veri){var g=TMS().gorev.filter(function(x){return x.id==e.veri.id})[0];if(g&&(e.veri.sureDk||e.veri.tokenLimit)&&!g.sonuc){if(e.veri.sureDk&&!g.sureDk){g.sureDk=+e.veri.sureDk;g.bitis=g.ts+g.sureDk*60000}if(e.veri.tokenLimit)g.tokenLimit=+e.veri.tokenLimit;setTimeout(function(){zekaGorev(g)},300)}}}}
 
 // ---------- Bütçe payı çubuğu ----------

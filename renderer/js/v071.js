@@ -43,3 +43,15 @@ var __at15=window.__asyncTest;window.__asyncTest=function(){return __at15().then
 var __at16=window.__asyncTest;window.__asyncTest=function(){return __at16().then(function(a){return (window.__gelenTest?window.__gelenTest():Promise.resolve([])).then(function(b){return a.concat(b)})})};
 // Ada program incelemesi testi (0.7.6)
 var __at17=window.__asyncTest;window.__asyncTest=function(){return __at17().then(function(a){return (window.__adaIncTest?window.__adaIncTest():Promise.resolve([])).then(function(b){return a.concat(b)})})};
+
+// 0.7.7: uygulama gece yarısından sonra açık kalsa da "bugün" güncellenir
+function gunKontrol(){var k=key(new Date());if(k===TODAY)return false;var o=TODAY;TODAY=k;if(sel==o)sel=k;if(!INFO.smoke)render();return true}
+setInterval(gunKontrol,60000);document.addEventListener('visibilitychange',function(){if(!document.hidden)gunKontrol()});
+window.__v077Test=function(){var R=[];function t(n,ok,m){R.push({n:n,ok:!!ok,m:ok?'':String(m||'beklenmeyen sonuç')})}
+var bt=TODAY,bs=sel;TODAY='2000-1-1';sel='2000-1-1';t('Gün değişince bugün güncellenir',gunKontrol()&&TODAY==key(new Date())&&sel==TODAY);TODAY=bt;sel=bs;
+t('Kapanışta eşzamanlı kayıt',!!(API&&API.saveSync)&&(function(){saveNow.sync=1;try{saveNow();return true}finally{saveNow.sync=0}})());
+var r0=API.saveSync?API.saveSync({v:1,deneme:1}):null;t('Eşzamanlı kayıt sonucu döner',r0&&r0.ok===true,JSON.stringify(r0));saveNow();
+var e=document.createElement('textarea');document.body.appendChild(e);e.focus();t('Yazı yazılırken dakikalık çizim atlanır',yaziyor());e.remove();
+var bz=ZK.st,bd=ZK.denendi;ZK.st=null;ZK.denendi=0;var c0=0,zd=window.zekaDurum;window.zekaDurum=function(){c0++;return Promise.resolve(null)};P.zeka();P.zeka();P.zeka();t('Durum alınamazsa tekrar tekrar istenmez',c0==1,c0);window.zekaDurum=zd;ZK.st=bz;ZK.denendi=bd;
+var t0=performance.now();return API.abonelik.status().then(function(){var ms=performance.now()-t0;t('Abonelik durumu arayüzü dondurmaz (<1 sn)',ms<1000,Math.round(ms)+' ms');return R})};
+var __at18=window.__asyncTest;window.__asyncTest=function(){return __at18().then(function(a){return window.__v077Test().then(function(b){return a.concat(b)})})};

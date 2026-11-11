@@ -51,7 +51,7 @@ function writeJSON(f, v) {
   fs.mkdirSync(path.dirname(f), { recursive: true });
   const tmp = f + '.tmp';
   fs.writeFileSync(tmp, JSON.stringify(v, null, 1), 'utf8');
-  fs.renameSync(tmp, f);
+  for (let i = 0; ; i++) { try { fs.renameSync(tmp, f); return; } catch (e) { if (i >= 3 || !/EPERM|EBUSY|EACCES/.test(e.code || '')) throw e; bekle(120); } }
 }
 function safeName(t) { return (String(t || '').trim() || 'Adsız not').replace(/[\\/:*?"<>|]/g, '-').replace(/[. ]+$/, '').slice(0, 120) || 'Adsız not'; }
 
@@ -79,7 +79,7 @@ function createWindow() {
 // Otomatik kontrol: sayfaları gezer, hataları toplar, ekran görüntüsü alır, kapanır
 function smoke(win) {
   // Gelen kutusu deneme dosyası (renderer testi okur)
-  try { const gd = GELEN(); fs.mkdirSync(gd, { recursive: true }); fs.writeFileSync(path.join(gd, 'deneme.json'), JSON.stringify([{ tur: 'gelisim', kim: 'ada', gtur: 'hafiza', ad: 'Mimari', metin: 'Orvane Electron + Expo.' }, { tur: 'gelisim', kim: 'ada', gtur: 'beceri', ad: 'Smoke testi', metin: 'npx electron . --smoke' }, { tur: 'mesaj', kim: 'ada', metin: 'Rapor hazır. ÖĞRENİLENLER: [] ' }])); } catch (e) {}
+  try { const gd = GELEN(); fs.mkdirSync(gd, { recursive: true }); fs.writeFileSync(path.join(gd, 'bozuk.json'), '{yarım'); fs.writeFileSync(path.join(gd, 'deneme.json'), JSON.stringify([{ tur: 'gelisim', kim: 'ada', gtur: 'hafiza', ad: 'Mimari', metin: 'Orvane Electron + Expo.' }, { tur: 'gelisim', kim: 'ada', gtur: 'beceri', ad: 'Smoke testi', metin: 'npx electron . --smoke' }, { tur: 'mesaj', kim: 'ada', metin: 'Rapor hazır. ÖĞRENİLENLER: [] ' }])); const eski = new Date(Date.now() - 60000); ['bozuk.json', 'deneme.json'].forEach(x => fs.utimesSync(path.join(gd, x), eski, eski)); } catch (e) {}
   const errors = [];
   win.webContents.on('console-message', (e, level, msg) => { if (level >= 3) errors.push(msg); });
   win.webContents.on('render-process-gone', (e, d) => errors.push('render-gone ' + d.reason));
@@ -168,7 +168,9 @@ const ipcHandlers = {}; { const h = ipcMain.handle.bind(ipcMain); ipcMain.handle
 const wrap = fn => async (e, a) => { try { return { ok: true, v: await fn(a, e) }; } catch (err) { return { ok: false, err: err.message }; } };
 ipcMain.on('state:load', e => { const f = STATE_FILE(); e.returnValue = f ? readJSON(f, null) : null; });
 // Kayıt yeri güvenli değilse (konum.json okunamıyor / klasör yok) yazma: varsayılana düşüp veriyi bölmek yerine reddet
-ipcMain.handle('state:save', (e, v) => { const f = STATE_FILE(); if (!f) return { ok: false, err: BLOCK_MSG() + '. Veri karışmasın diye kaydedilmedi.', warn: DWARN }; writeJSON(f, v); return { ok: true }; });
+function stateKaydet(v) { const f = STATE_FILE(); if (!f) return { ok: false, err: BLOCK_MSG() + '. Veri karışmasın diye kaydedilmedi.', warn: DWARN }; try { writeJSON(f, v); return { ok: true }; } catch (er) { return { ok: false, err: 'Kaydedilemedi: ' + er.message }; } }
+ipcMain.handle('state:save', (e, v) => stateKaydet(v));
+ipcMain.on('state:saveSync', (e, v) => { e.returnValue = stateKaydet(v); }); // pencere kapanırken bekleyen kayıt kaybolmasın
 // Veri klasörü: bilgi, taşıma, varsayılana dönüş
 function dataInfo() { const d = dataDir(); if (!d) return { dir: KONUM_OK || (DWARN && DWARN.dir) || '', def: DATA(), custom: true, file: BLOCK_MSG() + ' · kayıt durduruldu', warn: DWARN, blocked: true }; return { dir: d, def: DATA(), custom: d !== DATA(), file: path.join(d, 'durum.json'), warn: DWARN }; }
 // Varsayılandaki daha yeni veriyi seçili klasöre al (seçili klasördeki yedeklenir)
@@ -328,16 +330,17 @@ ipcMain.handle('zeka:sor', wrap(o => zeka.sor(o)));
 const GELEN = () => path.join(SMOKE ? DATA() : app.getPath('documents'), 'Orin', 'Gelen');
 ipcMain.handle('gelen:al', wrap(() => {
   const d = GELEN(), out = []; if (!fs.existsSync(d)) return out;
-  const isl = path.join(d, 'İşlenen');
   for (const f of fs.readdirSync(d).filter(x => /\.json$/i.test(x)).sort()) {
     const p = path.join(d, f);
-    try { const j = JSON.parse(fs.readFileSync(p, 'utf8').replace(/^\uFEFF/, '')); (Array.isArray(j) ? j : [j]).forEach(x => out.push(x)); } catch (e) { out.push({ tur: 'hata', dosya: f, hata: e.message }); }
-    try { fs.mkdirSync(isl, { recursive: true }); fs.renameSync(p, path.join(isl, f)); } catch (e) {}
+    try { if (Date.now() - fs.statSync(p).mtimeMs < 2000) continue; } catch (e) { continue; } // hâlâ yazılıyor olabilir
+    try { const j = JSON.parse(fs.readFileSync(p, 'utf8').replace(/^\uFEFF/, '')); (Array.isArray(j) ? j : [j]).forEach(x => { if (x && typeof x === 'object') out.push(Object.assign({}, x, { _dosya: f })); }); }
+    catch (e) { out.push({ tur: 'hata', dosya: f, hata: e.message }); try { fs.mkdirSync(path.join(d, 'Hatalı'), { recursive: true }); fs.renameSync(p, path.join(d, 'Hatalı', f)); } catch (er) {} }
   }
   return out;
 }));
+ipcMain.handle('gelen:tamam', wrap(dosyalar => { const d = GELEN(), isl = path.join(d, 'İşlenen'); let n = 0; fs.mkdirSync(isl, { recursive: true }); [...new Set(dosyalar || [])].forEach(f => { if (!/^[^\\/:*?"<>|]+\.json$/i.test(f)) return; try { fs.renameSync(path.join(d, f), path.join(isl, f)); n++; } catch (e) {} }); return n; }));
 // Ada'nın soracağı geliştirme fikirleri: GitHub main'deki güncel liste, yoksa uygulamayla gelen
-ipcMain.handle('fikir:liste', wrap(async () => { if (!SMOKE) { try { const r = await fetch('https://raw.githubusercontent.com/caglarbozkurt350-creator/Orin/main/fikirler.json?t=' + Date.now(), { cache: 'no-store' }); if (r.ok) { const j = await r.json(); if (Array.isArray(j.fikirler)) return { kaynak: 'github', fikirler: j.fikirler }; } } catch (e) {} } return { kaynak: 'yerel', fikirler: readJSON(path.join(__dirname, 'fikirler.json'), { fikirler: [] }).fikirler }; }));
+ipcMain.handle('fikir:liste', wrap(async () => { if (!SMOKE) { try { const r = await fetch('https://raw.githubusercontent.com/caglarbozkurt350-creator/Orin/main/fikirler.json?t=' + Date.now(), { cache: 'no-store', signal: AbortSignal.timeout(6000) }); if (r.ok) { const j = await r.json(); if (Array.isArray(j.fikirler)) return { kaynak: 'github', fikirler: j.fikirler }; } } catch (e) {} } return { kaynak: 'yerel', fikirler: readJSON(path.join(__dirname, 'fikirler.json'), { fikirler: [] }).fikirler }; }));
 // Claude aboneliği (Claude Code CLI, headless): ağır işler abonelikte
 const abonelik = require('./abonelik');
 abonelik.init(DATA(), app.getPath('documents'));

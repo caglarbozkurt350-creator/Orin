@@ -188,6 +188,6 @@ return tbar('n',n.id)+'<input id="nt" class="ti2" placeholder="Not başlığı (
 
 // ---------- Başlat ----------
 loadState();if(API&&zoom!=1)API.win('zoom',zoom);nav('home','gun',TODAY);loadNotes();loadImages();
-window.addEventListener('beforeunload',function(){saveNow()});
+window.addEventListener('beforeunload',function(){clearTimeout(_sv);saveNow.sync=1;try{saveNow()}finally{saveNow.sync=0}}); // kapanırken bekleyen kayıt eşzamanlı yazılır
 
 function setRemind(v){v=v.trim();if(v&&!/^([01]?\d|2[0-3]):[0-5]\d$/.test(v)){toast('Saati 17:50 gibi yaz');render();return}S.remind=v;S.remindDay='';save();toast(v?'Hatırlatma '+v:'Hatırlatma kapalı')}

@@ -4,7 +4,8 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const { spawn, execFileSync } = require('child_process');
+const { spawn, execFile, execFileSync } = require('child_process');
+let SURUM = null; // claude --version önbelleği (arka planda bir kez okunur)
 
 let DIR = null, DOCS = null, CFG = null, EXE;
 const VARS = { acik: false, gunluk: 5, gunlukSohbet: 60, model: 'sonnet', maxTur: 12, sureDk: 15, gun: '', sayi: 0, sohbet: 0, toplam: 0 };
@@ -33,7 +34,7 @@ function bul() {
     e.LOCALAPPDATA && path.join(e.LOCALAPPDATA, 'Programs', 'claude', 'claude.exe')
   ].filter(Boolean);
   EXE = aday.find(f => { try { return fs.statSync(f).isFile(); } catch (er) { return false; } }) || null;
-  if (!EXE) { try { const w = execFileSync('where', ['claude.exe'], { encoding: 'utf8', windowsHide: true }).split(/\r?\n/)[0].trim(); if (w && fs.existsSync(w)) EXE = w; } catch (er) {} }
+  if (!EXE) { try { const w = execFileSync('where', ['claude.exe'], { encoding: 'utf8', windowsHide: true, timeout: 5000 }).split(/\r?\n/)[0].trim(); if (w && fs.existsSync(w)) EXE = w; } catch (er) {} }
   return EXE;
 }
 // Alt süreç ortamı: yalnız sistem değişkenleri (ANTHROPIC_*, CLAUDE_* geçmez)
@@ -93,8 +94,9 @@ function raporYaz(r) {
   } catch (e) { return null; }
 }
 function status() {
-  const c = sayac(), exe = bul(); let surum = null;
-  if (exe) { try { surum = execFileSync(exe, ['--version'], { encoding: 'utf8', windowsHide: true, timeout: 15000, env: temizEnv() }).trim(); } catch (e) {} }
+  const c = sayac(), exe = bul();
+  if (exe && SURUM === null) { SURUM = ''; execFile(exe, ['--version'], { encoding: 'utf8', windowsHide: true, timeout: 15000, env: temizEnv() }, (e, o) => { SURUM = e ? '' : String(o).trim(); }); }
+  const surum = SURUM || null;
   return { kurulu: !!exe, yol: exe, surum, acik: !!c.acik, gunluk: c.gunluk, model: c.model, maxTur: c.maxTur, sureDk: c.sureDk, kaynak: kaynak(), raporlar: path.join(DOCS || os.homedir(), 'Orin', 'Ada Raporları'), bugun: c.sayi, gunlukSohbet: c.gunlukSohbet, sohbetBugun: c.sohbet || 0, toplam: c.toplam, son: c.son || null, test: c.test || null };
 }
 function setAyar(a) {

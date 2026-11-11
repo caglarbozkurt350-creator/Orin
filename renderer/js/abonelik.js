@@ -67,7 +67,8 @@ return '<div class="card"><div class="ch"><i class="ti ti-cloud-computing"></i>C
 (s.kurulu?'':'<div class="hn" style="margin-top:6px">Kurulum: Claude Code’u kur, sonra bir kez terminalde <b>claude</b> yazıp abonelik hesabınla giriş yap.</div>')+'</div>'}
 function abnAyar(a){API.abonelik.ayar(a).then(function(r){if(r.ok)ABN.st=r.v;else toast(r.err);if(a.acik!=null)toast(a.acik?'Ağır işler artık abonelikte yapılacak':'Abonelik yönlendirmesi kapatıldı');if(area=='set')render();if(a.acik)setTimeout(abnTara,500)})}
 function abnTest(){toast('Abonelik deneniyor…');API.abonelik.test().then(function(r){if(r.ok){ABN.st=r.v;toast(r.v.test&&r.v.test.ok?'Abonelik bağlı':'Bağlanamadı: '+(r.v.test&&r.v.test.hata||''))}if(area=='set')render()})}
-var _abnPz=P.zeka;P.zeka=function(){if(!ABN.st)abnDurum().then(function(){if(pg=='zeka')render()});return _abnPz()+abnKart()};
+function abnDurumBir(cb){if(ABN.st||ABN.denendi)return;ABN.denendi=1;setTimeout(function(){ABN.denendi=0},30000);abnDurum().then(function(){if(ABN.st)cb()})}
+var _abnPz=P.zeka;P.zeka=function(){abnDurumBir(function(){if(pg=='zeka')render()});return _abnPz()+abnKart()};
 // Görev kartında abonelik notu
 var _abnLim=typeof tmLimRozet=='function'?tmLimRozet:null;
 abnDurum().then(function(){if(!INFO.smoke){setTimeout(function(){abnTara();if(abnSohbetHazir()&&typeof zekaBekleyenler=='function')zekaBekleyenler()},6000);setInterval(abnTara,10*60000)}});
@@ -104,16 +105,18 @@ ABN.st.sohbetBugun=60;t('Sohbet sınırı dolunca abonelik kullanılmaz',!abnSoh
 
 // Gelen kutusu (0.7.5): Claude Code'un bıraktığı mesajlar ve gelişim talepleri çalışanlara iletilir.
 // {tur:'mesaj', kim, metin} → çalışanın sohbetine · {tur:'gelisim', kim, gtur:'hafiza'|'beceri', ad, metin} → Nika → Orin onayı
-function gelenIsle(){if(!API||!API.gelen)return Promise.resolve(0);return API.gelen().then(function(r){if(!r.ok||!r.v.length)return 0;var n=0,ozet={};
+var GELEN_MESGUL=false;
+function gelenIsle(){if(!API||!API.gelen||GELEN_MESGUL)return Promise.resolve(0);GELEN_MESGUL=true;return API.gelen().then(function(r){if(!r.ok||!r.v.length)return 0;var n=0,ozet={},dosyalar=[],hata=r.v.filter(function(x){return x&&x.tur=='hata'});
+r.v.forEach(function(x){if(x&&x._dosya&&dosyalar.indexOf(x._dosya)<0)dosyalar.push(x._dosya)});if(hata.length){ABN.gelenHata=hata;toast('Gelen kutusunda okunamayan dosya: '+hata.map(function(x){return x.dosya}).join(', ')+' (Gelen\\Hatalı)')}
 r.v.forEach(function(x){if(!x||!tm(x.kim))return;if(x.tur=='mesaj'){var a=abnOgrenAyikla(x.metin);tmPush(x.kim,{r:'o',t:a.metin,model:x.model||'Claude Code'});abnOgrenEkle({kim:x.kim},a.liste);n++}
 else if(x.tur=='gelisim'&&(x.gtur=='hafiza'||x.gtur=='beceri')){tmGelNew(x.kim,x.gtur,String(x.ad||'').slice(0,60),String(x.metin||'').slice(0,400),'claude');ozet[x.kim]=(ozet[x.kim]||0)+1;n++}});
 Object.keys(ozet).forEach(function(k){tmPush(k,{r:'sys',t:'Claude Code '+ozet[k]+' öğrenme maddesi gönderdi; Nika’nın ve Orin’in onayına gitti.'})});
-if(n){save();if(area=='team')render();toast('Gelen kutusu: '+n+' öğe çalışanlara iletildi')}return n})}
-if(!INFO.smoke){setTimeout(gelenIsle,5000);setInterval(gelenIsle,2*60000)}
+if(n){save();if(area=='team')render();toast('Gelen kutusu: '+n+' öğe çalışanlara iletildi')}return (dosyalar.length&&API.gelenTamam?API.gelenTamam(dosyalar):Promise.resolve()).then(function(){return n})}).then(function(n){GELEN_MESGUL=false;return n},function(e){GELEN_MESGUL=false;return 0})}
+if(!INFO.smoke){setTimeout(gelenIsle,5000);setInterval(function(){if(!document.hidden)gelenIsle()},2*60000)}
 ABN.apiVar=function(){return _abnZh()};
 window.__gelenTest=function(){var R=[],T=TMS(),bk={gel:T.gel.slice(),ch:JSON.stringify(T.sohbet)};function t(n,ok,m){R.push({n:n,ok:!!ok,m:ok?'':String(m||'beklenmeyen sonuç')})}
 return gelenIsle().then(function(n){var g=T.gel.filter(function(x){return x.kimden=='claude'&&x.kim=='ada'}),son=tmChat('ada').filter(function(m){return m.r=='o'}).slice(-1)[0];
 t('Gelen kutusu öğeleri işlenir',n==3,n);t('Gelişim talepleri Nika onayına gider',g.length==2&&g.every(function(x){return x.asama=='ik'}),JSON.stringify(g));
 t('Mesaj çalışanın sohbetine düşer (öğrenilenler satırı gizli)',son&&/Rapor/.test(son.t)&&!/ÖĞRENİLENLER/.test(son.t),son&&son.t);
-return gelenIsle()}).then(function(n2){t('İşlenen dosya tekrar işlenmez',n2==0,n2)}).catch(function(e){t('Gelen kutusu testi',false,e.stack)})
+return gelenIsle()}).then(function(n2){t('İşlenen dosya tekrar işlenmez',n2==0,n2);t('Bozuk gelen dosyası bildirilir',ABN.gelenHata&&ABN.gelenHata.some(function(x){return x.dosya=='bozuk.json'}),JSON.stringify(ABN.gelenHata))}).catch(function(e){t('Gelen kutusu testi',false,e.stack)})
 .then(function(){T.gel=bk.gel;T.sohbet=JSON.parse(bk.ch);save();return R})};

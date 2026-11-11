@@ -72,7 +72,7 @@ return '<div class="card" style="margin-top:14px"><div class="ch"><i class="ti t
 '<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="bt" onclick="adaRaporlar()"><i class="ti ti-folder"></i> Raporlar klasörü</button><button class="bt" onclick="adaKaynakSec()" title="'+esc(k||'')+'"><i class="ti ti-code"></i> Kaynak klasörü'+(k?'':' (bulunamadı)')+'</button></div></div>'}
 function adaRaporlar(){if(ABN.st&&ABN.st.raporlar)API.openPath(ABN.st.raporlar).then(function(r){if(r)toast('Henüz rapor klasörü yok')})}
 function adaKaynakSec(){API.pickFolder(ABN.st&&ABN.st.kaynak||'').then(function(d){if(d)abnAyar({kaynak:d})})}
-var _adaCh2=tmCharts;tmCharts=function(c){var h=_adaCh2(c);if(c.id=='ada'){if(!ABN.st)abnDurum().then(function(){if(area=='team')render()});return adaIncKart()+h}return h};
+var _adaCh2=tmCharts;tmCharts=function(c){var h=_adaCh2(c);if(c.id=='ada'){abnDurumBir(function(){if(area=='team')render()});return adaIncKart()+h}return h};
 
 window.__adaIncTest=function(){var R=[],T=TMS(),bk={st:ABN.st,cagir:ABN.cagir,ada:S.ada?JSON.stringify(S.ada):null,ch:JSON.stringify(T.sohbet),gel:T.gel.slice()};function t(n,ok,m){R.push({n:n,ok:!!ok,m:ok?'':String(m||'beklenmeyen sonuç')})}
 var cg=[];ABN.st={kurulu:true,acik:true,gunluk:5,bugun:0,toplam:0,gunlukSohbet:60,sohbetBugun:0,kaynak:'C:/kaynak',raporlar:'C:/raporlar'};

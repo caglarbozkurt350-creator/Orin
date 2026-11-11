@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld('api', {
   info: () => ipcRenderer.sendSync('app:info'),
   load: () => ipcRenderer.sendSync('state:load'),
   save: v => ipcRenderer.invoke('state:save', v),
+  saveSync: v => ipcRenderer.sendSync('state:saveSync', v),
   notes: {
     list: dir => ipcRenderer.invoke('notes:list', dir),
     save: o => ipcRenderer.invoke('notes:save', o),
@@ -36,6 +37,7 @@ contextBridge.exposeInMainWorld('api', {
   },
   fikirler: () => ipcRenderer.invoke('fikir:liste'),
   gelen: () => ipcRenderer.invoke('gelen:al'),
+  gelenTamam: d => ipcRenderer.invoke('gelen:tamam', d),
   abonelik: {
     status: () => ipcRenderer.invoke('abonelik:status'),
     ayar: a => ipcRenderer.invoke('abonelik:ayar', a),

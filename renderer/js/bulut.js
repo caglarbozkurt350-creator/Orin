@@ -23,6 +23,8 @@ if((E[k]||[]).some(function(z){return z.pid==e.id}))return;(E[k]=E[k]||[]).push(
 function bulutOzet(){var T=TMS(),so={},gun={},sy={};
 Object.keys(T.sohbet).forEach(function(id){so[id]=T.sohbet[id].slice(-60).map(function(m,i){return Object.assign({id:m.id||('m'+m.ts+'_'+i)},m)})});
 var d=pk(TODAY);for(var i=0;i<45;i++){var k=key(d);d.setDate(d.getDate()-1);var a=E[k]||[];if(!a.length&&!lim(k)&&!D[k])continue;gun[k]={L:lim(k),T:tot(k),OT:OT[k]||0,e:a.map(function(x){return[x.k,x.i,x.d]})};if(D[k])gun[k].D=D[k];a.forEach(function(x){if(SPECIAL.indexOf(x.k)<0&&x.k!='?')sy[x.k]=(sy[x.k]||0)+1})}
+// Önümüzdeki 14 gün de gider: telefonda ileri tarihli kayıt ve Günü doldur iş süresini bilsin
+var f=pk(TODAY);for(var j=0;j<14;j++){f.setDate(f.getDate()+1);var k2=key(f),a2=E[k2]||[];if(!a2.length&&!lim(k2)&&!D[k2])continue;gun[k2]={L:lim(k2),T:tot(k2),OT:OT[k2]||0,e:a2.map(function(x){return[x.k,x.i,x.d]})};if(D[k2])gun[k2].D=D[k2]}
 return{v:1,ts:Date.now(),olaySira:BLS().olaySira,bugun:TODAY,ekip:{m:T.m,gorev:T.gorev,gel:T.gel,sohbet:so},gun:gun,proj:Object.keys(sy).sort(function(a,b){return sy[b]-sy[a]}).slice(0,8),ayar:{w1:S.w1,w2:S.w2}}}
 
 // ---------- Eşitleme ----------

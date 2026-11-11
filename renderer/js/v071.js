@@ -57,3 +57,6 @@ var t0=performance.now();return API.abonelik.status().then(function(){var ms=per
 var __at18=window.__asyncTest;window.__asyncTest=function(){return __at18().then(function(a){return window.__v077Test().then(function(b){return a.concat(b)})})};
 // Şirket yönetimi testi (0.7.8)
 var __at19=window.__asyncTest;window.__asyncTest=function(){return __at19().then(function(a){return (window.__yonTest?window.__yonTest():Promise.resolve([])).then(function(b){return a.concat(b)})})};
+// Telefona ileri tarihli günler de gider (0.7.12)
+window.__ileriTest=function(){var R=[],o=bulutOzet(),d=pk(TODAY),k=null;for(var i=1;i<=7&&!k;i++){d.setDate(d.getDate()+1);if(lim(key(d)))k=key(d)}R.push({n:"Telefon özetinde ileri tarihli iş günü ("+k+")",ok:!!(k&&o.gun[k]&&o.gun[k].L==lim(k)),m:k?JSON.stringify(o.gun[k]):"7 günde iş günü yok"});return R};
+var __at20=window.__asyncTest;window.__asyncTest=function(){return __at20().then(function(a){return a.concat(window.__ileriTest())})};

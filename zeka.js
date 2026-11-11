@@ -63,6 +63,7 @@ function hataMetni(e) {
 async function sor(o) {
   const c = cfg(), h = harcama();
   if (h.usd >= c.butce) throw new Error('Bu ayın yapay zekâ bütçesi doldu ($' + c.butce + '). Ayarlar › Yapay zekâ’dan artırabilirsin.');
+  if (o.payUsd != null && ((h.kisi[o.kim] || {}).usd || 0) >= o.payUsd) throw new Error('PAY: bu ayki payı doldu, bekliyor');
   const model = MODELLER.includes(o.model) ? o.model : 'claude-haiku-5-5', cl = istemci();
   const govde = {
     model, max_tokens: Math.min(16000, Math.max(256, Number(o.maxTokens) || 4000)),

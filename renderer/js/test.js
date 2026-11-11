@@ -230,3 +230,17 @@ var g2=tmTaskNew('mia','Uzun plan','normal','',false,{tokenLimit:200});
 t('Çok düşük token sınırında görev başlamaz',/çok düşük/.test(g2.hata||''),g2.hata);
 API=bAPI;ZK.st=bST;S.team=bk=='null'?undefined:JSON.parse(bk);nav('home','gun',TODAY);return R})};
 var __at11=window.__asyncTest;window.__asyncTest=function(){return __at11().then(function(a){return window.__limitTest().then(function(b){return a.concat(b)})})};
+
+// Çalışan başına bütçe payı
+window.__payTest=function(){var R=[];function t(n,c,m){try{var ok=typeof c=='function'?c():c;R.push({n:n,ok:!!ok,m:ok?'':String(m||'')})}catch(e){R.push({n:n,ok:false,m:e.message})}}
+var bk=JSON.stringify(S.team||null),bST=ZK.st,bAPI=API,cagri=0;
+ZK.st={anahtar:true,butce:10,harcama:{usd:1,kisi:{luca:{usd:2.5,token:1,istek:1}},gun:{}},aylar:{}};
+API=Object.assign({},bAPI||{},{zeka:{sor:function(){cagri++;return Promise.resolve({ok:false,err:'çağrılmamalı'})}}});
+t('Varsayılan pay sınırsız (%100)',zekaPay('luca')===null&&zekaPayUsd('luca')===null&&!zekaPayDoldu('luca'));
+t('Pay %20 = bütçenin %20’si',function(){zekaPayKaydet('luca',20);return zekaPay('luca')==20&&zekaPayUsd('luca')==2});
+t('Payı dolan çalışan bekler (istek gitmez)',function(){var a=zekaPayDoldu('luca');tmChat('luca').push({r:'ben',t:'deneme',ts:Date.now(),bek:1});zekaCevapla('luca');return a&&cagri==0});
+t('%100 seçilince sınırsız',function(){zekaPayKaydet('luca',100);return zekaPay('luca')===null&&!zekaPayDoldu('luca')});
+t('Ayar sayfasında yüzde çubukları',function(){nav('set','zeka','');var h=document.getElementById('ct').innerHTML;return (h.match(/type="range"/g)||[]).length>=15&&h.indexOf('sınırsız')>0});
+API=bAPI;ZK.st=bST;S.team=bk=='null'?undefined:JSON.parse(bk);nav('home','gun',TODAY);return R};
+var __at12=window.__asyncTest;window.__asyncTest=function(){return __at12().then(function(a){return a.concat(window.__payTest())})};
+var __sg13=window.__smokeGo;window.__smokeGo=function(r){if(r[0]=='set'&&r[1]=='zeka'){ZK.st=ZK.st||{anahtar:true,ipucu:'…test',butce:5,harcama:{usd:0.42,giris:0,cikis:0,onbellek:0,istek:12,kisi:{orin:{usd:0.3,token:9000,istek:5},echo:{usd:0.12,token:20000,istek:7}},gun:{9:0.1,10:0.12,11:0.2}},aylar:{'2026-11':0.42}};var a=__sg13(r);return new Promise(function(res){setTimeout(function(){res(a)},600)})}return __sg13(r)};

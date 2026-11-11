@@ -3,6 +3,11 @@ var ZK={st:null,yaz:{},hata:''};
 var MODEL_AD={'claude-opus-5-5':'Opus 5.5','claude-sonnet-5-5':'Sonnet 5.5','claude-haiku-5-5':'Haiku 5.5'};
 function zekaDurum(){if(!API||!API.zeka)return Promise.resolve(null);return call(API.zeka.status()).then(function(s){ZK.st=s;return s},function(){return null})}
 function zekaHazir(){var s=ZK.st;return !!(s&&s.anahtar&&s.harcama.usd<s.butce&&tmOnline())}
+// Bütçe payı: S.team.m[id].pay = aylık bütçenin yüzdesi (boş = ortak havuz, ayrı sınır yok)
+function zekaPay(id){var p=(TMS().m[id]||{}).pay;return p==null||p===''?null:+p}
+function zekaPayUsd(id){var p=zekaPay(id),s=ZK.st;return p==null||!s?null:s.butce*p/100}
+function zekaKullanilan(id){var s=ZK.st;return s&&s.harcama&&s.harcama.kisi[id]?s.harcama.kisi[id].usd:0}
+function zekaPayDoldu(id){var u=zekaPayUsd(id);return u!=null&&zekaKullanilan(id)>=u}
 function tmModel(c){var m=(TMS().m[c.id]||{}).model;return m||(c.id=='orin'||c.id=='orla'?'claude-sonnet-5-5':'claude-haiku-5-5')}
 
 // ---------- Sistem istemi (sabit kısım önbelleğe alınır, değişen bilgiler ayrı blokta) ----------
@@ -20,12 +25,12 @@ function zekaGecmis(id){var a=tmChat(id).slice(-24),m=[];a.forEach(function(x){v
 while(m.length&&m[0].role!='user')m.shift();return m}
 
 // ---------- Cevap ----------
-function zekaCevapla(id){var c=tm(id);if(!c||ZK.yaz[id]||!zekaHazir())return Promise.resolve();var msgs=zekaGecmis(id);if(!msgs.length||msgs[msgs.length-1].role!='user')return Promise.resolve();
+function zekaCevapla(id){var c=tm(id);if(!c||ZK.yaz[id]||!zekaHazir()||zekaPayDoldu(id))return Promise.resolve();var msgs=zekaGecmis(id);if(!msgs.length||msgs[msgs.length-1].role!='user')return Promise.resolve();
 ZK.yaz[id]=1;TMSCR=true;if(area=='team')render();
-return call(API.zeka.sor({kim:id,model:tmModel(c),system:zekaSistem(c)+'\n\n'+zekaBaglam(c),messages:msgs})).then(function(r){
+return call(API.zeka.sor({kim:id,model:tmModel(c),payUsd:zekaPayUsd(id),system:zekaSistem(c)+'\n\n'+zekaBaglam(c),messages:msgs})).then(function(r){
 tmChat(id).forEach(function(m){if(m.bek)delete m.bek});tmPush(id,{r:'o',t:r.metin,model:r.model,usd:r.usd});
 if(ZK.st){ZK.st.harcama=r.harcama;ZK.st.aylar=r.aylar}ZK.hata='';save();if(r.harcama.usd>=r.butce*0.9)toast('Yapay zekâ bütçesinin %'+Math.round(r.harcama.usd/r.butce*100)+'’i kullanıldı')},
-function(e){ZK.hata=e.message;toast(e.message);if(/bütçe/.test(e.message))zekaDurum()}).then(function(){delete ZK.yaz[id];if(area=='team'||(area=='set'&&pg=='zeka'))render()})}
+function(e){if(/^PAY:/.test(e.message)){ZK.hata=c.ad+' bu ayki payını doldurdu; bekliyor';zekaDurum();return}ZK.hata=e.message;toast(e.message);if(/bütçe/.test(e.message))zekaDurum()}).then(function(){delete ZK.yaz[id];if(area=='team'||(area=='set'&&pg=='zeka'))render()})}
 function zekaBekleyenler(){var T=TMS(),n=0;Object.keys(T.sohbet).forEach(function(id){var a=T.sohbet[id];if(a.length&&a[a.length-1].bek&&tm(id)){n++;zekaCevapla(id)}});return n}
 
 // ---------- Harcama: kart ve canlı grafikler ----------
@@ -60,7 +65,7 @@ return '<p class="h">Yapay zekâ</p><p class="s">Çalışanlar Claude API ile ce
 '<div class="kr"><span>İstek · token</span><span class="hn">'+(h.istek||0)+' istek · '+fmtTok(h.giris)+' giriş · '+fmtTok(h.cikis)+' çıkış · '+fmtTok(h.onbellek)+' önbellekten</span></div>'+
 (ay.length>1?'<div class="kr"><span>Aylar</span><span class="hn">'+ay.map(function(a){return a+': '+usd(s.aylar[a])}).join(' · ')+'</span></div>':'')+
 '<div class="kr"><span>Aylık bütçe ($)</span><span style="display:flex;gap:6px"><input id="zb" class="in" type="number" min="0" max="1000" step="1" value="'+s.butce+'"><button class="bt" onclick="zekaButce()">Kaydet</button></span></div><div class="hn">Bütçeye gelince çalışanlar durur; %90’da uyarır. Anthropic Console’da da harcama sınırı koyman önerilir.</div></div>'+
-'<div class="card"><div class="ch"><i class="ti ti-cpu"></i>Çalışan modelleri</div>'+A.map(function(c){var m=tmModel(c),k=(h.kisi||{})[c.id];return '<div class="kr"><span style="display:flex;align-items:center;gap:8px">'+av(c,24,false)+esc(c.ad)+' <span class="hn">'+esc(c.gorev)+(k?' · '+usd(k.usd):'')+'</span></span><select onchange="zekaModel(\''+jq(c.id)+'\',this.value)">'+Object.keys(MODEL_AD).map(function(x){return '<option value="'+x+'"'+(x==m?' selected':'')+'>'+MODEL_AD[x]+'</option>'}).join('')+'</select></div>'}).join('')+
+'<div class="card"><div class="ch"><i class="ti ti-cpu"></i>Çalışan modelleri ve bütçe payı <span class="hn" id="pyt">'+zekaPayToplam()+'</span></div><div class="hn" style="margin-bottom:6px">Çubukla her çalışana aylık bütçeden pay ayır. Payı dolan çalışan bekler; ay başında ya da payı artırınca devam eder. %0 = hiç kullanmasın; %100 = sınırsız, yalnız toplam aylık bütçe geçerli.</div>'+A.map(function(c){var m=tmModel(c),k=(h.kisi||{})[c.id];return '<div class="kr"><span style="display:flex;align-items:center;gap:8px;min-width:0;flex:1">'+av(c,24,false)+esc(c.ad)+' <span class="hn" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(c.gorev)+'</span></span>'+zekaPayCubuk(c,s)+'<select onchange="zekaModel(\''+jq(c.id)+'\',this.value)">'+Object.keys(MODEL_AD).map(function(x){return '<option value="'+x+'"'+(x==m?' selected':'')+'>'+MODEL_AD[x]+'</option>'}).join('')+'</select></div>'}).join('')+
 '<div class="hn" style="margin-top:6px">Fiyat (1M token, giriş/çıkış): Opus 5.5 $4/$20 · Sonnet 5.5 $2/$10 · Haiku 5.5 $0,10/$0,50.</div></div>'};
 var _zkTo=titleOf;titleOf=function(){if(area=='set'&&pg=='zeka')return 'Ayarlar › Yapay zekâ';return _zkTo()};
 var _zkSb=sbH;sbH=function(){var h=_zkSb();if(area=='set'&&op('set'))h+=si('set','zeka','','Yapay zekâ','l2','ti-sparkles');return h};
@@ -68,13 +73,13 @@ zekaDurum().then(function(s){if(s&&s.anahtar&&!INFO.smoke)setTimeout(function(){
 
 // ---------- Süre ve token sınırlı görevler: çalışan görevi kendisi yapar ----------
 // Token sınırı giriş + çıkışı kapsar (çıkış payı tahmini girişten kalan); süre sınırı isteğin zaman aşımıdır.
-function zekaGorev(g){var c=tm(g.kim);if(!c||!zekaHazir()||g.durum!='acik'||g.sonuc)return Promise.resolve();
+function zekaGorev(g){var c=tm(g.kim);if(!c||!zekaHazir()||g.durum!='acik'||g.sonuc)return Promise.resolve();if(zekaPayDoldu(g.kim)){g.hata='Bu ayki payı doldu; bekliyor';save();return Promise.resolve()}
 var sys=zekaSistem(c)+'\n\n'+zekaBaglam(c),soru='Doğrudan görev (Çağlar’dan): '+g.metin+(g.son?'\nSon tarih: '+tmSon(g.son):'')+(g.sureDk?'\nSüre sınırı: '+tmSureAd(g.sureDk):'')+(g.tokenLimit?'\nToken sınırı: '+g.tokenLimit+' (kısa ve öz yaz)':'')+'\nGörevi yap ve sonucu doğrudan yaz. Bu sürümde yapamayacağın bir kısım varsa (dosyaya yazma, takvime ekleme, internet) açıkça belirt ve yapılabilecek olanı hazırla.';
 var tahmin=Math.ceil((sys.length+soru.length)/3.2),kalan=g.bitis?g.bitis-Date.now():0;
 if(g.bitis&&kalan<=0){g.hata='Süre sınırı doldu';save();return Promise.resolve()}
 if(g.tokenLimit&&g.tokenLimit-tahmin<256){g.hata='Token sınırı bu görev için çok düşük';save();if(area=='team')render();return Promise.resolve()}
 g.durum='calisiyor';delete g.hata;save();if(area=='team')render();
-return call(API.zeka.sor({kim:g.kim,model:tmModel(c),system:sys,messages:[{role:'user',content:soru}],effort:'medium',maxTokens:g.tokenLimit?g.tokenLimit-tahmin:6000,zamanAsimiMs:g.bitis?kalan:180000})).then(function(r){
+return call(API.zeka.sor({kim:g.kim,model:tmModel(c),system:sys,messages:[{role:'user',content:soru}],effort:'medium',payUsd:zekaPayUsd(g.kim),maxTokens:g.tokenLimit?g.tokenLimit-tahmin:6000,zamanAsimiMs:g.bitis?kalan:180000})).then(function(r){
 g.sonuc=r.metin;g.token=r.token;g.usd=r.usd;g.durum='bitti';g.bts=Date.now();if(r.stop=='max_tokens')g.hata='Token sınırına ulaşıldı';
 tmPush(g.kim,{r:'o',t:'Görev tamamlandı: '+g.metin+'\n\n'+r.metin,model:r.model,usd:r.usd});if(ZK.st){ZK.st.harcama=r.harcama;ZK.st.aylar=r.aylar}},
 function(e){g.durum='acik';g.hata=e.message;toast((c.ad||'')+': '+e.message)}).then(function(){save();if(area=='team'||area=='home')render()})}
@@ -82,3 +87,12 @@ function(e){g.durum='acik';g.hata=e.message;toast((c.ad||'')+': '+e.message)}).t
 function zekaGorevTara(){var T=TMS();T.gorev.forEach(function(g){if(g.durum=='calisiyor'&&!ZK.yaz['g'+g.id])g.durum='acik';if(g.durum=='acik'&&!g.sonuc&&(g.tokenLimit||g.sureDk)&&!g.hata)zekaGorev(g)})}
 setInterval(function(){if(area=='team'&&TMS().gorev.some(function(g){return g.sureDk&&g.durum!='bitti'}))render()},60000);
 if(typeof bulutUygula=='function'){var _zkBu2=bulutUygula;bulutUygula=function(e){_zkBu2(e);if(e.tur=='gorev'&&e.veri){var g=TMS().gorev.filter(function(x){return x.id==e.veri.id})[0];if(g&&(e.veri.sureDk||e.veri.tokenLimit)&&!g.sonuc){if(e.veri.sureDk&&!g.sureDk){g.sureDk=+e.veri.sureDk;g.bitis=g.ts+g.sureDk*60000}if(e.veri.tokenLimit)g.tokenLimit=+e.veri.tokenLimit;setTimeout(function(){zekaGorev(g)},300)}}}}
+
+// ---------- Bütçe payı çubuğu ----------
+function zekaPayCubuk(c,s){var p=zekaPay(c.id),u=zekaKullanilan(c.id),cap=p==null?null:s.butce*p/100,dol=cap!=null&&u>=cap,yz=cap?Math.min(100,u/cap*100):(s.butce?Math.min(100,u/s.butce*100):0);
+return '<span class="pay" style="display:flex;flex-direction:column;gap:4px;width:300px;flex:none;margin-right:12px"><span style="display:flex;align-items:center;gap:8px"><input type="range" min="0" max="100" step="5" value="'+(p==null?100:p)+'" style="flex:1;accent-color:'+c.renk+'" oninput="zekaPayGoster(\''+jq(c.id)+'\',this.value)" onchange="zekaPayKaydet(\''+jq(c.id)+'\',this.value)" aria-label="'+esc(c.ad)+' bütçe payı"><b id="pyl_'+esc(c.id)+'" style="font-size:12.5px;min-width:96px;text-align:right;color:'+(dol?'#f4a3a3':'#e4e4e8')+'">'+zekaPayEtiket(p,s)+'</b></span>'+
+'<span class="pb" style="margin:0;height:5px"><i style="width:'+yz+'%;background:'+(dol?'#e0705b':c.renk)+'"></i></span><span class="hn" style="font-size:11px">'+usd(u)+' kullanıldı'+(cap!=null?' / '+usd(cap)+(dol?' · payı doldu, bekliyor':' · kalan '+usd(Math.max(0,cap-u))):' · sınırsız (yalnız toplam bütçe)')+'</span></span>'}
+function zekaPayEtiket(p,s){return p==null||p>=100?'%100 · sınırsız':'%'+p+' · '+usd(s.butce*p/100)}
+function zekaPayToplam(){var t=0,n=0;tmAll().forEach(function(c){var p=zekaPay(c.id);if(p!=null){t+=p;n++}});return n?'· '+n+' çalışana sınır konuldu, toplam %'+t+(t>100?' (100’ü aşıyor)':''):'· hepsi sınırsız'}
+function zekaPayGoster(id,v){var s=ZK.st||{butce:0},e=document.getElementById('pyl_'+id);if(e)e.textContent=zekaPayEtiket(+v>=100?null:+v,s)}
+function zekaPayKaydet(id,v){v=+v;tmSet(id,{pay:v>=100?null:v});var e=document.getElementById('pyt');if(e)e.textContent=zekaPayToplam();render();if(!zekaPayDoldu(id))zekaBekleyenler()}

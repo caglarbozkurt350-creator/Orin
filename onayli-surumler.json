@@ -1,8 +1,30 @@
 {
  "aciklama": "Çağlar'ın denediği ve onayladığı sürümler. Ayarlar › Sorun giderme › 'Önceki onaylı sürüme dön' yalnız bunları gösterir. Yeni sürüm onaylanınca başa ekle; eskileri silme.",
  "surumler": [
-  { "v": "0.7.0", "tarih": "2026-11-11", "not": "Claude API çalışanları, bütçe, süre/token sınırlı görevler" },
-  { "v": "0.6.1", "tarih": "2026-11-11", "not": "Telefon eşitleme, OTA" },
-  { "v": "0.6.0", "tarih": "2026-11-11", "not": "Supabase telefon eşitlemesi" }
+  {
+   "v": "0.7.2",
+   "tarih": "2026-11-11",
+   "not": "Abonelik, Ada fikirleri, İK grafikleri"
+  },
+  {
+   "v": "0.7.1",
+   "tarih": "2026-11-11",
+   "not": "Veri koruması, geri dönüş, güncelleme öncesi yedek"
+  },
+  {
+   "v": "0.7.0",
+   "tarih": "2026-11-11",
+   "not": "Claude API çalışanları, bütçe, süre/token sınırlı görevler"
+  },
+  {
+   "v": "0.6.1",
+   "tarih": "2026-11-11",
+   "not": "Telefon eşitleme, OTA"
+  },
+  {
+   "v": "0.6.0",
+   "tarih": "2026-11-11",
+   "not": "Supabase telefon eşitlemesi"
+  }
  ]
 }

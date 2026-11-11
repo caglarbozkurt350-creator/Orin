@@ -1,5 +1,6 @@
 // Orin · Sheets'e yazma kuyruğu (Aşama 3). Kuyruk kalıcıdır; internet yokken bekler, gelince gönderilir.
 var Q=[],DR={},SYN={busy:false,last:null,err:''};
+function leaveMin(k){var t=D[k];if(!IZL[t])return null;return t=='ucretsiz'?0:(lim(k)||null)} // ücretli izin = o günün iş süresi
 var IZL={yillik:'Yıllık izin',ucretsiz:'Ücretsiz izin',rapor13:'Rapor',rapor4:'Rapor (4. gün ve sonrası)',mazeret:'Mazeret izni',refakat:'Refakat izni',sevk:'İş yeri sevki'};
 var PSO=['Başlandı','Devam ediyor','Bitti','Teslim edildi','Başkası devam ediyor'];
 var PHEAD=['Proje kodu','Proje adı','Durum'],INFOTAB='Ayarlar ve Bilgiler';
@@ -34,14 +35,16 @@ function flushSoon(){clearTimeout(_ft);_ft=setTimeout(flush,500)}
 function canSync(){return !!(API&&API.sheets&&CONNECTED&&navigator.onLine)}
 function call(p){return p.then(function(r){if(!r.ok){var er=new Error(r.err);er.offline=/İnternet/.test(r.err);throw er}return r.v})}
 function run(o){var S2=API.sheets;
-if(o.op=='add'){var f=findE(o.u);if(!f)return Promise.resolve();var rec=recOf(f.k,f.e);return call(S2.add(rec)).then(function(r){var g=findE(o.u);if(g){g.e.row=r.row;g.e.fp=fpRec(g.k,rec);g.e.src='sheets';g.e.st=1}})}
+if(o.op=='add'){var f=findE(o.u);if(!f)return Promise.resolve();var rec=recOf(f.k,f.e);return call(S2.add(rec)).then(function(r){var g=findE(o.u);if(g){g.e.row=r.row;g.e.fp=r.fp||fpRec(g.k,rec);g.e.src='sheets';g.e.st=1}})}
 if(o.op=='upd'){var f2=findE(o.u);if(!f2)return Promise.resolve();var rec2=recOf(f2.k,f2.e);if(!f2.e.row)return call(S2.add(rec2)).then(function(r){f2.e.row=r.row;f2.e.fp=fpRec(f2.k,rec2)});
 return call(S2.upd({row:f2.e.row,fp:f2.e.fp,rec:rec2,force:o.force})).then(function(r){if(r.conflict){o.conflict=r.current;return}var g=findE(o.u);if(g)g.e.fp=fpRec(g.k,rec2)})}
 if(o.op=='del')return call(S2.del({row:o.row,fp:o.fp,force:o.force})).then(function(r){if(r.conflict)o.conflict=r.current});
-if(o.op=='dset'){var k=o.k,t=D[k],lb=IZL[t],cur=DR[k];
-if(lb){var rec3={tarih:dstr(k),kod:'Standart dışı',parca:'',is:'İşe gidilmedi - '+lb,dk:'?',izin:lb};
+if(o.op=='dset'){var k=o.k,t=D[k],lb=IZL[t],cur=DR[k],dkv=leaveMin(k);if(dkv===null)dkv='?';
+if(lb&&cur)return call(S2.upd({row:cur.row,fp:cur.fp,rec:(/^İşe gidilmedi - (Yıllık izin|Ücretsiz izin|Rapor.*|Mazeret izni|Refakat izni|İş yeri sevki)$/.test(cur.is||'')?{izin:lb,dk:dkv,is:'İşe gidilmedi - '+lb}:{izin:lb,dk:dkv}),force:o.force})).then(function(r){if(r.conflict){o.conflict=r.current;return}DR[k]=Object.assign({},cur,{fp:r.fp||cur.fp,dk:dkv})}); // açıklamaya dokunma
+if(lb&&!o.looked){o.looked=true;return call(S2.findLeave({tarih:dstr(k)})).then(function(fnd){if(fnd)DR[k]={row:fnd.row,fp:fnd.fp,kod:fnd.kod,is:fnd.is};return run(o)})}
+if(lb){var rec3={tarih:dstr(k),kod:'Standart dışı',parca:'',is:'İşe gidilmedi - '+lb,dk:dkv,izin:lb};
 if(cur)return call(S2.upd({row:cur.row,fp:cur.fp,rec:rec3,force:o.force})).then(function(r){if(r.conflict){o.conflict=r.current;return}DR[k]={row:cur.row,fp:fpRec(k,rec3)}});
-return call(S2.add(rec3)).then(function(r){DR[k]={row:r.row,fp:fpRec(k,rec3)}})}
+return call(S2.add(rec3)).then(function(r){DR[k]={row:r.row,fp:r.fp||fpRec(k,rec3),kod:rec3.kod,is:rec3.is,dk:dkv}})}
 if(cur)return call(S2.del({row:cur.row,fp:cur.fp,force:o.force})).then(function(r){if(r.conflict){o.conflict=r.current;return}delete DR[k]});return Promise.resolve()}
 if(o.op=='pup'){var nm=pname(o.key);if(!nm)return Promise.resolve();return call(S2.upsert({tab:'Projeler',header:PHEAD,key:o.key,values:[nm,PS[o.key]||''],seed:projRows()}))}
 if(o.op=='pdel')return call(S2.delKey({tab:'Projeler',key:o.key,width:3}));

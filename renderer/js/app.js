@@ -47,7 +47,8 @@ if(h)return t>0?'mesai':(h[1]==1?'tatil':'tatily');
 if(w==0||w==6)return t>0?'mesai':'hafta';
 if(t>0)return t==L+o?(o?'mesai':'tam'):'hata';
 if(d>pk(TODAY))return 'gel';if(k==TODAY)return 'bugun';if(d<hireD())return 'hafta';
-return ((CONNECTED&&S.sheetStart&&d>=pk(S.sheetStart))||inRange(k))?'girdi':'bos'}
+var ts=trackStart();return ((CONNECTED&&ts&&d>=pk(ts))||inRange(k))?'girdi':'bos'}
+function trackStart(){if(S.trackStart&&hireOk(S.trackStart)){var a=S.trackStart.split('.');return mk(+a[2],+a[1],+a[0])}return S.sheetStart||null}
 function cs(t){var m={tam:BLU,hata:RED,girdi:RED,yillik:GRN,refakat:GRN,mazeret:ORG,sevk:ORG,rapor13:ORG,rapor4:GRN,ucretsiz:RED,tatil:HOL,hafta:'#2b2b30',gel:'#242428',bugun:'#242428'};
 if(t=='tatily')return 'background:linear-gradient(90deg,'+HOL+' 50%,#3a3a3f 50%);color:#fff';
 if(t=='mesai')return 'background:repeating-linear-gradient(135deg,'+BLU+' 0 5px,#2f4aa8 5px 10px);color:#fff';

@@ -48,10 +48,11 @@ var rows=[['Tarih','Proje kodu','Parça no','İş tanımı','Süre (dk)','Ay','G
 function fpRow(r){var g=function(i){return i>=0?String(r[i]==null?'':r[i]).trim():''};return [parseDate(g(0)),g(1),g(3),String(parseMin(g(4)))].join('|')}
 function put(rowNo,rec){var r=rows[rowNo-1]||[];F.forEach(function(f){if(MAP[f]>=0&&rec[f]!==undefined)r[MAP[f]]=rec[f]===null?'':String(rec[f])});rows[rowNo-1]=r}
 function ok(v){return Promise.resolve({ok:true,v:v})}
-var mock={add:function(rec){var n=rows.length+1;put(n,rec);return ok({row:n})},
-upd:function(o){var cur=rows[o.row-1]||[];if(!o.force&&fpRow(cur)!==o.fp)return ok({conflict:true,current:cur.slice()});put(o.row,o.rec);return ok({row:o.row})},
+var mock={add:function(rec){var n=rows.length+1;put(n,rec);return ok({row:n,fp:fpRow(rows[n-1])})},
+upd:function(o){var cur=rows[o.row-1]||[];if(!o.force&&fpRow(cur)!==o.fp)return ok({conflict:true,current:cur.slice()});put(o.row,o.rec);return ok({row:o.row,fp:fpRow(rows[o.row-1])})},
 del:function(o){var cur=rows[o.row-1]||[];if(!o.force&&fpRow(cur)!==o.fp)return ok({conflict:true,current:cur.slice()});var b={};F.forEach(function(f){b[f]=''});put(o.row,b);return ok({row:o.row})},
 upsert:function(o){if(!tabs[o.tab]){tabs[o.tab]=[o.header].concat(o.seed||[]);if(o.tab=='Projeler')return ok({created:true})}var T=tabs[o.tab],i=T.findIndex(function(x){return x[0]==o.key});if(i<0)T.push([o.key].concat(o.values));else T[i]=[o.key].concat(o.values);return ok({})},
+findLeave:function(o){var w=parseDate(o.tarih);for(var i=1;i<rows.length;i++){var r=rows[i]||[];if(parseDate(r[0])==w&&String(r[8]||"").trim())return ok({row:i+1,fp:fpRow(r),kod:r[1],is:r[3]})}return ok(null)},
 delKey:function(o){var T=tabs[o.tab]||[],i=T.findIndex(function(x){return x[0]==o.key});if(i>=0)T[i]=['','',''];return ok({})},
 status:function(){return ok({loggedIn:true,map:MAP,lastSync:'x',sheetId:'x',hasClient:true})},config:function(){return ok({})},read:function(){return ok([])},meta:function(){return ok({tabs:Object.keys(tabs),title:'x'})}};
 var keep={API:API,C:CONNECTED,onay:S.onay,w1:S.w1,Q:Q.slice(),PSs:JSON.stringify(PS),PRs:JSON.stringify(PR),UPs:JSON.stringify(UP)},k='2027-3-2',bk={E:E[k],D:D[k],DR:DR[k]};
@@ -72,11 +73,11 @@ rows[1][3]='Telefondan değişti';EDIT=0;render();form('78.26.03.19','Benim düz
 askDel('e',0);cfYes();return idle()})
 .then(function(){t('Silince satır temizlenir (silinmez)',rows.length==2&&rows[1][1]===''&&rows[1][4]==='',JSON.stringify(rows));
 setT('yillik');return idle()})
-.then(function(){var r=rows[2]||[];t('İzin günü satırı yazılır',r[1]=='Standart dışı'&&r[4]=='?'&&r[8]=='Yıllık izin'&&DR[k]&&DR[k].row==3,JSON.stringify(rows));
+.then(function(){var r=rows[2]||[];t('İzin günü satırı yazılır (tam gün süresiyle)',r[1]=='Standart dışı'&&r[4]==String(lim(k))&&r[8]=='Yıllık izin'&&DR[k]&&DR[k].row==3,JSON.stringify(rows));
 setT('');return idle()})
-.then(function(){t('İzin kaldırılınca satırı temizlenir',(rows[2]||[])[8]===''&&!DR[k],JSON.stringify(rows[2]));
-S.onay=false;form('78.26.03.19','Hızlı kayıt',100);add();var e=E[k][E[k].length-1];var a=E[k].indexOf(e);E[k].splice(a,1);entryRemoved(e);return idle()})
-.then(function(){t('Gönderilmeden silinen kayıt Sheets’e gitmez',rows.length==3,JSON.stringify(rows));
+.then(function(){window.__n0=rows.length;rows.push([dstr(k),'Standart dışı','','İşe gidilmedi - Hastane (telefondan)','?','','','','Mazeret izni']);delete DR[k];D[k]='mazeret';setT('rapor13');return idle()}).then(function(){var r=rows[window.__n0]||[];t('Sheets’te izin satırı varsa yenisi eklenmez, açıklama korunur',rows.length==window.__n0+1&&r[8]=='Rapor'&&r[3]=='İşe gidilmedi - Hastane (telefondan)'&&r[4]==String(lim(k))&&DR[k]&&DR[k].row==window.__n0+1,JSON.stringify(rows.slice(-2)));setT('');return idle()}).then(function(){t('İzin kaldırılınca satırı temizlenir',(rows[2]||[])[8]===''&&!DR[k],JSON.stringify(rows[2]));
+window.__n1=rows.length;S.onay=false;form('78.26.03.19','Hızlı kayıt',100);add();var e=E[k][E[k].length-1];var a=E[k].indexOf(e);E[k].splice(a,1);entryRemoved(e);return idle()})
+.then(function(){t('Gönderilmeden silinen kayıt Sheets’e gitmez',rows.length==window.__n1,JSON.stringify(rows));
 nav('home','yeni');document.getElementById('nk').value='999.26.01.01';document.getElementById('pn').value='Test projesi';addP();return idle()})
 .then(function(){var T=tabs['Projeler']||[];t('Yeni proje Projeler sekmesine yazılır (sekme açılır)',T[0]&&T[0][0]=='Proje kodu'&&T.some(function(x){return x[0]=='999.26.01.01'&&x[2]=='Başlandı'}),JSON.stringify(T.slice(0,3)));
 t('Sekme açılırken tüm projeler yazılır',T.length>=allP().length+1,T.length+' / '+allP().length);
@@ -115,3 +116,9 @@ var o=JSON.stringify(S.sg||{}),q=Q.slice();t('Öneri işaretlenince sonraki sür
 t('Öneri sayfasında onay kutuları',function(){nav('msg','haber','gel');return document.querySelectorAll('#ct input[type=checkbox]').length>3});
 S.sg=JSON.parse(o);Q=q;return R};
 var __at4=window.__asyncTest;window.__asyncTest=function(){return __at4().then(function(a){return a.concat(window.__wantTest())})};
+
+window.__v041Test=function(){var R=[];function t(n,c,m){try{var ok=typeof c=='function'?c():c;R.push({n:n,ok:!!ok,m:ok?'':String(m||'')})}catch(e){R.push({n:n,ok:false,m:e.message})}}
+var k='2027-2-3',bD=D[k];D[k]='yillik';t('Ücretli izin süresi gün süresi',leaveMin(k)==lim(k));D[k]='ucretsiz';t('Ücretsiz izin süresi 0',leaveMin(k)===0);D[k]='yillik';nav('home','gun',k);document.getElementById('kd').value='Diğer';fillDay();t('İzin gününde Günü doldur uyarır',/izin satırında/.test(document.getElementById('er').textContent)&&!(E[k]||[]).length,document.getElementById('er').textContent);t('İzin günü bilgi kartı',document.getElementById('ct').innerHTML.indexOf('Ücretli izin')>0);if(bD)D[k]=bD;else delete D[k];
+t('Takip başlangıcı ayarı',function(){var o=S.trackStart,c=CONNECTED;CONNECTED=true;S.trackStart='01.03.2026';var a=typ('2026-2-3')=='bos'&&typ('2026-3-3')=='girdi';S.trackStart=o;CONNECTED=c;return a});
+return R};
+var __at5=window.__asyncTest;window.__asyncTest=function(){return __at5().then(function(a){return a.concat(window.__v041Test())})};

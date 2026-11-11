@@ -8,7 +8,18 @@ const SEED = process.argv.includes('--seed'); // gizli açılış: kişisel geç
 if (SMOKE) app.setPath('userData', path.join(app.getPath('temp'), 'orin-smoke-' + process.pid)); // testler gerçek veriye dokunmaz
 const DATA = () => app.getPath('userData');
 const LOC = () => path.join(DATA(), 'konum.json'); // seçilen veri klasörü (yalnız yol)
-function dataDir() { try { const d = JSON.parse(fs.readFileSync(LOC(), 'utf8')).dir; if (d && fs.existsSync(d)) return d; } catch (e) {} return DATA(); }
+let DWARN = null; // veri klasörü uyarısı (renderer'a gösterilir)
+function konum() { try { return JSON.parse(fs.readFileSync(LOC(), 'utf8').replace(/^\uFEFF/, '')).dir || null; } catch (e) { return fs.existsSync(LOC()) ? '!okunamadı' : null; } }
+function dataDir() { const d = konum(); if (d && d !== '!okunamadı' && fs.existsSync(d)) return d; if (d) DWARN = { kind: 'missing', dir: d }; return DATA(); }
+function bootLog() {
+  try {
+    const d = dataDir(), k = konum(), def = path.join(DATA(), 'durum.json'), cus = d !== DATA() ? path.join(d, 'durum.json') : null;
+    if (cus && fs.existsSync(def) && fs.existsSync(cus) && fs.statSync(def).mtimeMs > fs.statSync(cus).mtimeMs + 60000) DWARN = { kind: 'newerDefault', dir: d, defTime: fs.statSync(def).mtimeMs, cusTime: fs.statSync(cus).mtimeMs };
+    const line = JSON.stringify({ t: new Date().toISOString(), v: app.getVersion(), packaged: app.isPackaged, exe: process.execPath, userData: DATA(), konum: k, dataDir: d, exists: k ? fs.existsSync(k) : null, warn: DWARN && DWARN.kind });
+    const f = path.join(DATA(), 'orin-baslangic.log'); let old = []; try { old = fs.readFileSync(f, 'utf8').trim().split('\n'); } catch (e) {}
+    fs.writeFileSync(f, old.concat([line]).slice(-50).join('\n') + '\n');
+  } catch (e) {}
+}
 const STATE_FILE = () => path.join(dataDir(), 'durum.json');
 const IMG_EXT = /\.(jpe?g|png|webp|gif|bmp)$/i;
 
@@ -75,7 +86,10 @@ function smoke(win) {
 ipcMain.on('state:load', e => { e.returnValue = readJSON(STATE_FILE(), null); });
 ipcMain.handle('state:save', (e, v) => { writeJSON(STATE_FILE(), v); return true; });
 // Veri klasörü: bilgi, taşıma, varsayılana dönüş
-function dataInfo() { const d = dataDir(); return { dir: d, def: DATA(), custom: d !== DATA(), file: path.join(d, 'durum.json') }; }
+function dataInfo() { const d = dataDir(); return { dir: d, def: DATA(), custom: d !== DATA(), file: path.join(d, 'durum.json'), warn: DWARN }; }
+// Varsayılandaki daha yeni veriyi seçili klasöre al (seçili klasördeki yedeklenir)
+ipcMain.handle('data:adopt', () => { try { const d = dataDir(), def = path.join(DATA(), 'durum.json'), cus = path.join(d, 'durum.json'), st = '.yedek-' + new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-') + '.json'; if (d === DATA() || !fs.existsSync(def)) return { ok: false, err: 'Taşınacak veri yok' }; if (fs.existsSync(cus)) fs.copyFileSync(cus, cus.replace(/\.json$/, st)); fs.copyFileSync(def, cus); fs.renameSync(def, def.replace(/\.json$/, st)); DWARN = null; return { ok: true }; } catch (e) { return { ok: false, err: e.message }; } });
+ipcMain.handle('data:dismiss', () => { DWARN = null; return true; });
 ipcMain.handle('data:info', () => dataInfo());
 ipcMain.handle('data:move', (e, { dir, mode }) => {
   try {
@@ -181,6 +195,7 @@ ipcMain.handle('sheets:read', wrap(r => sheets.read(r)));
 ipcMain.handle('sheets:add', wrap(r => sheets.addRec(r)));
 ipcMain.handle('sheets:upd', wrap(o => sheets.updRec(o)));
 ipcMain.handle('sheets:del', wrap(o => sheets.delRec(o)));
+ipcMain.handle('sheets:findLeave', wrap(o => sheets.findLeave(o)));
 ipcMain.handle('sheets:upsert', wrap(o => sheets.upsertKey(o)));
 ipcMain.handle('sheets:delKey', wrap(o => sheets.deleteKey(o)));
 ipcMain.handle('sheets:pickClient', wrap(async (a, e) => {
@@ -190,5 +205,5 @@ ipcMain.handle('sheets:pickClient', wrap(async (a, e) => {
 }));
 
 app.on('second-instance', () => { const w = BrowserWindow.getAllWindows()[0]; if (w) { if (w.isMinimized()) w.restore(); w.focus(); } });
-app.whenReady().then(() => { Menu.setApplicationMenu(null); createWindow(); if (app.isPackaged && updater && !SMOKE) { setTimeout(() => updater.checkForUpdates().catch(() => {}), 15000); setInterval(() => updater.checkForUpdates().catch(() => {}), 6 * 3600e3); } });
+app.whenReady().then(() => { Menu.setApplicationMenu(null); bootLog(); createWindow(); if (app.isPackaged && updater && !SMOKE) { setTimeout(() => updater.checkForUpdates().catch(() => {}), 15000); setInterval(() => updater.checkForUpdates().catch(() => {}), 6 * 3600e3); } });
 app.on('window-all-closed', () => app.quit());

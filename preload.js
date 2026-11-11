@@ -14,7 +14,9 @@ contextBridge.exposeInMainWorld('api', {
   data: {
     info: () => ipcRenderer.invoke('data:info'),
     move: (dir, mode) => ipcRenderer.invoke('data:move', { dir, mode }),
-    backup: () => ipcRenderer.invoke('data:backup')
+    backup: () => ipcRenderer.invoke('data:backup'),
+    adopt: () => ipcRenderer.invoke('data:adopt'),
+    dismiss: () => ipcRenderer.invoke('data:dismiss')
   },
   exp: { xlsx: o => ipcRenderer.invoke('exp:xlsx', o), pdf: o => ipcRenderer.invoke('exp:pdf', o) },
   news: () => ipcRenderer.invoke('news'),
@@ -37,6 +39,7 @@ contextBridge.exposeInMainWorld('api', {
     add: r => ipcRenderer.invoke('sheets:add', r),
     upd: o => ipcRenderer.invoke('sheets:upd', o),
     del: o => ipcRenderer.invoke('sheets:del', o),
+    findLeave: o => ipcRenderer.invoke('sheets:findLeave', o),
     upsert: o => ipcRenderer.invoke('sheets:upsert', o),
     delKey: o => ipcRenderer.invoke('sheets:delKey', o)
   }

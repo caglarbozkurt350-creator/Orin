@@ -124,14 +124,24 @@ async function addRec(rec) {
     const cur = await readRow(m, rowNo);
     if (mappedCols(m).some(i => String(cur[i] || '').trim())) continue; // biri araya yazdı: tekrar dene
     await writeRanges(rangesFor(rowNo, rec, m));
-    return { row: rowNo };
+    const merged = []; FIELDS.forEach(f => { if (m[f] >= 0 && rec[f] !== undefined) merged[m[f]] = rec[f]; });
+    return { row: rowNo, fp: fpOf(merged, m) };
   }
   throw new Error('Boş satır bulunamadı, sonra tekrar denenecek');
 }
 async function updRec({ row, fp, rec, force }) {
   const m = needMap(); const cur = await readRow(m, row);
   if (!force && fpOf(cur, m) !== fp) return { conflict: true, current: cur };
-  await writeRanges(rangesFor(row, rec, m)); return { row };
+  await writeRanges(rangesFor(row, rec, m));
+  const merged = cur.slice(); FIELDS.forEach(f => { if (m[f] >= 0 && rec[f] !== undefined) merged[m[f]] = rec[f]; });
+  return { row, fp: fpOf(merged, m) };
+}
+// Aynı tarihte izin türü dolu bir satır var mı (çift izin satırını önler)
+async function findLeave({ tarih }) {
+  const m = needMap(); if (!(m.izin >= 0)) return null; const want = pDate(tarih);
+  const v = await read(q(m.tab) + '!A2:Z');
+  for (let i = 0; i < v.length; i++) { const r = v[i]; if (pDate(r[m.tarih]) === want && String(r[m.izin] || '').trim()) return { row: i + 2, fp: fpOf(r, m), kod: String(r[m.kod] || '').trim(), is: String(r[m.is] || '').trim() }; }
+  return null;
 }
 async function delRec({ row, fp, force }) {
   const m = needMap(); const cur = await readRow(m, row);
@@ -160,4 +170,4 @@ async function deleteKey({ tab, key, width }) {
   await writeRanges([{ range: q(tab) + '!A' + r + ':' + col((width || 3) - 1) + r, values: [Array(width || 3).fill('')] }]); return { row: r };
 }
 
-module.exports = { cancel, authUrl, reopen, status, setConfig, login, logout, meta, read, sheetIdFrom, parseClient, addRec, updRec, delRec, upsertKey, deleteKey, fpOf, rangesFor };
+module.exports = { cancel, authUrl, reopen, status, setConfig, login, logout, meta, read, sheetIdFrom, parseClient, addRec, updRec, delRec, findLeave, upsertKey, deleteKey, fpOf, rangesFor };

@@ -28,17 +28,17 @@ function shReadAll(){var m=SH.st&&SH.st.map;if(!m){toast('Önce sütun eşlemesi
 return flush().then(function(){return shCall(API.sheets.read("'"+m.tab.replace(/'/g,"''")+"'!A2:Z"))}).then(function(v){var by={},bad=0,first=null,izn={};
 v.forEach(function(r,ix){var row=ix+2,k=parseDate(r[m.tarih]),d=parseMin(r[m.dk]),c=String(r[m.kod]||'').trim(),i=String(r[m.is]||'').trim(),it=m.izin>=0?izinType(r[m.izin]):null;
 if(k&&!inRange(k)&&(!first||pk(k)<pk(first)))first=k;
-if(k&&it){izn[k]={t:it,row:row,fp:[k,c,i,String(d)].join('|')}}
+if(k&&it){izn[k]={t:it,row:row,fp:[k,c,i,String(d)].join('|'),kod:c,is:i,dk:d};return} // izin satırı: çalışma kaydı değil
 if(!k||!d){if(!(k&&it)&&r.join('').trim())bad++;if(k)by[k]=by[k]||[];return}
 if(!c)c='?';(by[k]=by[k]||[]).push({k:c,i:i||'—',d:d,pn:m.parca>=0?String(r[m.parca]||'').trim():'',st:1,src:'sheets',row:row,fp:[k,c,i,String(d)].join('|'),u:uid()})});
 var busy={};Q.forEach(function(o){if(o.k)busy[o.k]=1;if(o.u){var f=findE(o.u);if(f)busy[f.k]=1}});
-Object.keys(izn).forEach(function(k){if(busy[k])return;D[k]=izn[k].t;DR[k]={row:izn[k].row,fp:izn[k].fp}});
+Object.keys(izn).forEach(function(k){if(busy[k])return;D[k]=izn[k].t;DR[k]={row:izn[k].row,fp:izn[k].fp,kod:izn[k].kod,is:izn[k].is,dk:izn[k].dk}});
 Object.keys(DR).forEach(function(k){if(!izn[k]&&!busy[k]){delete DR[k];if(IZL[D[k]])delete D[k]}}); // Sheets'te izin satırı silinmişse
 var n=0,np=0;Object.keys(by).forEach(function(k){if(busy[k])return;var keep=(E[k]||[]).filter(function(e){return !e.row&&(!e.src||e.src=='csv'||!e.st)});E[k]=by[k].concat(keep);if(!E[k].length)delete E[k];n+=by[k].length;
 by[k].forEach(function(e){if(e.k!='?'&&SPECIAL.indexOf(e.k)<0&&!pexists(e.k)&&/^\d+(\.\d+)+$/.test(e.k)){var md=pmodel(e.k);if(!PR[md]){PR[md]=[];UM[md]=true}PR[md].push([e.k,'Sheets’ten · adı yok']);UP[e.k]=true;np++}})});
 // Sheets'te artık olmayan senkron kayıtlar (biri satırı sildiyse) kaldırılır
 Object.keys(E).forEach(function(k){if(by[k]||busy[k])return;var a=E[k].filter(function(e){return !(e.src=='sheets'&&e.row)});if(a.length!=E[k].length){if(a.length)E[k]=a;else delete E[k]}});
-if(first)S.sheetStart=first;return readProjects().then(function(pp){return shCall(API.sheets.config({lastSync:new Date().toISOString()})).then(function(s){SH.st=s;SH.busy='';CONNECTED=true;SYN.last=new Date();save();render();toast(n+' kayıt okundu'+(np+pp?' · '+(np+pp)+' yeni proje':'')+(bad?' · '+bad+' satır okunamadı':''))})})},shErr)}
+var ds=Object.keys(by).concat(Object.keys(izn)).filter(function(k){return !inRange(k)}).sort(function(a,b){return pk(b)-pk(a)});if(ds.length){var st0=ds[0];for(var j=1;j<ds.length;j++){if((pk(st0)-pk(ds[j]))/864e5>10)break;st0=ds[j]}S.sheetStart=st0}return readProjects().then(function(pp){return shCall(API.sheets.config({lastSync:new Date().toISOString()})).then(function(s){SH.st=s;SH.busy='';CONNECTED=true;SYN.last=new Date();save();render();toast(n+' kayıt okundu'+(np+pp?' · '+(np+pp)+' yeni proje':'')+(bad?' · '+bad+' satır okunamadı':''))})})},shErr)}
 // Projeler sekmesi varsa: A sütunu kod, B sütunu ad
 function readProjects(){var go=function(tabs){var t=(tabs||[]).filter(function(x){return /^projeler$/i.test(x.trim())})[0];if(!t)return Promise.resolve(0);
 return shCall(API.sheets.read("'"+t+"'!A2:C")).then(function(v){var n=0,pend={};Q.forEach(function(o){if(o.op=='pup'||o.op=='pdel')pend[o.key]=1});v.forEach(function(r){var c=String(r[0]||'').trim(),nm=String(r[1]||'').trim(),ds=String(r[2]||'').trim();if(!/^\d+(\.\d+)+$/.test(c)||pend[c])return;if(ds)PS[c]=ds;if(pexists(c)){if(nm)allP().forEach(function(p){if(p[0]==c&&p[1]!=nm)p[1]=nm});return}var md=pmodel(c);if(!PR[md]){PR[md]=[];UM[md]=true}PR[md].push([c,nm||'Adı yok']);UP[c]=true;n++});return n},function(){return 0})};

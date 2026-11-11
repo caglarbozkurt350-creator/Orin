@@ -35,3 +35,5 @@ return API.surum.don(SURUM&&SURUM.surumler[0]?SURUM.surumler[0].v:'0.7.0')}).the
 var bk=_svWarnT;_svWarnT=0;var tt=document.getElementById('toast');saveBlocked({ok:false,err:'deneme reddi'});t('Kayıt reddi uyarısı',_svWarnT>0);_svWarnT=bk;
 return API.data.backup()}).then(function(r){t('Elle yedek hâlâ çalışır',r.ok,JSON.stringify(r));nav('home','gun',TODAY);return R})};
 var __at13=window.__asyncTest;window.__asyncTest=function(){return __at13().then(function(a){return window.__v071Test().then(function(b){return a.concat(b)})})};
+// İK grafikleri testleri (0.7.2)
+var __at14=window.__asyncTest;window.__asyncTest=function(){return __at14().then(function(a){return a.concat(window.__ikTest?window.__ikTest():[])})};

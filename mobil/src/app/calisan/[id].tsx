@@ -3,7 +3,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { AltPencere, Bos, GelisimFormu, GorevFormu } from '@/bilesen/formlar';
+import { AltPencere, Bos, GelisimFormu, GorevFormu, GorevSinir } from '@/bilesen/formlar';
 import { GelisimSatiri } from '@/bilesen/gelisim';
 import { Dugme, Ekran, Foto, Ikon, Nokta, Rozet, s } from '@/bilesen/ortak';
 import { olayEkle, useDurum } from '@/lib/depo';
@@ -49,7 +49,7 @@ export default function CalisanSayfasi() {
                   style={{ width: 24, height: 24, borderRadius: 12, borderWidth: 1.5, borderColor: g.durum === 'bitti' ? R.yesil : '#5a5a62', backgroundColor: g.durum === 'bitti' ? R.yesil : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
                   {g.durum === 'bitti' && <Ikon ad="tik" boy={14} renk="#fff" kalin={2.4} />}
                 </Pressable>
-                <View style={{ flex: 1 }}><Text style={{ color: '#e4e4e8', fontSize: 14.5, lineHeight: 21 }}>{g.metin}</Text><Text style={{ color: R.solukk, fontSize: 12, marginTop: 3 }}>Doğrudan görev · {saat(g.ts)}{g.son ? ' · son tarih ' + g.son : ''}</Text></View>
+                <View style={{ flex: 1 }}><Text style={{ color: '#e4e4e8', fontSize: 14.5, lineHeight: 21 }}>{g.metin}</Text><Text style={{ color: R.solukk, fontSize: 12, marginTop: 3 }}>Doğrudan görev · {saat(g.ts)}{g.son ? ' · son tarih ' + g.son : ''}</Text><GorevSinir g={g} /></View>
                 {g.onc === 'acil' && <Rozet yazi="Acil" renk={R.acil} />}
               </View>
             )) : <Bos yazi="Henüz görev yok. Görevler yapay zekâ bağlanınca Orin › Orla zinciriyle de gelecek." ikon="gorev" />}

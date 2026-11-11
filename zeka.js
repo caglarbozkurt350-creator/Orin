@@ -65,18 +65,18 @@ async function sor(o) {
   if (h.usd >= c.butce) throw new Error('Bu ayın yapay zekâ bütçesi doldu ($' + c.butce + '). Ayarlar › Yapay zekâ’dan artırabilirsin.');
   const model = MODELLER.includes(o.model) ? o.model : 'claude-haiku-5-5', cl = istemci();
   const govde = {
-    model, max_tokens: 4000,
+    model, max_tokens: Math.min(16000, Math.max(256, Number(o.maxTokens) || 4000)),
     system: [{ type: 'text', text: String(o.system || ''), cache_control: { type: 'ephemeral' } }],
-    output_config: { effort: 'low' }, // sohbet: kısa ve hızlı cevap
+    output_config: { effort: o.effort === 'medium' ? 'medium' : 'low' }, // sohbet: kısa ve hızlı; görev: orta
     messages: o.messages,
   };
-  let r;
+  let r; const sec = { timeout: Math.min(600000, Math.max(5000, Number(o.zamanAsimiMs) || 120000)) };
   try {
     // Sonnet 5.5: güvenlik reddinde sunucu tarafı yedek model (fallbacks: "default"); Haiku'da yedek yok
     r = model === 'claude-sonnet-5-5'
-      ? await cl.beta.messages.create(Object.assign({}, govde, { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' }))
-      : await cl.messages.create(govde);
-  } catch (e) { throw new Error(hataMetni(e)); }
+      ? await cl.beta.messages.create(Object.assign({}, govde, { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' }), sec)
+      : await cl.messages.create(govde, sec);
+  } catch (e) { if (e instanceof Anthropic.APIConnectionTimeoutError) throw new Error('Süre sınırı doldu'); throw new Error(hataMetni(e)); }
   const u = r.usage || {}, usd = maliyet(r.model || model, u);
   const y = harcama(); y.usd += usd; y.giris += u.input_tokens || 0; y.cikis += u.output_tokens || 0; y.onbellek += u.cache_read_input_tokens || 0; y.istek++;
   const k = (y.kisi[o.kim] = y.kisi[o.kim] || { usd: 0, token: 0, istek: 0 }); k.usd += usd; k.token += (u.input_tokens || 0) + (u.output_tokens || 0) + (u.cache_read_input_tokens || 0); k.istek++;
@@ -85,7 +85,7 @@ async function sor(o) {
   let metin = (r.content || []).filter((b) => b.type === 'text').map((b) => b.text).join('\n').trim();
   if (r.stop_reason === 'refusal') metin = metin || 'Bu isteğe yardımcı olamıyorum.';
   if (r.stop_reason === 'max_tokens') metin += '\n…(cevap uzun olduğu için kesildi)';
-  return { metin, model: r.model || model, usd, usage: u, harcama: y, aylar: aylar(), butce: c.butce };
+  return { metin, stop: r.stop_reason, token: (u.input_tokens || 0) + (u.output_tokens || 0) + (u.cache_read_input_tokens || 0) + (u.cache_creation_input_tokens || 0), model: r.model || model, usd, usage: u, harcama: y, aylar: aylar(), butce: c.butce };
 }
 
 module.exports = { status, setKey, clearKey, setBudget, sor, MODELLER };

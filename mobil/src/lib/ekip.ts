@@ -35,7 +35,7 @@ export function uygula(o: Ozet, e: Olay) {
   else if (e.tur === 'cevap') push(v.kim, { id: e.id, r: 'o', t: v.t, ts: e.ts, qr: v.qr, kaynak: 'telefon' });
   else if (e.tur === 'gorev') {
     if (!E.gorev.some((g) => g.id === v.id)) {
-      E.gorev.push({ id: v.id, kim: v.kim, metin: v.metin, onc: v.onc, son: v.son || '', durum: 'acik', bilgi: !!v.bilgi, yol: 'dogrudan', ts: e.ts });
+      E.gorev.push({ id: v.id, kim: v.kim, metin: v.metin, onc: v.onc, son: v.son || '', durum: 'acik', bilgi: !!v.bilgi, yol: 'dogrudan', ts: e.ts, ...(v.sureDk ? { sureDk: +v.sureDk, bitis: e.ts + v.sureDk * 60000 } : {}), ...(v.tokenLimit ? { tokenLimit: +v.tokenLimit } : {}) });
       push(v.kim, { id: e.id + 's', r: 'sys', t: 'Çağlar doğrudan görev verdi' + (v.onc === 'acil' ? ' (acil)' : '') + ': ' + v.metin + (v.son ? ' · son tarih ' + v.son : ''), ts: e.ts });
       if (v.bilgi && v.kim !== 'orin') push('orin', { id: e.id + 'b', r: 'sys', t: bilgiNotu(v.ad || v.kim), ts: e.ts });
     }

@@ -211,3 +211,22 @@ t('Mesaj Claude’a gider, cevap sohbete düşer',giden&&giden.model=='claude-ha
 t('Harcama canlı güncellenir',Math.abs(ZK.st.harcama.usd-0.012)<1e-9);
 API=bAPI;ZK.st=bST;S.team=bk=='null'?undefined:JSON.parse(bk);nav('home','gun',TODAY);return R})};
 var __at10=window.__asyncTest;window.__asyncTest=function(){return __at10().then(function(a){return window.__zekaTest().then(function(b){return a.concat(b)})})};
+
+// Süre ve token sınırlı görevler (API sahte)
+window.__limitTest=function(){var R=[];function t(n,c,m){try{var ok=typeof c=='function'?c():c;R.push({n:n,ok:!!ok,m:ok?'':String(m||'')})}catch(e){R.push({n:n,ok:false,m:e.message})}}
+var bk=JSON.stringify(S.team||null),bAPI=API,bST=ZK.st,giden=null;
+API=Object.assign({},bAPI||{},{zeka:{sor:function(o){giden=o;return Promise.resolve({ok:true,v:{metin:'Rapor hazır.',stop:'end_turn',token:1800,model:o.model,usd:0.0004,harcama:{usd:0.0004,giris:0,cikis:0,onbellek:0,istek:1,kisi:{},gun:{}},aylar:{},butce:10}})}}});
+ZK.st=null;var g0=tmTaskNew('vera','Kalite listesi çıkar','normal','',false,{sureDk:30,tokenLimit:5000});
+t('Sınırlı görev: bitiş zamanı ve token sınırı kaydedilir',g0.sureDk==30&&g0.bitis-g0.ts==1800000&&g0.tokenLimit==5000);
+t('Sınır rozetleri: kalan süre ve token',function(){var h=tmLimit(g0);return /30 dk/.test(h)&&/kalan/.test(h)&&/5K token/.test(h)});
+t('Süresi dolan görev kırmızı',function(){var g={sureDk:15,bitis:Date.now()-1000,durum:'acik'};return /süre doldu/.test(tmLimit(g))});
+t('Görev formunda süre ve token seçimi',function(){var h=tmTaskForm(tm('vera'));return h.indexOf('Süre sınırı')>0&&h.indexOf('Token sınırı')>0&&h.indexOf('50K')>0});
+ZK.st={anahtar:true,butce:10,harcama:{usd:0,kisi:{},gun:{}},aylar:{}};
+var g1=tmTaskNew('sage','Kısa araştırma özeti','normal','',false,{sureDk:15,tokenLimit:10000});
+return new Promise(function(res){setTimeout(res,60)}).then(function(){
+t('API bağlıyken çalışan görevi yapar, sonuç ve token kaydedilir',g1.durum=='bitti'&&g1.sonuc=='Rapor hazır.'&&g1.token==1800&&giden&&giden.maxTokens<10000&&giden.zamanAsimiMs>0&&giden.zamanAsimiMs<=900000,JSON.stringify({d:g1.durum,s:g1.sonuc,m:giden&&giden.maxTokens}));
+t('Sonuç çalışanın sohbetine düşer',/Görev tamamlandı/.test(tmChat('sage')[tmChat('sage').length-1].t));
+var g2=tmTaskNew('mia','Uzun plan','normal','',false,{tokenLimit:200});
+t('Çok düşük token sınırında görev başlamaz',/çok düşük/.test(g2.hata||''),g2.hata);
+API=bAPI;ZK.st=bST;S.team=bk=='null'?undefined:JSON.parse(bk);nav('home','gun',TODAY);return R})};
+var __at11=window.__asyncTest;window.__asyncTest=function(){return __at11().then(function(a){return window.__limitTest().then(function(b){return a.concat(b)})})};

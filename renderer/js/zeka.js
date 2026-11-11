@@ -64,4 +64,21 @@ return '<p class="h">Yapay zekâ</p><p class="s">Çalışanlar Claude API ile ce
 '<div class="hn" style="margin-top:6px">Fiyat (1M token, giriş/çıkış): Opus 5.5 $4/$20 · Sonnet 5.5 $2/$10 · Haiku 5.5 $0,10/$0,50.</div></div>'};
 var _zkTo=titleOf;titleOf=function(){if(area=='set'&&pg=='zeka')return 'Ayarlar › Yapay zekâ';return _zkTo()};
 var _zkSb=sbH;sbH=function(){var h=_zkSb();if(area=='set'&&op('set'))h+=si('set','zeka','','Yapay zekâ','l2','ti-sparkles');return h};
-zekaDurum().then(function(s){if(s&&s.anahtar&&!INFO.smoke)setTimeout(zekaBekleyenler,4000);if(area=='team')render()});
+zekaDurum().then(function(s){if(s&&s.anahtar&&!INFO.smoke)setTimeout(function(){zekaBekleyenler();zekaGorevTara()},4000);if(area=='team')render()});
+
+// ---------- Süre ve token sınırlı görevler: çalışan görevi kendisi yapar ----------
+// Token sınırı giriş + çıkışı kapsar (çıkış payı tahmini girişten kalan); süre sınırı isteğin zaman aşımıdır.
+function zekaGorev(g){var c=tm(g.kim);if(!c||!zekaHazir()||g.durum!='acik'||g.sonuc)return Promise.resolve();
+var sys=zekaSistem(c)+'\n\n'+zekaBaglam(c),soru='Doğrudan görev (Çağlar’dan): '+g.metin+(g.son?'\nSon tarih: '+tmSon(g.son):'')+(g.sureDk?'\nSüre sınırı: '+tmSureAd(g.sureDk):'')+(g.tokenLimit?'\nToken sınırı: '+g.tokenLimit+' (kısa ve öz yaz)':'')+'\nGörevi yap ve sonucu doğrudan yaz. Bu sürümde yapamayacağın bir kısım varsa (dosyaya yazma, takvime ekleme, internet) açıkça belirt ve yapılabilecek olanı hazırla.';
+var tahmin=Math.ceil((sys.length+soru.length)/3.2),kalan=g.bitis?g.bitis-Date.now():0;
+if(g.bitis&&kalan<=0){g.hata='Süre sınırı doldu';save();return Promise.resolve()}
+if(g.tokenLimit&&g.tokenLimit-tahmin<256){g.hata='Token sınırı bu görev için çok düşük';save();if(area=='team')render();return Promise.resolve()}
+g.durum='calisiyor';delete g.hata;save();if(area=='team')render();
+return call(API.zeka.sor({kim:g.kim,model:tmModel(c),system:sys,messages:[{role:'user',content:soru}],effort:'medium',maxTokens:g.tokenLimit?g.tokenLimit-tahmin:6000,zamanAsimiMs:g.bitis?kalan:180000})).then(function(r){
+g.sonuc=r.metin;g.token=r.token;g.usd=r.usd;g.durum='bitti';g.bts=Date.now();if(r.stop=='max_tokens')g.hata='Token sınırına ulaşıldı';
+tmPush(g.kim,{r:'o',t:'Görev tamamlandı: '+g.metin+'\n\n'+r.metin,model:r.model,usd:r.usd});if(ZK.st){ZK.st.harcama=r.harcama;ZK.st.aylar=r.aylar}},
+function(e){g.durum='acik';g.hata=e.message;toast((c.ad||'')+': '+e.message)}).then(function(){save();if(area=='team'||area=='home')render()})}
+// Bilgisayar açılınca ya da bağlantı gelince yarım kalan sınırlı görevleri yeniden dene; süre dolanları işaretle
+function zekaGorevTara(){var T=TMS();T.gorev.forEach(function(g){if(g.durum=='calisiyor'&&!ZK.yaz['g'+g.id])g.durum='acik';if(g.durum=='acik'&&!g.sonuc&&(g.tokenLimit||g.sureDk)&&!g.hata)zekaGorev(g)})}
+setInterval(function(){if(area=='team'&&TMS().gorev.some(function(g){return g.sureDk&&g.durum!='bitti'}))render()},60000);
+if(typeof bulutUygula=='function'){var _zkBu2=bulutUygula;bulutUygula=function(e){_zkBu2(e);if(e.tur=='gorev'&&e.veri){var g=TMS().gorev.filter(function(x){return x.id==e.veri.id})[0];if(g&&(e.veri.sureDk||e.veri.tokenLimit)&&!g.sonuc){if(e.veri.sureDk&&!g.sureDk){g.sureDk=+e.veri.sureDk;g.bitis=g.ts+g.sureDk*60000}if(e.veri.tokenLimit)g.tokenLimit=+e.veri.tokenLimit;setTimeout(function(){zekaGorev(g)},300)}}}}

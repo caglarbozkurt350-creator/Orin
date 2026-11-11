@@ -48,10 +48,10 @@ export function Secim({ secenek, deger, sec }: { secenek: [string, string][]; de
 }
 
 export function GorevFormu({ c, kapat }: { c: Calisan; kapat: () => void }) {
-  const [metin, setMetin] = useState(''), [onc, setOnc] = useState('normal'), [bilgi, setBilgi] = useState(true), [son, setSon] = useState('');
+  const [metin, setMetin] = useState(''), [onc, setOnc] = useState('normal'), [bilgi, setBilgi] = useState(true), [son, setSon] = useState(''), [sure, setSure] = useState('0'), [tok, setTok] = useState('0');
   const gonder = () => {
     if (!metin.trim()) return;
-    olayEkle('gorev', { id: uid(), kim: c.id, ad: c.ad, metin: metin.trim(), onc, son: son.trim(), bilgi: c.id !== 'orin' && bilgi });
+    olayEkle('gorev', { id: uid(), kim: c.id, ad: c.ad, metin: metin.trim(), onc, son: son.trim(), bilgi: c.id !== 'orin' && bilgi, sureDk: +sure || 0, tokenLimit: +tok || 0 });
     esitleSonra(); kapat();
   };
   return (
@@ -70,6 +70,8 @@ export function GorevFormu({ c, kapat }: { c: Calisan; kapat: () => void }) {
           <Text style={{ flex: 1, color: R.yazi2, fontSize: 13.5 }}>Orin’e bilgi notu düş <Text style={{ color: '#8e8e96' }}>· karışmaz, haberi olur</Text></Text>
         </Pressable>
       )}
+      <View style={{ gap: 6 }}><Text style={{ color: R.yazi2, fontSize: 13.5 }}>Süre sınırı</Text><Secim secenek={[['0', 'Yok'], ['15', '15 dk'], ['30', '30 dk'], ['60', '1 sa'], ['240', '4 sa'], ['1440', '1 gün']]} deger={sure} sec={setSure} /></View>
+      <View style={{ gap: 6 }}><Text style={{ color: R.yazi2, fontSize: 13.5 }}>Token sınırı</Text><Secim secenek={[['0', 'Yok'], ['2000', '2K'], ['5000', '5K'], ['10000', '10K'], ['25000', '25K'], ['50000', '50K']]} deger={tok} sec={setTok} /></View>
       <View style={s.giris}><Text style={s.girisEt}>Son tarih (isteğe bağlı)</Text><TextInput value={son} onChangeText={setSon} placeholder="ör. Bugün 17:00" placeholderTextColor={R.solukk} style={s.girisY} /></View>
       <Dugme yazi={'Görevi ' + c.ad + '’ya gönder'} ikon="simsek" onPress={gonder} kapali={!metin.trim()} />
     </View>
@@ -99,6 +101,25 @@ export function GelisimFormu({ c, o, hepsi, kimden, tur0, kapat }: { c?: Calisan
       {tur === 'seviye' && <Secim secenek={bec.map((b) => [b.ad, b.ad + ' · ' + LVL[b.sv]] as [string, string])} deger={ad} sec={setAd} />}
       <View style={s.giris}><Text style={s.girisEt}>Açıklama</Text><TextInput value={metin} onChangeText={setMetin} multiline placeholder="Ne öğrensin ya da neyi hatırlasın?" placeholderTextColor={R.solukk} style={[s.girisY, { minHeight: 60, textAlignVertical: 'top' }]} /></View>
       <Dugme yazi="Gönder" ikon="yildiz" onPress={gonder} kapali={!tamam} />
+    </View>
+  );
+}
+
+// Görev kartında süre/token rozetleri ve sonuç
+const sureAd = (dk: number) => (dk >= 1440 ? Math.round(dk / 1440) + ' gün' : dk >= 60 ? Math.round((dk / 60) * 10) / 10 + ' sa' : dk + ' dk');
+const tk = (n: number) => (n >= 1000 ? String(Math.round(n / 100) / 10).replace('.', ',') + 'K' : String(n));
+export function GorevSinir({ g }: { g: import('@/lib/depo').Gorev }) {
+  const [ac, setAc] = useState(false);
+  const r: [string, string][] = [];
+  if (g.sureDk && g.bitis) { const k = g.bitis - Date.now(), dol = g.durum !== 'bitti' && k <= 0; r.push([sureAd(g.sureDk) + (g.durum === 'bitti' ? '' : dol ? ' · süre doldu' : ' · kalan ' + sureAd(Math.ceil(k / 60000))), dol ? R.kirmizi : R.soluk]); }
+  if (g.tokenLimit || g.token) r.push([(g.token ? tk(g.token) + (g.tokenLimit ? ' / ' : '') : '') + (g.tokenLimit ? tk(g.tokenLimit) : '') + ' token' + (g.usd ? ' · $' + g.usd.toFixed(4).replace('.', ',') : ''), R.soluk]);
+  if (g.durum === 'calisiyor') r.push(['çalışıyor…', '#a9b4ff']);
+  if (g.hata) r.push([g.hata, R.kirmizi]);
+  if (!r.length && !g.sonuc) return null;
+  return (
+    <View style={{ marginTop: 6, gap: 6 }}>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>{r.map(([y, c], i) => <View key={i} style={{ borderWidth: 1, borderColor: saydam(c, 0.45), borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 }}><Text style={{ color: c, fontSize: 11.5 }}>{y}</Text></View>)}</View>
+      {!!g.sonuc && <Pressable onPress={() => setAc(!ac)}><Text style={{ color: R.bilgi, fontSize: 13 }}>{ac ? 'Sonucu gizle' : 'Sonucu göster'}</Text>{ac && <Text style={{ color: '#e4e4e8', fontSize: 14, lineHeight: 21, marginTop: 4 }}>{g.sonuc}</Text>}</Pressable>}
     </View>
   );
 }

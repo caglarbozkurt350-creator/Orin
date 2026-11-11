@@ -2,7 +2,7 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
-import { AltPencere, Bos, GorevFormu } from '@/bilesen/formlar';
+import { AltPencere, Bos, GorevFormu, GorevSinir } from '@/bilesen/formlar';
 import { Ekran, Foto, Ikon, Rozet, s } from '@/bilesen/ortak';
 import { olayEkle } from '@/lib/depo';
 import { bekleyenGelisim, Calisan, calisanlar, useGorunum } from '@/lib/ekip';
@@ -28,6 +28,7 @@ export default function Gorevler() {
               <Pressable style={{ flex: 1 }} onPress={() => c && router.push(('/calisan/' + c.id) as any)}>
                 <Text style={{ color: '#e4e4e8', fontSize: 14.5, lineHeight: 21 }}>{x.metin}</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 }}><Foto c={c} boy={18} halka={false} /><Text style={{ color: R.solukk, fontSize: 12 }}>{c?.ad} · doğrudan görev{x.son ? ' · ' + x.son : ''}</Text></View>
+                <GorevSinir g={x} />
               </Pressable>
               {x.onc === 'acil' && <Rozet yazi="Acil" renk={R.acil} />}
             </View>

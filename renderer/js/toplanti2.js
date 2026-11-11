@@ -223,7 +223,7 @@ cev.orin='Kararlar: kısa konuşma. Yapılacaklar: Remy hatırlatıcı.';return 
 t('Seçilen kapanış kararları kaydedilir, boş olan açık kalır',tp.kararlar.some(function(k){return /sarı mı olsun → Evet/.test(k.metin)})&&tp.kararlar.some(function(k){return /Gönder yanında mı → Hayır \(öneriyle\)/.test(k.metin)})&&!tp.kararlar.some(function(k){return /Haftalık/.test(k.metin)}),JSON.stringify(tp.kararlar.map(function(k){return k.metin})));
 t('Tutanak yazılır, toplantı biter',tp.durum=='bitti'&&/Remy hatırlatıcı/.test(tp.ozet||''),tp.durum);
 // Odaya dönüş
-var t2=tpYeni({ev:'orin',kim:['otto'],konu:'Dönüş'});tpGit(t2.id);nav('home','gun',TODAY);openArea('team');t('Toplantı sürerken Çalışanlarım’a dönünce oda açılır',pg=='toplanti'&&arg==t2.id,pg+' '+arg);
+var t2=tpYeni({ev:'orin',kim:['otto'],konu:'Dönüş'});tpGit(t2.id);nav('home','gun',TODAY);openArea(typeof sirketGenel=='function'?'sirket':'team');t('Toplantı sürerken Şirketim’e dönünce oda açılır',pg=='toplanti'&&arg==t2.id,pg+' '+arg);
 nav('team','calisan','otto');t('Ekip sayfalarında “Odaya dön” şeridi',/Toplantı sürüyor: <b>Dönüş<\/b>/.test(document.getElementById('ct').innerHTML));
 // Normal sohbette kendi üslubuyla +Ad önerisi
 T.sohbet.otto=[];tmPush('otto',{r:'o',t:'İsterseniz bu konuda görüşlerini almak için +Marco’yu toplantıya davet edelim.'});var so=tmChat('otto').slice(-1)[0];

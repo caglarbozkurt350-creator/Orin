@@ -81,3 +81,9 @@ kararlar:[{kim:'orin',metin:'Toplantılarda kısa ve öz konuşulur.',ts:n-90000
 // 0.7.17: toplantı → Claude Code, unvanlar, arka plan işleri
 var __at25=window.__asyncTest;window.__asyncTest=function(){return __at25().then(function(a){return (window.__v0717Test?window.__v0717Test():Promise.resolve([])).then(function(b){return a.concat(b)})})};
 var __sr11=window.__smokeRoutes;window.__smokeRoutes=function(){return __sr11().concat([['team','arkaplan','']])};
+// 0.7.18: Şirketim (kategori, gelir-gider, katkılar, piyasa)
+var __at26=window.__asyncTest;window.__asyncTest=function(){return __at26().then(function(a){return (window.__v0718Test?window.__v0718Test():Promise.resolve([])).then(function(b){return a.concat(b)})})};
+var __sr12=window.__smokeRoutes;window.__smokeRoutes=function(){return __sr12().concat([['sirketdemo','','']])};
+var __sg12=window.__smokeGo;window.__smokeGo=function(r){if(r[0]!='sirketdemo')return __sg12(r);var ay=fnBuAy(),d=new Date();S.finans={kayit:[],katki:[],ayar:{abonelikTL:800,abonelikBas:'2026-01',ottoTakip:true},piyasa:{tcmb:{tarih:'12.11.2026',kur:{usd:{satis:41.5},eur:{satis:47.6},gbp:{satis:54.2}}},otto:{ts:Date.now(),gun:fnBugun(),veri:{gram_altin:4100,ceyrek_altin:6700,ons_altin:2650,gram_gumus:48,bist100:10500,kaynak:'örnek'}}}};
+for(var i=5;i>=0;i--){var x=new Date(d.getFullYear(),d.getMonth()-i,5),a=x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0');fnKaydet({tur:'gelir',kim:'cagla',tutar:28000+i*700,kalem:'Maaş',tarih:a+'-05'});fnKaydet({tur:'gider',kim:'cagla',tutar:15000+i*900,kalem:'Kira',tarih:a+'-03'});fnS().katki.push({id:'k'+i,kim:'otto',tur:'birikim',aciklama:'Örnek katkı',tutar:900+(5-i)*400,durum:'onay',tarih:a+'-10'})}
+fnS().katki.push({id:'kx',kim:'sage',tur:'kazanc',aciklama:'Örnek kazanç fikri',tutar:2500,durum:'oneri',tarih:ay+'-11'});nav('team','sirket');return {}};

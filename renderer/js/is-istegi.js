@@ -252,7 +252,7 @@ nav('team','calisan','echo');TMTAB='prof';render();var hp=document.getElementByI
 tmSet('cdeneme',{yeni:1,ad:'Nova',gorev:'Deneme',grup:'ekip',bagli:'Orla',renk:'#5bb8ff'});nav('team','calisan','cdeneme');TMTAB='prof';render();t('Sonradan eklenen çalışan silinebilir',/Çalışanı sil/.test(document.getElementById('ct').innerHTML));TMTAB='genel';
 // 6) Hiyerarşi
 HRV='hiy';nav('team','ik');var hy=document.getElementById('ct').innerHTML;HRV='kart';t('İK sayfasında Hiyerarşi görünümü: Çağlar, Jarvis (dışarıda), sürüklenebilir kartlar',/class="hyt"/.test(hy)&&/Şirketin sahibi/.test(hy)&&/Jarvis/.test(hy)&&/draggable="true"/.test(hy)&&hy.indexOf('Orin')>0&&/hyj/.test(hy));
-t('İK sayfasında Kartlar | Hiyerarşi seçimi, kenar çubuğunda Jarvis',/Hiyerarşi<\/span>/.test(hy)&&/Kartlar<\/span>/.test(hy)&&/Kişisel asistan · yalnız Çağlar/.test(document.getElementById('sb').innerHTML));
+t('İK sayfasında Kartlar | Hiyerarşi seçimi, kenar çubuğunda Jarvis',/Hiyerarşi<\/span>/.test(hy)&&/Kartlar<\/span>/.test(hy)&&(nav('team','calisan','orin'),/Kişisel asistan · yalnız Çağlar/.test(document.getElementById('sb').innerHTML)));
 t('Kart kendi altındakine bağlanamaz (döngü yok)',hyBagla('orla','echo',false)===false&&tm('orla').bagli!='Echo');
 t('Sürükle-bırak bağlılığı değiştirir (yeni çalışan yerleşir)',hyBagla('cdeneme','nika',false)===true&&tm('cdeneme').bagli=='Nika'&&tmChain(tm('cdeneme')).join('>').indexOf('Nika>Nova')>0,tmChain(tm('cdeneme')).join('>'));
 t('Jarvis çalışan listesinde yok (çalışanlar Jarvis’e ulaşamaz)',!tmAll().some(function(c){return /jarvis/i.test(c.id+c.ad)})&&!/Jarvis/.test(zekaSistem(tm('sage'))));

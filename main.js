@@ -169,6 +169,8 @@ function mainTests() {
     t('İş emri adı doğrulanır (klasör dışı okunmaz)', ge && /Geçersiz/.test(ge.message));
     const tk1 = gl.testKarsilastir({ dusen: ['A', 'B'], gecen: 8, toplam: 10 }, { dusen: ['A', 'B'], gecen: 9, toplam: 11 }), tk2 = gl.testKarsilastir({ dusen: ['A'] }, { dusen: ['A', 'C'], gecen: 9, toplam: 11, hatalar: ['TEST C: x'] });
     t('İş emri testi: yalnız yeni düşen testler hata sayılır (kişisel veri eksikliği değil)', tk1.ok && tk1.kisiselEksik === 2 && !tk2.ok && tk2.yeniHata.join() === 'C' && tk2.hatalar.length === 1, JSON.stringify([tk1, tk2]));
+    const tx = tcmbAyikla('<Tarih_Date Tarih="12.11.2026"><Currency CrossOrder="0" Kod="USD" CurrencyCode="USD"><Unit>1</Unit><ForexBuying>41.1000</ForexBuying><ForexSelling>41.2000</ForexSelling></Currency><Currency CurrencyCode="EUR"><ForexBuying>47.5</ForexBuying><ForexSelling>47.6</ForexSelling></Currency></Tarih_Date>');
+    t('TCMB kur listesi okunur (dolar, euro)', tx.tarih === '12.11.2026' && tx.kur.usd.satis === 41.2 && tx.kur.eur.alis === 47.5 && !tx.kur.gbp, JSON.stringify(tx));
     t('İş emri durumu güncellenir', gl.emirGuncelle(e1.dosya, { durum: 'inceleme', dal: 'is-emri/ada-x' }).durum === 'inceleme' && gl.emirler().some(x => x.id === 'test1' && x.dal === 'is-emri/ada-x'));
   } catch (e) { t('Ana süreç testleri', false, e.stack); }
   try { fs.unlinkSync(LOC()); } catch (e) {}
@@ -387,6 +389,14 @@ function jarvisIstem(o) {
 }
 ipcMain.handle('jarvis:sor', wrap(o => { if (SMOKE) throw new Error('Testte Jarvis çalıştırılmaz'); if (!fs.existsSync(JARVIS_DIR())) throw new Error('Jarvis klasörü bulunamadı: ' + JARVIS_DIR());
   return abonelik.calistirIzle({ kim: 'jarvis', tur: 'sohbet', mod: 'jarvis', cwd: JARVIS_DIR(), sistemTam: true, araclar: 'Read,Glob,Grep', maxTur: 8, model: (o && o.model) || 'sonnet', zamanAsimiMs: 240000, sistem: jarvisSistem(), istem: jarvisIstem(o || {}) }); }));
+// Piyasa (0.7.18): TCMB günlük resmî döviz kurları (anahtarsız, herkese açık XML); gün içinde önbellekten
+function tcmbAyikla(xml) { const tarih = (String(xml).match(/Tarih="([\d.]+)"/) || [])[1] || '', kur = {};
+  ['USD', 'EUR', 'GBP'].forEach(k => { const b = String(xml).match(new RegExp('CurrencyCode="' + k + '"[\\s\\S]*?</Currency>')); if (!b) return; const al = (b[0].match(/<ForexBuying>([\d.]+)</) || [])[1], sat = (b[0].match(/<ForexSelling>([\d.]+)</) || [])[1]; if (sat) kur[k.toLowerCase()] = { alis: +al || null, satis: +sat }; });
+  if (!kur.usd) throw new Error('TCMB kur listesi okunamadı'); return { tarih, kur, kaynak: 'TCMB', alindi: Date.now() }; }
+ipcMain.handle('piyasa:tcmb', wrap(async zorla => { const f = path.join(DATA(), 'tcmb-kur.json'), o = readJSON(f, null);
+  if (!zorla && o && Date.now() - o.alindi < 6 * 3600e3) return o; if (SMOKE) throw new Error('Testte ağ yok');
+  const r = await fetch('https://www.tcmb.gov.tr/kurlar/today.xml', { cache: 'no-store', signal: AbortSignal.timeout(10000) }); if (!r.ok) throw new Error('TCMB ' + r.status);
+  const v = tcmbAyikla(await r.text()); writeJSON(f, v); return v; }));
 // Toplantı kayıtları (0.7.16): Belgeler\Orin\Toplantılar\<ad>.md — kişisel veri dosyasına dokunmadan okunabilsin
 const TOPLANTI_DIR = () => path.join(SMOKE ? DATA() : app.getPath('documents'), 'Orin', 'Toplantılar');
 ipcMain.handle('toplanti:kaydet', wrap(o => { const ad = String(o && o.ad || ''); if (!/^[\w.-]{5,90}\.md$/.test(ad)) throw new Error('Geçersiz toplantı dosya adı'); fs.mkdirSync(TOPLANTI_DIR(), { recursive: true });

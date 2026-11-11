@@ -19,7 +19,7 @@ export default function CalisanSayfasi() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const o = useGorunum(), senk = useDurum((d) => d.senk);
   const hepsi = useMemo(() => calisanlar(o), [o]), c = hepsi.find((x) => x.id === id);
-  const [sek, setSek] = useState<'sohbet' | 'gorev' | 'bec' | 'haf'>('sohbet'), [form, setForm] = useState<'' | 'gorev' | 'beceri' | 'hafiza'>('');
+  const [sek, setSek] = useState<'sohbet' | 'gorev' | 'bec' | 'haf'>('sohbet'), [form, setForm] = useState<'' | 'gorev' | 'beceri' | 'hafiza' | 'finans'>('');
   if (!c) return <Ekran baslik="ORVANE" geri><Bos yazi="Çalışan bulunamadı" /></Ekran>;
   const cevrim = !senk.hata, gorev = o.ekip.gorev.filter((g) => g.kim === c.id);
   const T: [typeof sek, string][] = [['sohbet', 'Sohbet'], ['gorev', 'Görevler' + (gorev.filter((g) => g.durum !== 'bitti').length ? ' · ' + gorev.filter((g) => g.durum !== 'bitti').length : '')], ['bec', 'Beceriler'], ['haf', 'Hafıza']];
@@ -44,6 +44,7 @@ export default function CalisanSayfasi() {
         <ScrollView contentContainerStyle={{ padding: 16, gap: 10, paddingBottom: 40 }}>
           {sek === 'gorev' && <>
             <Dugme yazi="Doğrudan görev ver" ikon="simsek" onPress={() => setForm('gorev')} />
+            {c.id === 'otto' && <Dugme yazi="Gelir / gider ekle" ikon="kaydet" onPress={() => setForm('finans')} />}
             {gorev.length ? gorev.slice().sort((a, b) => Number(a.durum === 'bitti') - Number(b.durum === 'bitti') || b.ts - a.ts).map((g) => (
               <View key={g.id} style={[s.kart, { flexDirection: 'row', gap: 12, opacity: g.durum === 'bitti' ? 0.6 : 1 }]}>
                 <Pressable onPress={() => { olayEkle('gorev_durum', { id: g.id, durum: g.durum === 'bitti' ? 'acik' : 'bitti' }); esitleSonra(); }} accessibilityRole="checkbox" accessibilityState={{ checked: g.durum === 'bitti' }} accessibilityLabel="Bitti"
@@ -78,7 +79,7 @@ export default function CalisanSayfasi() {
         </ScrollView>
       )}
       <AltPencere acik={!!form} kapat={() => setForm('')}>
-        {form === 'gorev' ? <GorevFormu c={c} kapat={() => setForm('')} /> : form ? <GelisimFormu c={c} o={o} hepsi={hepsi} kimden="cagla" tur0={form} kapat={() => setForm('')} /> : null}
+        {form === 'gorev' ? <GorevFormu c={c} kapat={() => setForm('')} /> : form === 'finans' ? <FinansFormu kapat={() => setForm('')} /> : form ? <GelisimFormu c={c} o={o} hepsi={hepsi} kimden="cagla" tur0={form} kapat={() => setForm('')} /> : null}
       </AltPencere>
     </Ekran>
   );
@@ -158,5 +159,29 @@ function Bot({ c, t, ts, qr, gonder, sil }: { c: Calisan; t: string; ts?: number
         ))}</View>}
       </View>
     </Pressable>
+  );
+}
+
+// 0.7.18: Otto'ya gelir / gider kaydı (masaüstündeki Şirketim › Aylık gelir ve gider'e olay olarak gider)
+function FinansFormu({ kapat }: { kapat: () => void }) {
+  const [tur, setTur] = useState<'gelir' | 'gider'>('gider'), [kim, setKim] = useState<'cagla' | 'sirket'>('cagla'), [tutar, setTutar] = useState(''), [kalem, setKalem] = useState('');
+  const kaydet = () => {
+    const t = Math.round((Number(tutar.replace(',', '.')) || 0) * 100) / 100; if (!(t > 0)) { Alert.alert('Tutarı yaz'); return; }
+    const d = new Date(), tarih = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    olayEkle('finans_kayit', { tur, kim, tutar: t, kalem: kalem.trim() || 'Diğer', tarih }); esitleSonra(); kapat();
+  };
+  const sec = <T extends string>(deger: T, aktif: T, yazi: string, f: (x: T) => void) => (
+    <Pressable key={deger} onPress={() => f(deger)} accessibilityRole="button" accessibilityState={{ selected: aktif === deger }} style={{ flex: 1, paddingVertical: 10, borderRadius: 12, alignItems: 'center', backgroundColor: aktif === deger ? R.secili : '#252528', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' }}><Text style={{ color: '#fff', fontSize: 14 }}>{yazi}</Text></Pressable>
+  );
+  return (
+    <View style={{ gap: 12 }}>
+      <Text style={{ color: '#fff', fontSize: 17, fontWeight: '600' }}>Gelir / gider ekle</Text>
+      <View style={{ flexDirection: 'row', gap: 8 }}>{sec('gelir', tur, 'Gelir', setTur)}{sec('gider', tur, 'Gider', setTur)}</View>
+      <View style={{ flexDirection: 'row', gap: 8 }}>{sec('cagla', kim, 'Benim', setKim)}{sec('sirket', kim, 'Şirketin', setKim)}</View>
+      <TextInput value={tutar} onChangeText={setTutar} keyboardType="decimal-pad" placeholder="Tutar (₺)" placeholderTextColor={R.soluk} accessibilityLabel="Tutar" style={{ color: '#fff', fontSize: 16, backgroundColor: '#252528', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12 }} />
+      <TextInput value={kalem} onChangeText={setKalem} placeholder="Kalem (ör. Market, Kira, Maaş)" placeholderTextColor={R.soluk} accessibilityLabel="Kalem" style={{ color: '#fff', fontSize: 15, backgroundColor: '#252528', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12 }} />
+      <Text style={{ color: R.soluk, fontSize: 12.5 }}>Bilgisayardaki Orvane’de Şirketim › Aylık gelir ve gider’e eklenir; Otto izler.</Text>
+      <Dugme yazi="Kaydet" ikon="kaydet" onPress={kaydet} />
+    </View>
   );
 }

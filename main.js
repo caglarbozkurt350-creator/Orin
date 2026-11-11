@@ -1,4 +1,4 @@
-// Orin · ana süreç
+// Orvane · ana süreç
 const { app, BrowserWindow, ipcMain, shell, dialog, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
@@ -6,6 +6,7 @@ const fs = require('fs');
 const SMOKE = process.argv.includes('--smoke');
 const SEED = process.argv.includes('--seed'); // gizli açılış: kişisel geçmişi yerel veriye yazar ve kapanır
 if (SMOKE) app.setPath('userData', path.join(app.getPath('temp'), 'orin-smoke-' + process.pid)); // testler gerçek veriye dokunmaz
+else app.setPath('userData', path.join(app.getPath('appData'), 'Orin')); // ad Orvane oldu ama ayar, token ve konum.json eski klasörde kalır
 const DATA = () => app.getPath('userData');
 const LOC = () => path.join(DATA(), 'konum.json'); // seçilen veri klasörü (yalnız yol)
 let DWARN = null; // veri klasörü uyarısı (renderer'a gösterilir)
@@ -38,12 +39,16 @@ function writeJSON(f, v) {
 function safeName(t) { return (String(t || '').trim() || 'Adsız not').replace(/[\\/:*?"<>|]/g, '-').replace(/[. ]+$/, '').slice(0, 120) || 'Adsız not'; }
 
 function createWindow() {
+  const IS_WIN = process.platform === 'win32';
   const win = new BrowserWindow({
     width: 1280, height: 820, minWidth: 900, minHeight: 560,
-    backgroundColor: '#181818', title: 'Orin', show: !SMOKE && !SEED,
+    // Windows 11: yerel yuvarlak köşe + buzlu cam (acrylic). Diğer sistemlerde düz koyu zemin.
+    backgroundColor: IS_WIN ? '#00000000' : '#181818',
+    ...(IS_WIN ? { backgroundMaterial: 'acrylic', roundedCorners: true } : {}),
+    title: 'Orvane', show: !SMOKE && !SEED,
     icon: path.join(__dirname, 'assets', 'icon.png'),
     titleBarStyle: 'hidden',
-    titleBarOverlay: { color: '#121214', symbolColor: '#c9c9ce', height: 34 },
+    titleBarOverlay: { color: '#00000000', symbolColor: '#d6d6db', height: 58 },
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: false, spellcheck: false }
   });
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
@@ -148,7 +153,7 @@ ipcMain.on('win:cmd', (e, cmd, arg) => {
   else if (cmd === 'fullscreen') w.setFullScreen(!w.isFullScreen());
   else if (cmd === 'zoom') w.webContents.setZoomFactor(arg);
   else if (cmd === 'devtools') w.webContents.toggleDevTools();
-  else if (cmd === 'theme') { try { w.setTitleBarOverlay(arg === 'light' ? { color: '#ededeb', symbolColor: '#333333' } : { color: '#121214', symbolColor: '#c9c9ce' }); } catch (e) {} }
+  else if (cmd === 'theme') { try { w.setTitleBarOverlay(arg === 'light' ? { color: '#00000000', symbolColor: '#333333' } : { color: '#00000000', symbolColor: '#d6d6db' }); } catch (e) {} }
 });
 
 // ---- Yedek, dışa aktarma, haberler, güncelleme ----

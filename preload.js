@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld('api', {
     del: o => ipcRenderer.invoke('notes:delete', o)
   },
   images: dir => ipcRenderer.invoke('images:list', dir),
+  teamSeed: () => { try { return JSON.parse(require('fs').readFileSync(require('path').join(__dirname, 'calisanlar.json'), 'utf8')); } catch (e) { return null; } },
   data: {
     info: () => ipcRenderer.invoke('data:info'),
     move: (dir, mode) => ipcRenderer.invoke('data:move', { dir, mode }),

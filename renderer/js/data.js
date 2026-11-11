@@ -3,7 +3,7 @@ var RED='#d23b3b',ORG='#f0a030',GRN='#3fb97a',BLU='#4f7dff',HOL='#8b7cf6';
 var AY=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 var GK=['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'];
 var GN=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
-var AREAS=['home','msg','cal','img','plan','set'];
+var AREAS=['home','team','msg','cal','img','set'];
 var DG=['Tezgah Düzenleme','Atölye Temizliği','Yarı Mamül Üretimi','Diğer'];
 var HN={gel:'Uygulama Geliştirme',bil:'Uygulama Bildirimleri',sir:'Şirket Haberleri'};
 // Gün türü ata listesi (Yarım gün kaldırıldı)

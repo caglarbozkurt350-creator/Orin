@@ -3,9 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' file: data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; script-src 'self' 'unsafe-inline'">
-<title>Orin</title>
+<title>Orvane</title>
 <link rel="stylesheet" href="vendor/tabler/tabler-icons.min.css">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="team.css">
 </head>
 <body>
 <div class="w" id="app">
@@ -17,23 +18,26 @@
 <span class="mi" id="m_Düzenle" onmousedown="event.preventDefault()" onclick="menu('Düzenle')">Düzenle</span>
 <span class="mi" id="m_Görünüm" onmousedown="event.preventDefault()" onclick="menu('Görünüm')">Görünüm</span>
 <span class="mi" id="m_Yardım" onmousedown="event.preventDefault()" onclick="menu('Yardım')">Yardım</span>
-<span class="ttl"><img src="../assets/logo.png" alt="">Orin</span>
+<span class="ttl">ORVANE</span>
 <span id="sy" class="sy"></span>
 </div>
 <div class="dd" id="dd" style="display:none"></div>
 <div class="bd" id="bd">
 <div class="rail" id="rail">
 <div class="rb" id="r_home" onclick="openArea('home')" title="Anasayfa"><i class="ti ti-home"></i></div>
+<div class="rb" id="r_team" onclick="openArea('team')" title="Çalışanlarım"><i class="ti ti-users"></i></div>
 <div class="rb" id="r_msg" onclick="openArea('msg')" title="Haberler"><i class="ti ti-news"></i></div>
 <div class="rb" id="r_cal" onclick="openArea('cal')" title="Takvim"><i class="ti ti-calendar"></i></div>
 <div class="rb" id="r_img" onclick="openArea('img')" title="Görseller"><i class="ti ti-photo"></i></div>
-<div class="rb" id="r_plan" onclick="openArea('plan')" title="Planlar"><i class="ti ti-notebook"></i></div>
-<div class="rb" id="r_set" onclick="openArea('set')" title="Ayarlar" style="margin-top:auto;margin-bottom:10px"><i class="ti ti-settings"></i></div>
+<div class="lg" title="Orvane"><img src="../assets/logo.png" alt="Orvane"></div>
+<div class="rb" id="r_set" onclick="openArea('set')" title="Ayarlar" style="margin-bottom:10px"><i class="ti ti-settings"></i></div>
 </div>
+<div class="pn">
 <div class="sb" id="sb"></div>
 <div class="mn"><div class="top"><span id="tl"></span><span class="hn" id="tr"></span></div>
 <div id="fb" style="display:none;padding:8px 18px;border-bottom:0.5px solid #2c2c30;gap:8px;align-items:center"><input id="fi" placeholder="Sayfada ara" style="flex:1" onkeydown="if(event.key=='Enter')doFind()"><button class="bt" onclick="doFind()">Sonraki</button><button class="bt" onclick="closeFind()">Kapat</button></div>
 <div id="bn"></div><div class="ct" id="ct"></div></div>
+</div>
 </div>
 <div class="cx" id="cx" style="display:none"></div>
 <div class="ov" id="ov" style="display:none"></div>
@@ -49,6 +53,9 @@
 <script src="js/motion.js"></script>
 <script src="js/stage5.js"></script>
 <script src="js/v041.js"></script>
+<script src="js/team.js"></script>
+<script src="js/team-hr.js"></script>
+<script src="js/team-voice.js"></script>
 <script src="js/test.js"></script>
 </body>
 </html>

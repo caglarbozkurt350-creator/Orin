@@ -45,7 +45,10 @@ function xlsx(sheets) {
 }
 async function pdf(html, file) {
   const w = new BrowserWindow({ show: false, webPreferences: { javascript: false } });
-  await w.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html));
+  if (/src="file:/.test(html)) { // yerel görsel içeren sayfa (çalışan kartları): geçici dosyadan aç
+    const t = require('path').join(require('os').tmpdir(), 'orvane-pdf-' + Date.now() + '.html'); fs.writeFileSync(t, html, 'utf8');
+    await w.loadFile(t); setTimeout(() => { try { fs.unlinkSync(t); } catch (e) {} }, 10000);
+  } else await w.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html));
   const buf = await w.webContents.printToPDF({ pageSize: 'A4', printBackground: true, margins: { marginType: 'default' } });
   w.destroy(); fs.writeFileSync(file, buf);
 }

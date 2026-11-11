@@ -1,5 +1,5 @@
 // Otomatik kontrol (yalnız `npm run smoke` ile çalışır; normal kullanımda etkisizdir)
-window.__smokeRoutes=function(){return[['home','gun',TODAY],['home','gun','2026-6-4'],['home','gun','2026-8-7'],['home','proje','118.11'],['home','proje','88.34.14.43'],['home','yil',''],['home','maz',''],['home','ref',''],['home','yeni',''],['cal','takvim','2026-6'],['cal','takvim',''],['msg','haber','gel'],['msg','haber','bil'],['msg','haber','sir'],['img','gorsel',''],['plan','notlar',''],['set','huk',''],['set','kur',''],['set','ice',''],['set','baglanti',''],['set','sorun',''],['set','tema',''],['hafta','2026-6-1',''],['motion','sinir',''],['motion','izgara',''],['motion','cekirdek',''],['set','aktar',''],['set','belge',''],['set','kisa',''],['set','yenilik',''],['menu','Dosya','']]};
+window.__smokeRoutes=function(){return[['home','gun',TODAY],['home','gun','2026-6-4'],['home','gun','2026-8-7'],['home','proje','118.11'],['home','proje','88.34.14.43'],['home','yil',''],['home','maz',''],['home','ref',''],['home','yeni',''],['cal','takvim','2026-6'],['cal','takvim',''],['msg','haber','gel'],['msg','haber','bil'],['msg','haber','sir'],['img','gorsel',''],['set','huk',''],['set','kur',''],['set','ice',''],['set','baglanti',''],['set','sorun',''],['set','tema',''],['hafta','2026-6-1',''],['motion','sinir',''],['motion','izgara',''],['motion','cekirdek',''],['set','aktar',''],['set','belge',''],['set','kisa',''],['set','yenilik',''],['menu','Dosya','']]};
 window.__smokeGo=function(r){try{closeM();if(r[0]=='hafta'){S.calView='hafta';calW=r[1];nav('cal','takvim');return{}}if(S.calView=='hafta'&&r[0]=='cal'){S.calView='ay'}if(r[0]=='motion'){window.__motionTest=true;S.motion=r[1];MO.st={};mApply();nav('home','gun','2026-6-4');return new Promise(function(res){setTimeout(function(){res({})},700)})}if(window.__motionTest){window.__motionTest=false;S.motion='kapali';mApply()}if(r[0]=='menu'){menu(r[1]);return{}}
 if(r[0]=='cal'&&r[2]){var a=r[2].split('-');nav('cal','takvim');calY=+a[0];calM=+a[1]-1;render();return{}}
 nav(r[0],r[1],r[2]);if(!document.getElementById('ct').innerHTML.trim())return{error:'boş sayfa'};return{}}catch(e){return{error:e.message}}};
@@ -122,3 +122,44 @@ var k='2027-2-3',bD=D[k];D[k]='yillik';t('Ücretli izin süresi gün süresi',le
 t('Takip başlangıcı ayarı',function(){var o=S.trackStart,c=CONNECTED;CONNECTED=true;S.trackStart='01.03.2026';var a=typ('2026-2-3')=='bos'&&typ('2026-3-3')=='girdi';S.trackStart=o;CONNECTED=c;return a});
 return R};
 var __at5=window.__asyncTest;window.__asyncTest=function(){return __at5().then(function(a){return a.concat(window.__v041Test())})};
+
+// Orvane 0.5.0: çerçeve, Çalışanlarım, İnsan Kaynakları, sesli sohbet
+var __sr5=window.__smokeRoutes;window.__smokeRoutes=function(){return __sr5().concat([['team','calisan','echo'],['tmtab','echo','gorev'],['tmtab','echo','bec'],['tmtab','echo','haf'],['tmtab','echo','prof'],['team','calisan','nika'],['team','calisan','orin'],['team','calisan','otto'],['offline','otto',''],['team','ik',''],['hrcard','echo','mesaj'],['hrcard','echo','gorev'],['voice','echo','']])};
+var __sg5=window.__smokeGo;window.__smokeGo=function(r){try{hrClose();if(VC){voiceEnd();var v=document.getElementById('vc');if(v)v.remove()}window.__off=false;cfNo();
+if(r[0]=='tmtab'){nav('team','calisan',r[1]);TMTAB=r[2];render();return{}}
+if(r[0]=='hrcard'){nav('team','ik','');hrOpen(r[1],r[2]);return{}}
+if(r[0]=='offline'){window.__off=true;nav('team','calisan',r[1]);return{}}
+if(r[0]=='voice'){nav('team','calisan',r[1]);voiceOpen(r[1]);voiceKb();voiceSay('Bu haftanın raporu ne durumda?');return new Promise(function(res){setTimeout(function(){res({})},1200)})}
+}catch(e){return{error:e.message}}return __sg5(r)};
+window.__teamTest=function(){var R=[];function t(n,c,m){try{var ok=typeof c=='function'?c():c;R.push({n:n,ok:!!ok,m:ok?'':String(m||'')})}catch(e){R.push({n:n,ok:false,m:e.message})}}
+var bk=JSON.stringify(S.team||null),ct=function(){return document.getElementById('ct').innerHTML};
+t('15 çalışan yüklendi',tmAll().length>=15,tmAll().length);
+t('Çalışanlarım 2. sırada',document.querySelectorAll('#rail .rb')[1].id=='r_team');
+t('Notlar sekmesi gizli',!document.getElementById('r_plan'));
+t('Üst ortada ORVANE',document.querySelector('.ttl').textContent=='ORVANE');
+t('Logo Ayarlar’ın üstünde',document.getElementById('r_set').previousElementSibling.classList.contains('lg'));
+t('Pencere adı Orvane',document.title=='Orvane'&&APPNAME=='Orvane');
+nav('team','calisan','echo');t('Echo: 3 grafik, gerçek hedef çizgisi',document.querySelectorAll('#ct .gc').length==3&&ct().indexOf('hedef '+S.w1)>0);
+t('Echo: 5 görev kartı ve yazma kutusu',document.querySelectorAll('#ct .kp5>div').length==5&&!!document.getElementById('tmi'));
+t('Kenar çubuğunda İK ve iki grup',document.getElementById('sb').innerHTML.indexOf('İnsan Kaynakları')>0&&document.querySelectorAll('#sb .si.tm').length>=15);
+nav('team','calisan','otto');t('Grafiği seçilmemiş çalışanda Veri yok',(ct().match(/Veri yok/g)||[]).length==3);
+t('Echo yerel cevap (gerçek kayıt)',function(){var r=tmReply(tm('echo'),'Bu haftanın raporu');return r&&r.t.length>5});
+t('Echo dışındakiler API bekler',tmReply(tm('otto'),'merhaba')===null);
+t('Gelişim: İK → CEO → beceri eklenir',function(){var g=tmGelNew('otto','beceri','Fatura okuma','test');var a=g.asama=='ik';tmGelIk(g.id,1);var b=g.asama=='ceo';tmGelCeo(g.id,1);return a&&b&&g.asama=='tamam'&&tmSkills('otto').some(function(s){return s.ad=='Fatura okuma'})});
+t('Gelişim: hafızaya ekleme iki onayla',function(){var g=tmGelNew('echo','hafiza','','Test bilgisi 123');tmGelIk(g.id,1);tmGelCeo(g.id,1);return tmMem('echo').some(function(m){return m.metin=='Test bilgisi 123'})});
+t('Gelişim: seviye yükselir',function(){var s0=tmSkills('echo').filter(function(s){return s.ad=='Haftalık özet'})[0].sv,g=tmGelNew('echo','seviye','Haftalık özet','');tmGelIk(g.id,1);tmGelCeo(g.id,1);return tmSkills('echo').filter(function(s){return s.ad=='Haftalık özet'})[0].sv==s0+1});
+t('Gelişim: Nika önerisi doğrudan CEO’ya',tmGelNew('iris','beceri','Uyku takibi','','nika').asama=='ceo');
+t('Gelişim: reddedilen uygulanmaz',function(){var g=tmGelNew('mia','beceri','Reddedilecek','');tmGelIk(g.id,0);return g.asama=='red'&&!tmSkills('mia').some(function(s){return s.ad=='Reddedilecek'})});
+t('Nika sayfasında İK onay listesi',function(){tmGelNew('kai','beceri','Test becerisi','');nav('team','calisan','nika');return ct().indexOf('İK incelemesi')>0&&ct().indexOf('Test becerisi')>0});
+t('Doğrudan görev + Orin’e bilgi notu',function(){var n=tmOpen('echo').length;tmTaskNew('echo','Test görevi','acil','',true);var o=tmChat('orin');return tmOpen('echo').length==n+1&&/Bilgi notu/.test(o[o.length-1].t)});
+t('Acil görevde durum meşgul',function(){tmTaskNew('luca','Acil test','acil','',false);return tmStat(tm('luca'))=='bz'});
+t('Görev bitince bu hafta biten sayılır',function(){var g=tmOpen('luca')[0];tmTaskTog(g.id);return tmDoneWeek('luca').length>=1&&tmStat(tm('luca'))=='id'});
+t('Çevrimdışı: Not moduna geçer, not bekler',function(){window.__off=true;nav('team','calisan','otto');var a=!!document.querySelector('.cmp.ofc')&&document.getElementById('sy').textContent.indexOf('Çevrimdışı')>=0;tmSend('otto','Not testi');var b=tmPending('otto').length==1&&ct().indexOf('Bekliyor')>0;window.__off=false;tmSendPending();return a&&b&&!tmPending().length&&tmChat('otto').some(function(m){return m.tur=='not'&&m.ilt})});
+t('Çevrimiçi mesaj Echo’dan cevap alır',function(){nav('team','calisan','echo');var n=tmChat('echo').length;tmSend('echo','Bu ayın özeti','mesaj');var a=tmChat('echo');return a.length==n+2&&a[a.length-1].r=='o'});
+t('İK sayfası 15 kart + yeni kart kutusu',function(){nav('team','ik','');return document.querySelectorAll('#ct .kc').length>=15&&!!document.querySelector('#ct .kn')});
+t('Kart açılır, Esc ile kapanır',function(){hrOpen('echo');var a=!!document.getElementById('hrm');document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape'}));return a&&!document.getElementById('hrm')});
+t('Kartta doğrudan görev formu',function(){hrOpen('echo','gorev');var h=document.getElementById('hrm').innerHTML,ok=h.indexOf('Orin ve Orla atlanır')>0&&h.indexOf('Görevi Echo’ya gönder')>0&&!!document.querySelector('#hrm .tg2.on');hrClose();return ok});
+t('Sesli sohbet açılır, kapanınca geçmişe yazılır',function(){nav('team','calisan','echo');voiceOpen('echo');var a=!!document.getElementById('vc');voiceSay('Bu haftanın raporu');var n=tmChat('echo').length;voiceEnd();return a&&!VC&&tmChat('echo').length>=n+3});
+t('Telefon eşitleme öneri listesinde',SUG.some(function(x){return x.id=='telefon'}));
+S.team=bk=='null'?undefined:JSON.parse(bk);var v=document.getElementById('vc');if(v)v.remove();nav('home','gun',TODAY);return R};
+var __at6=window.__asyncTest;window.__asyncTest=function(){return __at6().then(function(a){return a.concat(window.__teamTest())})};

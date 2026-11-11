@@ -1,5 +1,5 @@
 // Orin · durum, hesaplar, gezinme, menüler
-var API=window.api||null,INFO=API?API.info():{version:'dev',smoke:false},APPNAME='Orin';
+var API=window.api||null,INFO=API?API.info():{version:'dev',smoke:false},APPNAME='Orvane';
 var CONNECTED=false; // Aşama 2'de Google Sheets bağlanınca true
 function mk(y,m,d){return y+'-'+m+'-'+d}
 function pk(s){var a=s.split('-');return new Date(+a[0],+a[1]-1,+a[2])}
@@ -101,7 +101,7 @@ function nav(a,p,g,noh){EDIT=null;closeCx();if(!noh){hist=hist.slice(0,hp+1);his
 if(a=='plan')loadNotes();if(a=='img'||(a=='home'&&p=='proje'))loadImages();render();save()}
 function back(){if(hp>0){hp--;var h=hist[hp];nav(h[0],h[1],h[2],true)}}
 function fwd(){if(hp<hist.length-1){hp++;var h=hist[hp];nav(h[0],h[1],h[2],true)}}
-function openArea(a){if(a=='home')nav('home','gun',sel);else if(a=='msg')nav('msg','haber','gel');else if(a=='cal')nav('cal','takvim');else if(a=='img')nav('img','gorsel','');else if(a=='plan')nav('plan','notlar','');else nav('set','huk')}
+function openArea(a){if(a=='home')nav('home','gun',sel);else if(a=='msg')nav('msg','haber','gel');else if(a=='cal')nav('cal','takvim');else if(a=='img')nav('img','gorsel','');else if(a=='plan')nav('plan','notlar','');else if(a=='team')nav('team','calisan',TM_SEL());else nav('set','huk')}
 function stepTab(d){openArea(AREAS[(AREAS.indexOf(area)+d+AREAS.length)%AREAS.length])}
 function stepSb(d){var a=[].slice.call(document.querySelectorAll('#sb .si[data-nav]')),i=a.findIndex(function(x){return x.classList.contains('on')});if(!a.length)return;a[(i+d+a.length)%a.length].click()}
 function togSb(){sbOn=!sbOn;render();save()}
@@ -134,6 +134,7 @@ h+=gh('izn','İzinler',1);if(op('izn'))h+=si('home','yil','','Yıllık İzinler'
 else if(area=='set'){h+=gh('set','Ayarlar');if(op('set'))h+=si('set','huk','','Hukuki Sorumluluk','l2','ti-scale')+si('set','kur','','Uygulama Kuralları','l2','ti-adjustments')+si('set','baglanti','','Google Sheets','l2','ti-table')+si('set','ice','','Geçmiş raporlar','l2','ti-file-import')+si('set','aktar','','Dışa aktar','l2','ti-file-export')+si('set','tema','','Görünüm','l2','ti-palette')}
 else if(area=='msg'){h+=gh('msg','Haberler');if(op('msg'))h+=si('msg','haber','gel',HN.gel,'l2','ti-bulb')+si('msg','haber','bil',HN.bil,'l2','ti-bell')+si('msg','haber','sir',HN.sir,'l2','ti-ship')}
 else if(area=='cal'){h+=gh('cal','Takvim');if(op('cal'))h+=si('cal','takvim','','Ay takvimi','l2','ti-calendar-month')+'<div class="si l2" onclick="cm(0)"><i class="ti ti-calendar-event"></i>Bugüne git</div>'}
+else if(area=='team'){h+=teamSb()}
 else if(area=='plan'){h+=gh('plan','Planlar');if(op('plan')){h+='<div class="si l2" onclick="newNote()"><i class="ti ti-plus"></i>Yeni not</div>'+gh('notl','Notlar',1);
 if(op('notl')){if(!N.length)h+='<div class="hn" style="padding:4px 8px 4px 32px">Henüz not yok</div>';N.slice().reverse().forEach(function(n){h+=siX('plan','notlar',n.id,ntitle(n)+(n.sv?'':' •'),'l3','ti-note','n',n.id)})}
 h+='<div class="hn" style="padding:10px 8px">'+(S.npath?'Not klasörü ayarlı':'Not klasörü ayarlanmadı')+'</div>'}}
@@ -141,13 +142,13 @@ else{h+=gh('img','Görseller');if(op('img')){h+=si('img','gorsel','','Tüm proje
 h+='<div class="hn" style="padding:10px 8px">'+(S.path?'Klasör ayarlı':'Klasör ayarlanmadı')+'</div>'}}
 return h}
 function titleOf(){var m={gun:'İş Raporu › İş Günleri › '+lab(arg||sel),proje:'İş Raporu › Projeler › '+arg,yeni:'İş Raporu › Projeler › Yeni proje',yil:'İş Raporu › İzinler › Yıllık İzinler',maz:'İş Raporu › İzinler › Mazeret İzinleri',ref:'İş Raporu › İzinler › Refakat İzinleri',huk:'Ayarlar › Hukuki Sorumluluk',kur:'Ayarlar › Uygulama Kuralları',ice:'Ayarlar › Geçmiş raporlar',baglanti:'Ayarlar › Google Sheets bağlantısı',aktar:'Dosya › Excel ve PDF olarak aktar',belge:'Yardım › Belgeler',tema:'Ayarlar › Görünüm',kisa:'Yardım › Klavye kısayolları',yenilik:'Yardım › Yenilikler',sorun:'Yardım › Sorun giderme ve sistem durumu'};
-if(area=='msg')return 'Haberler › '+HN[arg||'gel'];if(area=='cal')return 'Takvim › '+AY[calM]+' '+calY;if(area=='img')return 'Görseller'+(arg?' › '+arg:'');if(area=='plan'){var n=arg?nobj(arg):null;return 'Planlar'+(n?' › '+ntitle(n):'')}return m[pg]}
+if(area=='team')return teamTitle();if(area=='msg')return 'Haberler › '+HN[arg||'gel'];if(area=='cal')return 'Takvim › '+AY[calM]+' '+calY;if(area=='img')return 'Görseller'+(arg?' › '+arg:'');if(area=='plan'){var n=arg?nobj(arg):null;return 'Planlar'+(n?' › '+ntitle(n):'')}return m[pg]}
 function render(){AREAS.forEach(function(x){document.getElementById('r_'+x).className='rb'+(x==area?' on':'')});
 document.getElementById('rail').style.display=railOn?'flex':'none';
 document.getElementById('nsb').setAttribute('data-tip','Kenar çubuğunu '+(sbOn?'gizle':'göster')+'  Ctrl+Shift+S');
 var sb=document.getElementById('sb'),st=sb.scrollTop;sb.innerHTML=sbH();sb.style.display=sbOn?'block':'none';sb.scrollTop=st;
 document.getElementById('tl').textContent=titleOf();document.getElementById('tr').textContent='Sürüm '+INFO.version;
-var P2=(area=='home'||area=='set')?P[pg]:area=='msg'?P.haber:area=='cal'?P.takvim:area=='plan'?P.notlar:P.gorsel;document.getElementById('ct').innerHTML=P2?P2():'';
+var P2=(area=='home'||area=='set')?P[pg]:area=='team'?teamPage:area=='msg'?P.haber:area=='cal'?P.takvim:area=='plan'?P.notlar:P.gorsel;var CT=document.getElementById('ct');CT.className='ct'+(area=='team'?' tmc':'');CT.innerHTML=P2?P2():'';if(area=='team')teamAfter();
 document.getElementById('nbk').className='nb'+(hp>0?'':' off');document.getElementById('nfw').className='nb'+(hp<hist.length-1?'':' off');banner();syncLabel()}
 
 // ---------- Notlar (.txt dosyaları) ----------
@@ -210,7 +211,7 @@ function openPath(){if(!S.path){toast('Görsel klasörü ayarlanmadı');nav('set
 function allCl(v){var ks=['ir','gun','prj','izn','mDiger','set','msg','cal','plan','notl','img'].concat(models().map(function(m){return 'm'+m}),models().map(function(m){return 'i'+m}),dayMonths().map(function(x){return 'gm'+x[0]+'-'+x[1]}));ks.forEach(function(k){CL[k]=v});document.getElementById('sb').innerHTML=sbH();save()}
 function winCmd(c,m){if(API)API.win(c);else toast(m)}
 var MA={
-'Dosya':[['Yeni pencere',function(){winCmd('new','Tarayıcıda tek pencere var')}],['Yeni kayıt',newRec,'Ctrl+N'],['Yeni not',newNote],['Yeni proje…',function(){nav('home','yeni')},'Ctrl+Shift+N'],null,['Notu kaydet',saveNote,'Ctrl+S'],['Görsel klasörünü aç',openPath,'Ctrl+O'],['Google Sheets\'i aç',T('Sheets bağlantısı Aşama 2’de kurulacak')],['Senkronize et',syncNow,'Ctrl+R'],['Geçmiş raporlar…',function(){nav('set','ice')}],['Excel ve PDF olarak aktar…',function(){nav('set','aktar')}],['Şimdi yedekle',function(){backupNow(true)}],null,['Kapat',function(){winCmd('close','Tarayıcıda pencere kapanmaz')},'Ctrl+W'],['Oturumu kapat',function(){if(API&&window.shLogout)shLogout();else toast('Google oturumu yok')}]],
+'Dosya':[['Yeni pencere',function(){winCmd('new','Tarayıcıda tek pencere var')}],['Yeni kayıt',newRec,'Ctrl+N'],['Yeni proje…',function(){nav('home','yeni')},'Ctrl+Shift+N'],null,['Görsel klasörünü aç',openPath,'Ctrl+O'],['Google Sheets\'i aç',T('Sheets bağlantısı Aşama 2’de kurulacak')],['Senkronize et',syncNow,'Ctrl+R'],['Geçmiş raporlar…',function(){nav('set','ice')}],['Excel ve PDF olarak aktar…',function(){nav('set','aktar')}],['Şimdi yedekle',function(){backupNow(true)}],null,['Kapat',function(){winCmd('close','Tarayıcıda pencere kapanmaz')},'Ctrl+W'],['Oturumu kapat',function(){if(API&&window.shLogout)shLogout();else toast('Google oturumu yok')}]],
 'Düzenle':[['Geri al',function(){undo()},'Ctrl+Z'],['Yinele',function(){redo()},'Ctrl+Y'],null,['Kes',function(){ex('cut')},'Ctrl+X'],['Kopyala',function(){ex('copy')},'Ctrl+C'],['Yapıştır',function(){ex('paste')},'Ctrl+V'],['Sil',function(){ex('delete')}],null,['Tümünü seç',function(){ex('selectAll')},'Ctrl+A'],null,['Ayarlar',function(){nav('set','kur')},'Ctrl+,']],
 'Görünüm':[['Kenar çubuğunu değiştir',togSb,'Ctrl+Shift+S'],['Gezinme panelini aç/kapat',togRail,'Ctrl+Shift+E'],['Tüm kategorileri kapat',function(){allCl(true)}],['Tüm kategorileri aç',function(){allCl(false)}],null,['Ara (kayıt, proje, komut)',function(){openPal()},'Ctrl+K'],['Bul',openFind,'Ctrl+F'],null,['Geri',back,'Ctrl+['],['İleri',fwd,'Alt+→'],null,['Önceki kenar çubuğu öğesi',function(){stepSb(-1)},'Alt+Ctrl+['],['Sonraki kenar çubuğu öğesi',function(){stepSb(1)},'Alt+Ctrl+]'],null,['Önceki sekme',function(){stepTab(-1)},'Ctrl+Shift+['],['Sonraki sekme',function(){stepTab(1)},'Ctrl+Shift+]'],null,['Yakınlaştır',function(){zoomSet(zoom+.1)},'Ctrl+Shift++'],['Uzaklaştır',function(){zoomSet(zoom-.1)},'Ctrl+-'],['Gerçek boyut',function(){zoomSet(1)},'Ctrl+0'],null,['Açık / koyu tema',function(){togTheme()}],['Hareketli tema…',function(){nav('set','tema')}],null,['Tam ekranı aç/kapat',function(){winCmd('fullscreen','Tarayıcıda F11 kullan')},'F11']],
 'Yardım':[['Belgeler',function(){nav('set','belge')}],['Klavye kısayollarını göster',function(){nav('set','kisa')},'Ctrl+/'],['Yenilikler',function(){nav('set','yenilik')}],null,['Sorun giderme',function(){nav('set','sorun')}],['Sistem durumu',function(){nav('set','sorun')}],['Geri bildirim',T('Geri bildirimini Claude’a yazabilirsin')],null,['Güncellemeleri denetle…',function(){checkUpdate(true)}],[APPNAME+' hakkında',function(){toast(APPNAME+' · sürüm '+INFO.version)}]]};

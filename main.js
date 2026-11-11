@@ -78,6 +78,8 @@ function createWindow() {
 
 // Otomatik kontrol: sayfaları gezer, hataları toplar, ekran görüntüsü alır, kapanır
 function smoke(win) {
+  // Gelen kutusu deneme dosyası (renderer testi okur)
+  try { const gd = GELEN(); fs.mkdirSync(gd, { recursive: true }); fs.writeFileSync(path.join(gd, 'deneme.json'), JSON.stringify([{ tur: 'gelisim', kim: 'ada', gtur: 'hafiza', ad: 'Mimari', metin: 'Orvane Electron + Expo.' }, { tur: 'gelisim', kim: 'ada', gtur: 'beceri', ad: 'Smoke testi', metin: 'npx electron . --smoke' }, { tur: 'mesaj', kim: 'ada', metin: 'Rapor hazır. ÖĞRENİLENLER: [] ' }])); } catch (e) {}
   const errors = [];
   win.webContents.on('console-message', (e, level, msg) => { if (level >= 3) errors.push(msg); });
   win.webContents.on('render-process-gone', (e, d) => errors.push('render-gone ' + d.reason));
@@ -322,6 +324,18 @@ ipcMain.handle('zeka:setKey', wrap(k => zeka.setKey(k)));
 ipcMain.handle('zeka:clearKey', wrap(() => zeka.clearKey()));
 ipcMain.handle('zeka:setBudget', wrap(b => zeka.setBudget(b)));
 ipcMain.handle('zeka:sor', wrap(o => zeka.sor(o)));
+// Gelen kutusu: Claude Code Belgeler\Orin\Gelen\*.json bırakır (çalışana mesaj / gelişim talebi); uygulama iletir, dosya İşlenen'e taşınır
+const GELEN = () => path.join(SMOKE ? DATA() : app.getPath('documents'), 'Orin', 'Gelen');
+ipcMain.handle('gelen:al', wrap(() => {
+  const d = GELEN(), out = []; if (!fs.existsSync(d)) return out;
+  const isl = path.join(d, 'İşlenen');
+  for (const f of fs.readdirSync(d).filter(x => /\.json$/i.test(x)).sort()) {
+    const p = path.join(d, f);
+    try { const j = JSON.parse(fs.readFileSync(p, 'utf8').replace(/^\uFEFF/, '')); (Array.isArray(j) ? j : [j]).forEach(x => out.push(x)); } catch (e) { out.push({ tur: 'hata', dosya: f, hata: e.message }); }
+    try { fs.mkdirSync(isl, { recursive: true }); fs.renameSync(p, path.join(isl, f)); } catch (e) {}
+  }
+  return out;
+}));
 // Ada'nın soracağı geliştirme fikirleri: GitHub main'deki güncel liste, yoksa uygulamayla gelen
 ipcMain.handle('fikir:liste', wrap(async () => { if (!SMOKE) { try { const r = await fetch('https://raw.githubusercontent.com/caglarbozkurt350-creator/Orin/main/fikirler.json?t=' + Date.now(), { cache: 'no-store' }); if (r.ok) { const j = await r.json(); if (Array.isArray(j.fikirler)) return { kaynak: 'github', fikirler: j.fikirler }; } } catch (e) {} } return { kaynak: 'yerel', fikirler: readJSON(path.join(__dirname, 'fikirler.json'), { fikirler: [] }).fikirler }; }));
 // Claude aboneliği (Claude Code CLI, headless): ağır işler abonelikte

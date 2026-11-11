@@ -35,6 +35,7 @@ contextBridge.exposeInMainWorld('api', {
     sor: o => ipcRenderer.invoke('zeka:sor', o)
   },
   fikirler: () => ipcRenderer.invoke('fikir:liste'),
+  gelen: () => ipcRenderer.invoke('gelen:al'),
   abonelik: {
     status: () => ipcRenderer.invoke('abonelik:status'),
     ayar: a => ipcRenderer.invoke('abonelik:ayar', a),

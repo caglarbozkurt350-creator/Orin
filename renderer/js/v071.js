@@ -39,3 +39,5 @@ var __at13=window.__asyncTest;window.__asyncTest=function(){return __at13().then
 var __at14=window.__asyncTest;window.__asyncTest=function(){return __at14().then(function(a){return a.concat(window.__ikTest?window.__ikTest():[])})};
 // Abonelik ve Ada fikir testleri (0.7.2)
 var __at15=window.__asyncTest;window.__asyncTest=function(){return __at15().then(function(a){return (window.__abnTest?window.__abnTest():Promise.resolve([])).then(function(b){return a.concat(b)})}).then(function(a){return (window.__adaTest?window.__adaTest():Promise.resolve([])).then(function(b){return a.concat(b)})})};
+// Gelen kutusu testi (0.7.5)
+var __at16=window.__asyncTest;window.__asyncTest=function(){return __at16().then(function(a){return (window.__gelenTest?window.__gelenTest():Promise.resolve([])).then(function(b){return a.concat(b)})})};

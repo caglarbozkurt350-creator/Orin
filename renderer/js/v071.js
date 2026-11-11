@@ -55,3 +55,5 @@ var e=document.createElement('textarea');document.body.appendChild(e);e.focus();
 var bz=ZK.st,bd=ZK.denendi;ZK.st=null;ZK.denendi=0;var c0=0,zd=window.zekaDurum;window.zekaDurum=function(){c0++;return Promise.resolve(null)};P.zeka();P.zeka();P.zeka();t('Durum alınamazsa tekrar tekrar istenmez',c0==1,c0);window.zekaDurum=zd;ZK.st=bz;ZK.denendi=bd;
 var t0=performance.now();return API.abonelik.status().then(function(){var ms=performance.now()-t0;t('Abonelik durumu arayüzü dondurmaz (<1 sn)',ms<1000,Math.round(ms)+' ms');return R})};
 var __at18=window.__asyncTest;window.__asyncTest=function(){return __at18().then(function(a){return window.__v077Test().then(function(b){return a.concat(b)})})};
+// Şirket yönetimi testi (0.7.8)
+var __at19=window.__asyncTest;window.__asyncTest=function(){return __at19().then(function(a){return (window.__yonTest?window.__yonTest():Promise.resolve([])).then(function(b){return a.concat(b)})})};

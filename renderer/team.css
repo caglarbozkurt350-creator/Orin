@@ -136,8 +136,8 @@ html.motion .gc,html.motion .kp5>div,html.motion .ti3,html.motion .sk{background
 .iksc{max-height:138px;overflow-y:auto;overflow-x:hidden;margin-bottom:4px;padding-right:2px}.iksc::-webkit-scrollbar{width:6px}.iksc::-webkit-scrollbar-thumb{background:transparent;border:0}.iksc:hover::-webkit-scrollbar-thumb{background:#4a4a52;border-radius:4px}
 
 /* Onay kutuları: onaylanırsa (yeşil) / onaylanmazsa (kırmızı) — sade, okunaklı (Claude'un açıklama kutuları gibi) */
-.snc{display:flex;flex-direction:column;gap:6px;margin:8px 0 4px}
-.snc div{border-radius:10px;padding:8px 11px;font:400 13px/1.5 "Segoe UI",system-ui,-apple-system,sans-serif;letter-spacing:.1px}
+.snc{display:flex;flex-direction:column;gap:5px;margin:7px 0 4px}
+.snc div{border-radius:8px;padding:6px 10px;font:400 11.5px/1.55 "Cascadia Code","Cascadia Mono",Consolas,ui-monospace,"SF Mono",Menlo,monospace;letter-spacing:0}
 .snc b{font-weight:600;margin-right:4px}
 .snc .ev{background:rgba(46,160,67,.13);border:1px solid rgba(63,185,80,.45);color:#8ee6a9}
 .snc .ha{background:rgba(248,81,73,.12);border:1px solid rgba(248,81,73,.45);color:#ffa4a0}

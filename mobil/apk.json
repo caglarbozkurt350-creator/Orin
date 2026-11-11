@@ -1,6 +1,6 @@
 {
   "not": "Telefondaki Orvane bu dosyayı okur. runtime, çalışan uygulamanınkinden büyükse 'Yeni sürüm var · İndir' şeridi çıkar. Yerel modül eklenip yeni APK derlenince runtime'ı artır ve url'yi güncelle.",
   "runtime": "1",
-  "surum": "0.6.0",
-  "url": ""
+  "surum": "0.6.1",
+  "url": "https://expo.dev/artifacts/eas/W_w1uIplWN2mrbw5Ilv6Pg77nOVD5g47BfElhNBVt8M.apk"
 }

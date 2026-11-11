@@ -10,18 +10,35 @@ else app.setPath('userData', path.join(app.getPath('appData'), 'Orin')); // ad O
 const DATA = () => app.getPath('userData');
 const LOC = () => path.join(DATA(), 'konum.json'); // seçilen veri klasörü (yalnız yol)
 let DWARN = null; // veri klasörü uyarısı (renderer'a gösterilir)
-function konum() { try { return JSON.parse(fs.readFileSync(LOC(), 'utf8').replace(/^\uFEFF/, '')).dir || null; } catch (e) { return fs.existsSync(LOC()) ? '!okunamadı' : null; } }
-function dataDir() { const d = konum(); if (d && d !== '!okunamadı' && fs.existsSync(d)) return d; if (d) DWARN = { kind: 'missing', dir: d }; return DATA(); }
+// 0.7.1: konum.json varken veri ASLA varsayılan klasöre yazılmaz. Okuma kısa aralıklarla yeniden denenir,
+// son başarılı okunan yol bellekte tutulur; hiç okunamazsa veya klasör yoksa kayıt reddedilir (dataDir() null).
+let KONUM_OK; // undefined: henüz okunmadı · null: konum.json yok (varsayılan) · metin: seçili klasör
+function bekle(ms) { try { Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms); } catch (e) {} }
+function konum() {
+  for (let i = 0; i < 5; i++) {
+    if (!fs.existsSync(LOC())) { if (KONUM_OK) return KONUM_OK; KONUM_OK = null; return null; } // bilinen seçim varken dosya kaybolursa seçime sadık kal
+    try { const d = JSON.parse(fs.readFileSync(LOC(), 'utf8').replace(/^\uFEFF/, '')).dir || null; KONUM_OK = d; return d; } catch (e) { bekle(80); }
+  }
+  return KONUM_OK || '!okunamadı';
+}
+function dataDir() {
+  const d = konum();
+  if (d === '!okunamadı') { DWARN = { kind: 'unreadable', file: LOC() }; return null; }
+  if (d && fs.existsSync(d)) return d;
+  if (d) { DWARN = { kind: 'missing', dir: d }; return null; }
+  return DATA();
+}
 function bootLog() {
   try {
-    const d = dataDir(), k = konum(), def = path.join(DATA(), 'durum.json'), cus = d !== DATA() ? path.join(d, 'durum.json') : null;
+    const d = dataDir(), k = konum(), def = path.join(DATA(), 'durum.json'), cus = d && d !== DATA() ? path.join(d, 'durum.json') : null;
     if (cus && fs.existsSync(def) && fs.existsSync(cus) && fs.statSync(def).mtimeMs > fs.statSync(cus).mtimeMs + 60000) DWARN = { kind: 'newerDefault', dir: d, defTime: fs.statSync(def).mtimeMs, cusTime: fs.statSync(cus).mtimeMs };
-    const line = JSON.stringify({ t: new Date().toISOString(), v: app.getVersion(), packaged: app.isPackaged, exe: process.execPath, userData: DATA(), konum: k, dataDir: d, exists: k ? fs.existsSync(k) : null, warn: DWARN && DWARN.kind });
+    const line = JSON.stringify({ t: new Date().toISOString(), v: app.getVersion(), packaged: app.isPackaged, exe: process.execPath, userData: DATA(), konum: k, dataDir: d, blocked: !d, exists: k && k !== '!okunamadı' ? fs.existsSync(k) : null, warn: DWARN && DWARN.kind });
     const f = path.join(DATA(), 'orin-baslangic.log'); let old = []; try { old = fs.readFileSync(f, 'utf8').trim().split('\n'); } catch (e) {}
     fs.writeFileSync(f, old.concat([line]).slice(-50).join('\n') + '\n');
   } catch (e) {}
 }
-const STATE_FILE = () => path.join(dataDir(), 'durum.json');
+const STATE_FILE = () => { const d = dataDir(); return d ? path.join(d, 'durum.json') : null; };
+const BLOCK_MSG = () => DWARN && DWARN.kind === 'missing' ? 'Seçili veri klasörü bulunamadı: ' + DWARN.dir : 'Veri klasörü bilgisi (konum.json) okunamadı';
 const IMG_EXT = /\.(jpe?g|png|webp|gif|bmp)$/i;
 
 if (!SMOKE && !SEED && !app.requestSingleInstanceLock()) app.quit();
@@ -78,6 +95,7 @@ function smoke(win) {
         fs.writeFileSync(path.join(out, r.join('_').replace(/[^\w.-]/g, '-') + '.png'), img.toPNG());
       }
       const t = await win.webContents.executeJavaScript('window.__selfTest ? window.__selfTest() : []');
+      mainTests().forEach(x => t.push(x));
       t.forEach(x => { if (!x.ok) errors.push('TEST ' + x.n + ': ' + x.m); });
       fs.writeFileSync(path.join(out, 'rapor.json'), JSON.stringify({ errors, tests: t }, null, 1));
     } catch (e) { errors.push('smoke ' + e.message); fs.writeFileSync(path.join(out, 'rapor.json'), JSON.stringify({ errors }, null, 1)); }
@@ -87,13 +105,63 @@ function smoke(win) {
   });
 }
 
+// Ana süreç testleri (yalnız smoke; geçici userData içinde): konum.json koruması, güncelleme öncesi yedek, duraklatma
+function mainTests() {
+  const R = [], t = (n, ok, m) => R.push({ n, ok: !!ok, m: ok ? '' : String(m || 'beklenmeyen sonuç') });
+  const bkK = KONUM_OK, bkW = DWARN, def = path.join(DATA(), 'durum.json'), cus = path.join(DATA(), 'test-secili'), save = st => ipcHandlers['state:save'](null, st);
+  try {
+    try { fs.unlinkSync(def); } catch (e) {}
+    fs.mkdirSync(cus, { recursive: true }); fs.writeFileSync(LOC(), JSON.stringify({ dir: cus }));
+    t('konum.json okunur', dataDir() === cus, dataDir());
+    fs.writeFileSync(LOC(), '{bozuk');
+    t('Bozuk konum.json: bilinen klasöre sadık kalır', dataDir() === cus, dataDir());
+    KONUM_OK = undefined;
+    t('Bozuk konum.json + bilinmeyen: kayıt yeri yok', dataDir() === null && DWARN && DWARN.kind === 'unreadable', JSON.stringify(DWARN));
+    const r1 = save({ v: 1, test: 1 });
+    t('Bozuk konum.json: kayıt reddedilir', r1 && r1.ok === false, JSON.stringify(r1));
+    t('Bozuk konum.json: varsayılana yazılmaz', !fs.existsSync(def));
+    t('Bozuk konum.json: yüklemede boş döner', STATE_FILE() === null);
+    t('Bozuk konum.json: yedek alınmaz, hata verir', yedekAl('guncelleme-oncesi-test').ok === false);
+    fs.writeFileSync(LOC(), JSON.stringify({ dir: path.join(DATA(), 'yok-klasor') })); KONUM_OK = undefined;
+    const r2 = save({ v: 1, test: 2 });
+    t('Klasör yok: kayıt reddedilir', r2.ok === false && DWARN.kind === 'missing', JSON.stringify(r2));
+    t('Klasör yok: varsayılana yazılmaz', !fs.existsSync(def));
+    t('Klasör yok: bilgi kayıt durdu der', dataInfo().blocked === true);
+    fs.writeFileSync(LOC(), JSON.stringify({ dir: cus })); KONUM_OK = undefined;
+    const r3 = save({ v: 1, test: 3 });
+    t('Konum düzelince seçili klasöre yazar', r3.ok && fs.existsSync(path.join(cus, 'durum.json')) && !fs.existsSync(def), JSON.stringify(r3));
+    fs.unlinkSync(LOC());
+    t('Bilinen seçim varken konum.json kaybolursa seçime sadık kalır', dataDir() === cus, dataDir());
+    KONUM_OK = undefined;
+    t('konum.json yoksa varsayılan kullanılır', dataDir() === DATA());
+    fs.writeFileSync(LOC(), JSON.stringify({ dir: cus })); KONUM_OK = undefined;
+    const y = yedekAl('guncelleme-oncesi-9.9.9');
+    t('Güncelleme öncesi yedek alınır', y.ok && /Yedekler/.test(y.file) && /durum-guncelleme-oncesi-9\.9\.9-/.test(path.basename(y.file)) && fs.existsSync(y.file), JSON.stringify(y));
+    t('Yedek içeriği veriyle aynı', y.ok && fs.readFileSync(y.file, 'utf8') === fs.readFileSync(path.join(cus, 'durum.json'), 'utf8'));
+    for (let i = 0; i < 12; i++) { const f = path.join(cus, 'Yedekler', 'durum-guncelleme-oncesi-eski-' + i + '.json'); fs.writeFileSync(f, '{}'); fs.utimesSync(f, new Date(2020, 0, 1 + i), new Date(2020, 0, 1 + i)); }
+    yedekAl('guncelleme-oncesi-9.9.10');
+    const kalan = fs.readdirSync(path.join(cus, 'Yedekler')).filter(f => /^durum-guncelleme-oncesi-/.test(f));
+    t('Güncelleme yedekleri en fazla 10', kalan.length === 10 && kalan.some(f => /9\.9\.10/.test(f)), kalan.length);
+    writeJSON(PIN(), { v: app.getVersion(), from: '9.9.9' });
+    t('Duraklatma kaydı bu sürümde geçerli', pinOku() && pinOku().v === app.getVersion());
+    writeJSON(PIN(), { v: '0.0.1' });
+    t('Başka sürümün duraklatma kaydı silinir', pinOku() === null && !fs.existsSync(PIN()));
+    t('Güncelleme kurulumu öncesi yedek bağlı', String(ipcHandlers['update:install'] || '').indexOf('yedekAl') >= 0);
+  } catch (e) { t('Ana süreç testleri', false, e.stack); }
+  try { fs.unlinkSync(LOC()); } catch (e) {}
+  KONUM_OK = bkK; DWARN = bkW;
+  return R;
+}
 // ---- IPC ----
-ipcMain.on('state:load', e => { e.returnValue = readJSON(STATE_FILE(), null); });
-ipcMain.handle('state:save', (e, v) => { writeJSON(STATE_FILE(), v); return true; });
+const ipcHandlers = {}; { const h = ipcMain.handle.bind(ipcMain); ipcMain.handle = (ch, fn) => { ipcHandlers[ch] = fn; return h(ch, fn); }; }
+const wrap = fn => async (e, a) => { try { return { ok: true, v: await fn(a, e) }; } catch (err) { return { ok: false, err: err.message }; } };
+ipcMain.on('state:load', e => { const f = STATE_FILE(); e.returnValue = f ? readJSON(f, null) : null; });
+// Kayıt yeri güvenli değilse (konum.json okunamıyor / klasör yok) yazma: varsayılana düşüp veriyi bölmek yerine reddet
+ipcMain.handle('state:save', (e, v) => { const f = STATE_FILE(); if (!f) return { ok: false, err: BLOCK_MSG() + '. Veri karışmasın diye kaydedilmedi.', warn: DWARN }; writeJSON(f, v); return { ok: true }; });
 // Veri klasörü: bilgi, taşıma, varsayılana dönüş
-function dataInfo() { const d = dataDir(); return { dir: d, def: DATA(), custom: d !== DATA(), file: path.join(d, 'durum.json'), warn: DWARN }; }
+function dataInfo() { const d = dataDir(); if (!d) return { dir: KONUM_OK || (DWARN && DWARN.dir) || '', def: DATA(), custom: true, file: BLOCK_MSG() + ' · kayıt durduruldu', warn: DWARN, blocked: true }; return { dir: d, def: DATA(), custom: d !== DATA(), file: path.join(d, 'durum.json'), warn: DWARN }; }
 // Varsayılandaki daha yeni veriyi seçili klasöre al (seçili klasördeki yedeklenir)
-ipcMain.handle('data:adopt', () => { try { const d = dataDir(), def = path.join(DATA(), 'durum.json'), cus = path.join(d, 'durum.json'), st = '.yedek-' + new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-') + '.json'; if (d === DATA() || !fs.existsSync(def)) return { ok: false, err: 'Taşınacak veri yok' }; if (fs.existsSync(cus)) fs.copyFileSync(cus, cus.replace(/\.json$/, st)); fs.copyFileSync(def, cus); fs.renameSync(def, def.replace(/\.json$/, st)); DWARN = null; return { ok: true }; } catch (e) { return { ok: false, err: e.message }; } });
+ipcMain.handle('data:adopt', () => { try { const d = dataDir(); if (!d) return { ok: false, err: BLOCK_MSG() }; const def = path.join(DATA(), 'durum.json'), cus = path.join(d, 'durum.json'), st = '.yedek-' + new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-') + '.json'; if (d === DATA() || !fs.existsSync(def)) return { ok: false, err: 'Taşınacak veri yok' }; if (fs.existsSync(cus)) fs.copyFileSync(cus, cus.replace(/\.json$/, st)); fs.copyFileSync(def, cus); fs.renameSync(def, def.replace(/\.json$/, st)); DWARN = null; return { ok: true }; } catch (e) { return { ok: false, err: e.message }; } });
 ipcMain.handle('data:dismiss', () => { DWARN = null; return true; });
 ipcMain.handle('data:info', () => dataInfo());
 ipcMain.handle('data:move', (e, { dir, mode }) => {
@@ -102,13 +170,14 @@ ipcMain.handle('data:move', (e, { dir, mode }) => {
     fs.mkdirSync(dir, { recursive: true });
     fs.accessSync(dir, fs.constants.W_OK);
     const src = STATE_FILE(), dst = path.join(dir, 'durum.json');
-    if (path.resolve(src) === path.resolve(dst)) return { ok: true, info: dataInfo() };
+    if (src && path.resolve(src) === path.resolve(dst)) return { ok: true, info: dataInfo() };
     if (fs.existsSync(dst) && !mode) return { ok: false, exists: true };
-    if (mode !== 'use' && fs.existsSync(src)) {
+    if (mode !== 'use' && src && fs.existsSync(src)) {
       fs.copyFileSync(src, dst);
       fs.renameSync(src, src.replace(/\.json$/, '.yedek-' + new Date().toISOString().slice(0, 10) + '.json'));
     }
-    if (path.resolve(dir) === path.resolve(DATA())) { try { fs.unlinkSync(LOC()); } catch (er) {} } else fs.writeFileSync(LOC(), JSON.stringify({ dir }));
+    if (path.resolve(dir) === path.resolve(DATA())) { try { fs.unlinkSync(LOC()); } catch (er) {} KONUM_OK = null; } else { fs.writeFileSync(LOC(), JSON.stringify({ dir })); KONUM_OK = dir; }
+    DWARN = null;
     return { ok: true, info: dataInfo() };
   } catch (err) { return { ok: false, err: err.message }; }
 });
@@ -159,8 +228,8 @@ ipcMain.on('win:cmd', (e, cmd, arg) => {
 // ---- Yedek, dışa aktarma, haberler, güncelleme ----
 ipcMain.handle('data:backup', () => {
   try {
-    const src = STATE_FILE(); if (!fs.existsSync(src)) return { ok: false, err: 'Veri dosyası yok' };
-    const dir = path.join(dataDir(), 'Yedekler'); fs.mkdirSync(dir, { recursive: true });
+    const src = STATE_FILE(); if (!src) return { ok: false, err: BLOCK_MSG() }; if (!fs.existsSync(src)) return { ok: false, err: 'Veri dosyası yok' };
+    const dir = path.join(path.dirname(src), 'Yedekler'); fs.mkdirSync(dir, { recursive: true });
     const d = new Date(), name = 'durum-' + d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') + '.json';
     fs.copyFileSync(src, path.join(dir, name));
     fs.readdirSync(dir).filter(f => /^durum-\d{4}-\d{2}-\d{2}\.json$/.test(f)).sort().reverse().slice(8).forEach(f => fs.unlinkSync(path.join(dir, f)));
@@ -174,20 +243,59 @@ async function saveAs(e, name, ext, label) {
 ipcMain.handle('exp:xlsx', async (e, o) => { try { const f = await saveAs(e, o.name, 'xlsx', 'Excel'); if (!f) return { canceled: true }; fs.writeFileSync(f, exp.xlsx(o.sheets)); return { ok: true, file: f }; } catch (er) { return { ok: false, err: er.message }; } });
 ipcMain.handle('exp:pdf', async (e, o) => { try { const f = await saveAs(e, o.name, 'pdf', 'PDF'); if (!f) return { canceled: true }; await exp.pdf(o.html, f); return { ok: true, file: f }; } catch (er) { return { ok: false, err: er.message }; } });
 ipcMain.handle('news', async () => { try { return { ok: true, items: await exp.news() }; } catch (er) { return { ok: false, err: er.message }; } });
+// 0.7.1: güncelleme kurulmadan önce otomatik veri yedeği (Yedekler/durum-guncelleme-oncesi-X-zaman.json, son 10 tutulur)
+function yedekAl(etiket) {
+  try {
+    const src = STATE_FILE(); if (!src) return { ok: false, err: BLOCK_MSG() }; if (!fs.existsSync(src)) return { ok: false, err: 'Veri dosyası yok' };
+    const dir = path.join(path.dirname(src), 'Yedekler'); fs.mkdirSync(dir, { recursive: true });
+    const d = new Date(), p2 = n => String(n).padStart(2, '0'), ts = d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) + '-' + p2(d.getHours()) + '-' + p2(d.getMinutes()) + '-' + p2(d.getSeconds());
+    const file = path.join(dir, 'durum-' + String(etiket).replace(/[^\w.-]/g, '-') + '-' + ts + '.json');
+    fs.copyFileSync(src, file);
+    fs.readdirSync(dir).filter(f => /^durum-(guncelleme-oncesi|geri-donus-oncesi)-.*\.json$/.test(f)).map(f => ({ f, t: fs.statSync(path.join(dir, f)).mtimeMs })).sort((a, b) => b.t - a.t).slice(10).forEach(x => fs.unlinkSync(path.join(dir, x.f)));
+    return { ok: true, file };
+  } catch (e) { return { ok: false, err: e.message }; }
+}
+// Geri dönüşten sonra güncellemeleri duraklat (yalnız 0.7.1 ve sonrası bu dosyayı tanır)
+const PIN = () => path.join(DATA(), 'guncelleme-durdur.json');
+function pinOku() { const p = readJSON(PIN(), null); if (p && p.v !== app.getVersion()) { try { fs.unlinkSync(PIN()); } catch (e) {} return null; } return p; }
+let UPD_HAZIR = null;
 function updSend(s) { BrowserWindow.getAllWindows().forEach(w => w.webContents.send('upd', s)); }
 if (updater) {
-  updater.autoDownload = true;
-  updater.on('update-available', i => updSend({ s: 'indiriliyor', v: i.version }));
+  const pin = SMOKE ? null : pinOku();
+  updater.autoDownload = !pin; updater.autoInstallOnAppQuit = !pin;
+  updater.on('update-available', i => updSend({ s: updater.autoDownload ? 'indiriliyor' : 'durduruldu', v: i.version }));
   updater.on('update-not-available', () => updSend({ s: 'guncel' }));
-  updater.on('update-downloaded', i => updSend({ s: 'hazir', v: i.version }));
+  updater.on('update-downloaded', i => { UPD_HAZIR = i.version; const y = yedekAl('guncelleme-oncesi-' + i.version); updSend({ s: 'hazir', v: i.version, yedek: y.ok ? y.file : null }); });
   updater.on('error', er => updSend({ s: 'hata', m: String(er && er.message || er).slice(0, 200) }));
 }
+app.on('before-quit', () => { if (UPD_HAZIR && updater && updater.autoInstallOnAppQuit) yedekAl('guncelleme-oncesi-' + UPD_HAZIR); });
 ipcMain.handle('update:check', async () => { if (!app.isPackaged || !updater) return { s: 'gelistirme' }; try { await updater.checkForUpdates(); return { s: 'denetleniyor' }; } catch (er) { return { s: 'hata', m: er.message }; } });
-ipcMain.handle('update:install', () => { if (updater) updater.quitAndInstall(); });
+ipcMain.handle('update:install', () => { if (!updater) return; yedekAl('guncelleme-oncesi-' + (UPD_HAZIR || 'yeni')); UPD_HAZIR = null; updater.quitAndInstall(); });
+ipcMain.handle('update:resume', async () => { try { fs.unlinkSync(PIN()); } catch (e) {} if (updater) { updater.autoDownload = true; updater.autoInstallOnAppQuit = true; if (app.isPackaged) updater.checkForUpdates().catch(() => {}); } return { ok: true }; });
+// Önceki onaylı sürüme dönüş
+const surum = require('./surum');
+const YEREL_LISTE = () => readJSON(path.join(__dirname, 'onayli-surumler.json'), { surumler: [] });
+ipcMain.handle('surum:liste', wrap(async () => Object.assign(await surum.liste(app.getVersion(), YEREL_LISTE(), SMOKE), { cur: app.getVersion(), pin: pinOku(), paketli: app.isPackaged })));
+let DONUS = false;
+ipcMain.handle('surum:don', wrap(async (v, e) => {
+  if (DONUS) throw new Error('Geri dönüş zaten sürüyor');
+  const l = await surum.liste(app.getVersion(), YEREL_LISTE(), SMOKE);
+  if (!l.surumler.some(s => s.v === v)) throw new Error(v + ' onaylı önceki sürümler listesinde yok');
+  if (!app.isPackaged) throw new Error('Geri dönüş yalnız kurulu uygulamada çalışır');
+  DONUS = true;
+  try {
+    const y = yedekAl('geri-donus-oncesi-' + app.getVersion());
+    const exe = await surum.indir(v, path.join(app.getPath('temp'), 'orvane-geri-donus'), (n, top) => { try { e.sender.send('surum:ilerle', { v, n, top }); } catch (er) {} });
+    if (surum.karsilastir(v, '0.7.1') >= 0) writeJSON(PIN(), { v, t: new Date().toISOString(), from: app.getVersion() });
+    if (updater) { updater.autoDownload = false; updater.autoInstallOnAppQuit = false; } // inen yeni sürüm kapanışta kurulmasın
+    require('child_process').spawn(exe, [], { detached: true, stdio: 'ignore' }).unref();
+    setTimeout(() => app.quit(), 1200);
+    return { exe, yedek: y.ok ? y.file : null, pin: surum.karsilastir(v, '0.7.1') >= 0 };
+  } finally { DONUS = false; }
+}));
 
 // ---- Google Sheets ----
 const sheets = require('./sheets');
-const wrap = fn => async (e, a) => { try { return { ok: true, v: await fn(a, e) }; } catch (err) { return { ok: false, err: err.message }; } };
 ipcMain.handle('sheets:status', wrap(() => sheets.status()));
 // Telefon eşitlemesi (Supabase)
 const bulut = require('./bulut');

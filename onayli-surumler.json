@@ -1,0 +1,8 @@
+{
+ "aciklama": "Çağlar'ın denediği ve onayladığı sürümler. Ayarlar › Sorun giderme › 'Önceki onaylı sürüme dön' yalnız bunları gösterir. Yeni sürüm onaylanınca başa ekle; eskileri silme.",
+ "surumler": [
+  { "v": "0.7.0", "tarih": "2026-11-11", "not": "Claude API çalışanları, bütçe, süre/token sınırlı görevler" },
+  { "v": "0.6.1", "tarih": "2026-11-11", "not": "Telefon eşitleme, OTA" },
+  { "v": "0.6.0", "tarih": "2026-11-11", "not": "Supabase telefon eşitlemesi" }
+ ]
+}

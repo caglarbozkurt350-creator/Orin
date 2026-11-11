@@ -20,7 +20,7 @@ var t=pk(TODAY);calY=t.getFullYear();calM=t.getMonth()}
 var _sv=null;
 function save(){clearTimeout(_sv);_sv=setTimeout(saveNow,250)}
 function saveNow(){var st={v:1,gecmis:1,Q:Q,DR:DR,S:S,E:E,D:D,OT:OT,PR:PR,UP:UP,UM:UM,PS:PS,PT:PT,PL:PL,PA:PA,CL:CL,V:V,WS:WS,RG:RG,res:res,sbOn:sbOn,railOn:railOn,zoom:zoom};
-try{if(API)API.save(st);else localStorage.setItem('orin',JSON.stringify(st))}catch(e){toast('Kaydedilemedi: '+e.message)}}
+try{if(API)API.save(st).then(function(r){if(r&&r.ok===false&&window.saveBlocked)saveBlocked(r)});else localStorage.setItem('orin',JSON.stringify(st))}catch(e){toast('Kaydedilemedi: '+e.message)}}
 // Geçmiş raporları (Mayıs–Ağustos 2026) bir kez içe aktarır; mevcut kayıtların üzerine yazmaz
 function importGecmis(){WS=WS0.map(function(x){return x.slice()});if(!window.GECMIS)return;var G=GECMIS;RG=G.ranges.map(function(x){return x.slice()});
 G.projeler.forEach(function(p){if(!pexists(p[0])){var m=pmodel(p[0]);if(!PR[m]){PR[m]=[];UM[m]=true}PR[m].push([p[0],p[1]]);UP[p[0]]=true}PS[p[0]]=p[2]});
@@ -237,4 +237,4 @@ function newRec(){nav('home','gun',TODAY);setTimeout(function(){var e=document.g
 // Otomatik güncelleme durumu
 var UPD={s:''};
 function checkUpdate(manual){if(!API||!API.update){toast('Güncelleme yalnız masaüstü uygulamasında');return}API.update.check().then(function(r){if(r.s=='gelistirme'){if(manual)toast('Geliştirme sürümü: güncelleme yalnız kurulu uygulamada çalışır')}else if(manual)toast('Güncellemeler denetleniyor…')})}
-if(API&&API.update)API.update.on(function(s){UPD=s;if(s.s=='hazir'){var o=document.getElementById('ov');o.innerHTML='<div class="dl"><div style="color:#fff;margin-bottom:12px;line-height:1.45">'+APPNAME+' '+esc(s.v)+' indirildi. Şimdi yeniden başlatıp kurulsun mu? Kayıtların korunur.</div><div style="display:flex;gap:8px;justify-content:flex-end"><button class="bt" onclick="cfNo()">Sonra</button><button class="bt p" onclick="API.update.install()">Yeniden başlat</button></div></div>';o.style.display='flex'}else if(s.s=='indiriliyor')toast('Yeni sürüm '+s.v+' indiriliyor…');else if(s.s=='guncel')toast(APPNAME+' güncel');else if(s.s=='hata')toast('Güncelleme denetlenemedi')});
+if(API&&API.update)API.update.on(function(s){UPD=s;if(s.s=='hazir'){var o=document.getElementById('ov');o.innerHTML='<div class="dl"><div style="color:#fff;margin-bottom:12px;line-height:1.45">'+APPNAME+' '+esc(s.v)+' indirildi. Şimdi yeniden başlatıp kurulsun mu? Kayıtların korunur; kurulumdan önce verilerin kendiliğinden yedeklenir.</div><div style="display:flex;gap:8px;justify-content:flex-end"><button class="bt" onclick="cfNo()">Sonra</button><button class="bt p" onclick="API.update.install()">Yeniden başlat</button></div></div>';o.style.display='flex'}else if(s.s=='indiriliyor')toast('Yeni sürüm '+s.v+' indiriliyor…');else if(s.s=='guncel')toast(APPNAME+' güncel');else if(s.s=='hata')toast('Güncelleme denetlenemedi')});

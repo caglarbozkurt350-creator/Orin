@@ -153,7 +153,7 @@ tmGelNew(kim,t,ad,m,kimden);cfNo();toast(kimden=='nika'?'Orin’in onayına gön
 // ---------- Görevler ----------
 function tmTaskNew(kim,metin,onc,son,bilgi){var c=tm(kim),g={id:uid(),kim:kim,metin:metin,onc:onc||'normal',son:son||'',durum:'acik',bilgi:!!bilgi,yol:'dogrudan',ts:Date.now()};TMS().gorev.push(g);
 tmPush(kim,{r:'sys',t:'Çağlar doğrudan görev verdi'+(g.onc=='acil'?' (acil)':'')+': '+metin+(son?' · son tarih '+tmSon(son):'')});
-if(bilgi&&kim!='orin')tmPush('orin',{r:'sys',t:'Bilgi notu: Çağlar, '+c.ad+'’ya doğrudan görev verdi (Orin ve Orla atlandı): '+metin});save();return g}
+if(bilgi&&kim!='orin')tmPush('orin',{r:'sys',t:bilgiNotu(c.ad)});save();return g}
 function tmSon(s){if(!s)return '';var d=new Date(s);if(isNaN(d))return s;var k=key(d),t=d.toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});return (k==TODAY?'Bugün':short(k))+' '+t}
 function tmTaskTog(id){var g=TMS().gorev.filter(function(x){return x.id==id})[0];if(!g)return;g.durum=g.durum=='bitti'?'acik':'bitti';g.bts=g.durum=='bitti'?Date.now():null;save();render()}
 function tmTaskDel(id){confirmBox('Bu görev silinsin mi?',function(){S.team.gorev=TMS().gorev.filter(function(x){return x.id!=id});save();render()},'Sil')}
@@ -213,3 +213,9 @@ if(typeof SUG!='undefined')SUG.push({id:'telefon',t:'Telefonla eşitleme: kayıt
 {id:'kartciz',t:'Çalışan kimlik kartlarını program kendisi çizsin (ORVANE şeridiyle, düzenlenebilir)',k:'Görsel',v:'0.5.0'},
 {id:'profsheets',t:'Çalışan profilleri, beceri ve hafızaları Google Sheets’e yedeklensin',k:'Yapısal',v:'0.5.0'},
 {id:'gorevzincir',t:'Görevler Orin › Orla zinciriyle dağıtılsın, her adım sohbet çipinde görünsün',k:'Yapısal',v:'0.5.0'});
+
+// Bilgi notu: yalnız kimin ne yaptığı (görev metni çalışanın kendi sohbetinde durur)
+function yonelme(ad){ad=String(ad||'');var s=ad.toLocaleLowerCase('tr').replace(/y$/,'i'),v=(s.match(/[aıoueiöü]/g)||['a']).pop(),k=/[aıou]/.test(v),son=/[aıoueiöü]$/.test(s);return ad+'’'+(son?'y':'')+(k?'a':'e')}
+function bilgiNotu(ad){return 'Bilgi notu: Çağlar, '+yonelme(ad)+' doğrudan görev verdi.'}
+// Eski uzun bilgi notlarını kısalt (bir kez)
+try{var _bt=TMS();Object.keys(_bt.sohbet).forEach(function(id){_bt.sohbet[id].forEach(function(m){var x=m.r=='sys'&&/^Bilgi notu: Çağlar, (.+?)’ya doğrudan görev verdi \(Orin ve Orla atlandı\):/.exec(m.t);if(x)m.t=bilgiNotu(x[1])})})}catch(e){}

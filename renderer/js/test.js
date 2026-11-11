@@ -177,3 +177,8 @@ t('Özet: ekip, gün ve proje bilgisi',function(){var o=bulutOzet();return o.v==
 t('Telefon eşitleme sayfası',function(){nav('set','telefon','');return document.getElementById('ct').innerHTML.indexOf('Telefon eşitleme')>=0&&document.getElementById('sb').innerHTML.indexOf('Telefon eşitleme')>=0});
 S.team=bk=='null'?undefined:JSON.parse(bk);Q=bq;if(bE)E[k]=bE;else delete E[k];S.bulut=bb=='null'?undefined:JSON.parse(bb);nav('home','gun',TODAY);return R};
 var __at7=window.__asyncTest;window.__asyncTest=function(){return __at7().then(function(a){return a.concat(window.__bulutTest())})};
+window.__notTest=function(){var R=[];function t(n,c,m){try{var ok=typeof c=='function'?c():c;R.push({n:n,ok:!!ok,m:ok?'':String(m||'')})}catch(e){R.push({n:n,ok:false,m:e.message})}}
+t('Bilgi notu kısa, görev metni yok',bilgiNotu('Iris')=='Bilgi notu: Çağlar, Iris’e doğrudan görev verdi.',bilgiNotu('Iris'));
+t('Türkçe yönelme eki',yonelme('Echo')=='Echo’ya'&&yonelme('Kai')=='Kai’ye'&&yonelme('Remy')=='Remy’ye'&&yonelme('Orin')=='Orin’e'&&yonelme('Luca')=='Luca’ya');
+return R};
+var __at8=window.__asyncTest;window.__asyncTest=function(){return __at8().then(function(a){return a.concat(window.__notTest())})};

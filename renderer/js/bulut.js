@@ -11,7 +11,7 @@ else if(e.tur=='cevap')psh(v.kim,{id:e.id,r:'o',t:v.t,ts:e.ts,qr:v.qr,kaynak:'te
 else if(e.tur=='gorev'){if(T.gorev.some(function(g){return g.id==v.id}))return;var c=tm(v.kim)||{ad:v.ad||v.kim};
 T.gorev.push({id:v.id,kim:v.kim,metin:v.metin,onc:v.onc||'normal',son:v.son||'',durum:'acik',bilgi:!!v.bilgi,yol:'dogrudan',ts:e.ts,kaynak:'telefon'});
 psh(v.kim,{id:e.id+'s',r:'sys',t:'Çağlar doğrudan görev verdi'+(v.onc=='acil'?' (acil)':'')+': '+v.metin+(v.son?' · son tarih '+v.son:''),ts:e.ts});
-if(v.bilgi&&v.kim!='orin')psh('orin',{id:e.id+'b',r:'sys',t:'Bilgi notu: Çağlar, '+c.ad+'’ya doğrudan görev verdi (Orin ve Orla atlandı): '+v.metin,ts:e.ts})}
+if(v.bilgi&&v.kim!='orin')psh('orin',{id:e.id+'b',r:'sys',t:bilgiNotu(c.ad),ts:e.ts})}
 else if(e.tur=='gorev_durum'){var g=T.gorev.filter(function(x){return x.id==v.id})[0];if(g){g.durum=v.durum;g.bts=v.durum=='bitti'?e.ts:null}}
 else if(e.tur=='gelisim'){if(T.gel.some(function(x){return x.id==v.id}))return;var o={id:v.id,kim:v.kim,tur:v.gtur,ad:v.ad||'',metin:v.metin||'',asama:v.kimden=='nika'?'ceo':'ik',kimden:v.kimden||'cagla',ts:e.ts};if(v.kimden=='nika')o.ik={ts:e.ts,ok:1};T.gel.push(o)}
 else if(e.tur=='gelisim_karar'){var x=T.gel.filter(function(y){return y.id==v.id})[0];if(!x||x.asama!=v.asama)return;

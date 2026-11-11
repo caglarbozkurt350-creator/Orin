@@ -23,6 +23,10 @@ export function bosOzet(): Ozet {
   return { v: 1, ts: 0, olaySira: 0, ekip: { m: {}, gorev: [], gel: [], sohbet: {} }, gun: {}, proj: [], ayar: { w1: 525, w2: 435 } };
 }
 
+// Bilgi notu: yalnız kimin ne yaptığı (masaüstündeki bilgiNotu ile aynı)
+export function yonelme(ad: string) { const s = ad.toLocaleLowerCase('tr').replace(/y$/, 'i'), v = (s.match(/[aıoueiöü]/g) || ['a']).pop() as string, k = /[aıou]/.test(v), son = /[aıoueiöü]$/.test(s); return ad + '’' + (son ? 'y' : '') + (k ? 'a' : 'e'); }
+export const bilgiNotu = (ad: string) => 'Bilgi notu: Çağlar, ' + yonelme(ad) + ' doğrudan görev verdi.';
+
 // ---------- Olayları uygula (masaüstündeki tmApplyEvent ile aynı) ----------
 export function uygula(o: Ozet, e: Olay) {
   const v = e.veri || {}, E = o.ekip;
@@ -33,7 +37,7 @@ export function uygula(o: Ozet, e: Olay) {
     if (!E.gorev.some((g) => g.id === v.id)) {
       E.gorev.push({ id: v.id, kim: v.kim, metin: v.metin, onc: v.onc, son: v.son || '', durum: 'acik', bilgi: !!v.bilgi, yol: 'dogrudan', ts: e.ts });
       push(v.kim, { id: e.id + 's', r: 'sys', t: 'Çağlar doğrudan görev verdi' + (v.onc === 'acil' ? ' (acil)' : '') + ': ' + v.metin + (v.son ? ' · son tarih ' + v.son : ''), ts: e.ts });
-      if (v.bilgi && v.kim !== 'orin') push('orin', { id: e.id + 'b', r: 'sys', t: 'Bilgi notu: Çağlar, ' + (v.ad || v.kim) + '’ya doğrudan görev verdi (Orin ve Orla atlandı): ' + v.metin, ts: e.ts });
+      if (v.bilgi && v.kim !== 'orin') push('orin', { id: e.id + 'b', r: 'sys', t: bilgiNotu(v.ad || v.kim), ts: e.ts });
     }
   } else if (e.tur === 'gorev_durum') { const g = E.gorev.find((x) => x.id === v.id); if (g) { g.durum = v.durum; g.bts = v.durum === 'bitti' ? e.ts : null; } }
   else if (e.tur === 'gelisim') {

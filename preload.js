@@ -26,6 +26,15 @@ contextBridge.exposeInMainWorld('api', {
   openPath: p => ipcRenderer.invoke('fs:open', p),
   external: url => ipcRenderer.invoke('shell:external', url),
   win: (cmd, arg) => ipcRenderer.send('win:cmd', cmd, arg),
+  bulut: {
+    status: () => ipcRenderer.invoke('bulut:status'),
+    config: c => ipcRenderer.invoke('bulut:config', c),
+    login: o => ipcRenderer.invoke('bulut:login', o),
+    signup: o => ipcRenderer.invoke('bulut:signup', o),
+    logout: () => ipcRenderer.invoke('bulut:logout'),
+    pull: s => ipcRenderer.invoke('bulut:pull', s),
+    push: v => ipcRenderer.invoke('bulut:push', v)
+  },
   sheets: {
     status: () => ipcRenderer.invoke('sheets:status'),
     config: p => ipcRenderer.invoke('sheets:config', p),

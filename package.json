@@ -28,7 +28,8 @@
       "assets/**",
       "!renderer/js/kisisel.js",
       "export.js",
-      "calisanlar.json"
+      "calisanlar.json",
+      "bulut.js"
     ],
     "win": {
       "target": "nsis",

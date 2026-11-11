@@ -163,3 +163,17 @@ t('Sesli sohbet açılır, kapanınca geçmişe yazılır',function(){nav('team'
 t('Telefon eşitleme öneri listesinde',SUG.some(function(x){return x.id=='telefon'}));
 S.team=bk=='null'?undefined:JSON.parse(bk);var v=document.getElementById('vc');if(v)v.remove();nav('home','gun',TODAY);return R};
 var __at6=window.__asyncTest;window.__asyncTest=function(){return __at6().then(function(a){return a.concat(window.__teamTest())})};
+
+// Orvane 0.6.0: telefon eşitlemesi (olay uygulama ve özet)
+var __sr6=window.__smokeRoutes;window.__smokeRoutes=function(){return __sr6().concat([['set','telefon','']])};
+window.__bulutTest=function(){var R=[];function t(n,c,m){try{var ok=typeof c=='function'?c():c;R.push({n:n,ok:!!ok,m:ok?'':String(m||'')})}catch(e){R.push({n:n,ok:false,m:e.message})}}
+var bk=JSON.stringify(S.team||null),bq=Q.slice(),k='2027-2-4',bE=E[k],bb=JSON.stringify(S.bulut||null),now=Date.now();
+t('Telefon mesajı sohbete düşer (tekrar gelirse eklenmez)',function(){bulutUygula({id:'tm1',tur:'mesaj',veri:{kim:'otto',t:'Telefondan merhaba',mod:'mesaj',bek:1},ts:now});bulutUygula({id:'tm1',tur:'mesaj',veri:{kim:'otto',t:'Telefondan merhaba',mod:'mesaj',bek:1},ts:now});return tmChat('otto').filter(function(m){return m.id=='tm1'}).length==1&&tmChat('otto').some(function(m){return m.kaynak=='telefon'})});
+t('Telefon görevi + Orin bilgi notu',function(){bulutUygula({id:'tg1',tur:'gorev',veri:{id:'g-tel',kim:'luca',ad:'Luca',metin:'Çizim bul',onc:'acil',bilgi:true},ts:now});var o=tmChat('orin');return tmOpen('luca').some(function(g){return g.id=='g-tel'})&&/Bilgi notu/.test(o[o.length-1].t)});
+t('Telefondan görev bitti',function(){bulutUygula({id:'tg2',tur:'gorev_durum',veri:{id:'g-tel',durum:'bitti'},ts:now});return !tmOpen('luca').some(function(g){return g.id=='g-tel'})});
+t('Telefondan gelişim İK → CEO → uygulanır',function(){bulutUygula({id:'tl1',tur:'gelisim',veri:{id:'gl-tel',kim:'sage',gtur:'beceri',ad:'Kaynak tarama',metin:'',kimden:'cagla'},ts:now});bulutUygula({id:'tl2',tur:'gelisim_karar',veri:{id:'gl-tel',asama:'ik',ok:1},ts:now});bulutUygula({id:'tl3',tur:'gelisim_karar',veri:{id:'gl-tel',asama:'ceo',ok:1},ts:now});return tmSkills('sage').some(function(s){return s.ad=='Kaynak tarama'})});
+t('Telefondan iş günü kaydı Sheets kuyruğuna girer',function(){delete E[k];Q=[];bulutUygula({id:'tk1',tur:'kayit',veri:{k:k,kod:'78.26.03.19',is:'Telefon kaydı',dk:120},ts:now});bulutUygula({id:'tk1',tur:'kayit',veri:{k:k,kod:'78.26.03.19',is:'Telefon kaydı',dk:120},ts:now});return (E[k]||[]).length==1&&E[k][0].src=='telefon'&&Q.some(function(o){return o.op=='add'})});
+t('Özet: ekip, gün ve proje bilgisi',function(){var o=bulutOzet();return o.v==1&&o.ekip&&o.ekip.sohbet.otto.every(function(m){return !!m.id})&&o.gun&&typeof o.olaySira=='number'&&o.ayar.w1==S.w1});
+t('Telefon eşitleme sayfası',function(){nav('set','telefon','');return document.getElementById('ct').innerHTML.indexOf('Telefon eşitleme')>=0&&document.getElementById('sb').innerHTML.indexOf('Telefon eşitleme')>=0});
+S.team=bk=='null'?undefined:JSON.parse(bk);Q=bq;if(bE)E[k]=bE;else delete E[k];S.bulut=bb=='null'?undefined:JSON.parse(bb);nav('home','gun',TODAY);return R};
+var __at7=window.__asyncTest;window.__asyncTest=function(){return __at7().then(function(a){return a.concat(window.__bulutTest())})};

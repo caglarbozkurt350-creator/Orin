@@ -189,6 +189,15 @@ ipcMain.handle('update:install', () => { if (updater) updater.quitAndInstall(); 
 const sheets = require('./sheets');
 const wrap = fn => async (e, a) => { try { return { ok: true, v: await fn(a, e) }; } catch (err) { return { ok: false, err: err.message }; } };
 ipcMain.handle('sheets:status', wrap(() => sheets.status()));
+// Telefon eşitlemesi (Supabase)
+const bulut = require('./bulut');
+ipcMain.handle('bulut:status', wrap(() => bulut.status()));
+ipcMain.handle('bulut:config', wrap(c => bulut.setCfg(c)));
+ipcMain.handle('bulut:login', wrap(o => bulut.login(o)));
+ipcMain.handle('bulut:signup', wrap(o => bulut.signup(o)));
+ipcMain.handle('bulut:logout', wrap(() => bulut.logout()));
+ipcMain.handle('bulut:pull', wrap(s => bulut.pull(s)));
+ipcMain.handle('bulut:push', wrap(v => bulut.push(v)));
 ipcMain.handle('sheets:config', wrap(p => sheets.setConfig(p)));
 ipcMain.handle('sheets:login', wrap(() => sheets.login()));
 ipcMain.handle('sheets:cancel', wrap(() => sheets.cancel()));

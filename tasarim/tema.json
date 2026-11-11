@@ -1,0 +1,11 @@
+{
+ "not": "Orvane ortak tema: masaüstü (renderer/style.css, team.css) ve telefon (mobil) aynı değerleri kullanır. Değiştirirken ikisini birlikte güncelle.",
+ "renk": {
+  "zemin": "#18181a", "panel": "#1a1a1c", "kenar": "#1e1e21", "kart": "#232327", "kart2": "#2a2a2e", "giris": "#2c2c30", "secili": "#3a3a40",
+  "yazi": "#ececf0", "yazi2": "#c9c9ce", "soluk": "#9a9aa2", "solukk": "#77777f", "cizgi": "rgba(255,255,255,0.07)",
+  "ana": "#2f7bf5", "yesil": "#4fd18b", "turuncu": "#ffb35b", "notTuruncu": "#e0952f", "kirmizi": "#e0443a", "acil": "#e0705b", "bosta": "#5a5a62",
+  "ikBas": "#ff8a5b", "ikSon": "#ffc35b", "bilgi": "#a9c8ff"
+ },
+ "yaricap": { "kart": 16, "giris": 16, "menu": 14, "hap": 999, "yazma": 26 },
+ "yazi": { "baslik": 21, "govde": 14.5, "kucuk": 12.5, "marka": 17, "markaAralik": 0.32 }
+}

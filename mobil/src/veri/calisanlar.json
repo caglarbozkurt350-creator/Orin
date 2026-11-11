@@ -1,0 +1,190 @@
+{
+ "sirket": "Orvane",
+ "not": "Görev metinleri programdaki rollerdir. grafikler: GRF anahtarları (hafta, proje, mesai) ya da {t,s} başlıkları (veri bağlanana kadar Veri yok gösterilir).",
+ "calisanlar": [
+  {
+   "id": "orin",
+   "ad": "Orin",
+   "grup": "yonetim",
+   "gorev": "CEO · Genel yönetici",
+   "bagli": "Çağlar",
+   "renk": "#5b6cff",
+   "foto": "assets/calisanlar/foto/01_Orin.jpg",
+   "kart": "assets/calisanlar/kartlar/01_Orin.png",
+   "grafikler": [],
+   "ses": null
+  },
+  {
+   "id": "orla",
+   "ad": "Orla",
+   "grup": "yonetim",
+   "gorev": "Yönetici · Koordinatör",
+   "bagli": "Orin",
+   "renk": "#c55bff",
+   "foto": "assets/calisanlar/foto/02_Orla.jpg",
+   "kart": "assets/calisanlar/kartlar/02_Orla.png",
+   "grafikler": [],
+   "ses": null
+  },
+  {
+   "id": "nika",
+   "ad": "Nika",
+   "grup": "yonetim",
+   "gorev": "İnsan Kaynakları Müdürü",
+   "bagli": "Orla",
+   "renk": "#ff8a5b",
+   "foto": "assets/calisanlar/foto/03_Nika.png",
+   "kart": "assets/calisanlar/kartlar/03_Nika.png",
+   "grafikler": [],
+   "ses": null
+  },
+  {
+   "id": "echo",
+   "ad": "Echo",
+   "grup": "ekip",
+   "gorev": "Günlük iş raporu ve kayıtlar",
+   "bagli": "Orla",
+   "renk": "#3fb6ff",
+   "foto": "assets/calisanlar/foto/04_Echo.png",
+   "kart": "assets/calisanlar/kartlar/04_Echo.png",
+   "grafikler": [
+    "hafta",
+    "proje",
+    "mesai"
+   ],
+   "ses": null
+  },
+  {
+   "id": "otto",
+   "ad": "Otto",
+   "grup": "ekip",
+   "gorev": "Ev bütçesi, gelir-gider",
+   "bagli": "Orla",
+   "renk": "#4fc38a",
+   "foto": "assets/calisanlar/foto/05_Otto.png",
+   "kart": "assets/calisanlar/kartlar/05_Otto.png",
+   "grafikler": [],
+   "ses": null
+  },
+  {
+   "id": "iris",
+   "ad": "Iris",
+   "grup": "ekip",
+   "gorev": "Sağlıklı yaşam takibi",
+   "bagli": "Orla",
+   "renk": "#7ad36b",
+   "foto": "assets/calisanlar/foto/06_Iris.png",
+   "kart": "assets/calisanlar/kartlar/06_Iris.png",
+   "grafikler": [],
+   "ses": null
+  },
+  {
+   "id": "marco",
+   "ad": "Marco",
+   "grup": "ekip",
+   "gorev": "Yemek menüsü ve market listesi",
+   "bagli": "Orla",
+   "renk": "#e0a24f",
+   "foto": "assets/calisanlar/foto/07_Marco.png",
+   "kart": "assets/calisanlar/kartlar/07_Marco.png",
+   "grafikler": [],
+   "ses": null
+  },
+  {
+   "id": "luca",
+   "ad": "Luca",
+   "grup": "ekip",
+   "gorev": "Proje ve çizim arama",
+   "bagli": "Orla",
+   "renk": "#8f9bb3",
+   "foto": "assets/calisanlar/foto/08_Luca.png",
+   "kart": "assets/calisanlar/kartlar/08_Luca.png",
+   "grafikler": [],
+   "ses": null
+  },
+  {
+   "id": "vera",
+   "ad": "Vera",
+   "grup": "ekip",
+   "gorev": "İş standartları ve kalite kontrol",
+   "bagli": "Orla",
+   "renk": "#57d3d3",
+   "foto": "assets/calisanlar/foto/09_Vera.jpg",
+   "kart": "assets/calisanlar/kartlar/09_Vera.png",
+   "grafikler": [],
+   "ses": null
+  },
+  {
+   "id": "ada",
+   "ad": "Ada",
+   "grup": "ekip",
+   "gorev": "Program ve kod yazımı",
+   "bagli": "Orla",
+   "renk": "#a9b4ff",
+   "foto": "assets/calisanlar/foto/10_Ada.jpg",
+   "kart": "assets/calisanlar/kartlar/10_Ada.png",
+   "grafikler": [],
+   "ses": null
+  },
+  {
+   "id": "remy",
+   "ad": "Remy",
+   "grup": "ekip",
+   "gorev": "Takvim ve hatırlatmalar",
+   "bagli": "Orla",
+   "renk": "#a58bff",
+   "foto": "assets/calisanlar/foto/11_Remy.png",
+   "kart": "assets/calisanlar/kartlar/11_Remy.png",
+   "grafikler": [],
+   "ses": null
+  },
+  {
+   "id": "sage",
+   "ad": "Sage",
+   "grup": "ekip",
+   "gorev": "Araştırma ve bilgi toplama",
+   "bagli": "Orla",
+   "renk": "#b08cff",
+   "foto": "assets/calisanlar/foto/12_Sage.png",
+   "kart": "assets/calisanlar/kartlar/12_Sage.png",
+   "grafikler": [],
+   "ses": null
+  },
+  {
+   "id": "mia",
+   "ad": "Mia",
+   "grup": "ekip",
+   "gorev": "Aile ve ev işleri",
+   "bagli": "Orla",
+   "renk": "#ff9ec4",
+   "foto": "assets/calisanlar/foto/13_Mia.png",
+   "kart": "assets/calisanlar/kartlar/13_Mia.png",
+   "grafikler": [],
+   "ses": null
+  },
+  {
+   "id": "kai",
+   "ad": "Kai",
+   "grup": "ekip",
+   "gorev": "Uzay gemisi teknisyeni",
+   "bagli": "Orla",
+   "renk": "#ff7a5b",
+   "foto": "assets/calisanlar/foto/14_Kai.png",
+   "kart": "assets/calisanlar/kartlar/14_Kai.png",
+   "grafikler": [],
+   "ses": null
+  },
+  {
+   "id": "cleo",
+   "ad": "Cleo",
+   "grup": "ekip",
+   "gorev": "Yazışma ve mesaj taslakları",
+   "bagli": "Orla",
+   "renk": "#ffd36b",
+   "foto": "assets/calisanlar/foto/15_Cleo.png",
+   "kart": "assets/calisanlar/kartlar/15_Cleo.png",
+   "grafikler": [],
+   "ses": null
+  }
+ ]
+}

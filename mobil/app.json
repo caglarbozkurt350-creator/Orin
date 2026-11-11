@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "Orvane",
+    "slug": "orvane",
+    "version": "0.5.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "orvane",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#18181a",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.caglar.orvane"
+    },
+    "android": {
+      "package": "com.caglar.orvane",
+      "adaptiveIcon": {
+        "backgroundColor": "#18181a",
+        "foregroundImage": "./assets/icon.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/icon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-image",
+      "expo-sqlite",
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}

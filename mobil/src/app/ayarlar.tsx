@@ -7,11 +7,13 @@ import { bekleyenGelisim, useGorunum } from '@/lib/ekip';
 import { cikis, esitle, girisYap, hataMetni, kayitOl, oturum, VARSAYILAN } from '@/lib/senk';
 import { R } from '@/lib/tema';
 import { SURUM } from '@/veri/surum';
+import * as Updates from 'expo-updates';
+import { guncellemeDenetle, yenidenBaslat } from '@/lib/guncelle';
 
 export default function Ayarlar() {
   const d = useDurum((x) => x), o = useGorunum();
   const [url, setUrl] = useState(d.ayar.url), [anahtar, setAnahtar] = useState(d.ayar.anahtar);
-  const [eposta, setEposta] = useState(''), [sifre, setSifre] = useState(''), [kim, setKim] = useState<string | null>(null), [mesaj, setMesaj] = useState(''), [bekle, setBekle] = useState(false);
+  const [eposta, setEposta] = useState(''), [sifre, setSifre] = useState(''), [kim, setKim] = useState<string | null>(null), [mesaj, setMesaj] = useState(''), [bekle, setBekle] = useState(false), [guncel, setGuncel] = useState(false);
   const yenile = () => oturum().then((x) => setKim(x?.user?.email || null)).catch(() => setKim(null));
   useEffect(() => { yenile(); }, [d.ayar]);
   const varsayilan = !!VARSAYILAN.url;
@@ -49,6 +51,14 @@ export default function Ayarlar() {
           </View>
         )}
         {!!mesaj && <Text style={{ color: R.bilgi, fontSize: 13 }}>{mesaj}</Text>}
+        <View style={[s.kart, { gap: 8 }]}>
+          <Text style={{ color: '#fff', fontSize: 15, fontWeight: '600' }}>Uygulama güncellemesi</Text>
+          <Text style={s.soluk}>Düzeltmeler APK kurmadan gelir: uygulama açılınca ve öne gelince denetlenir. {Updates.isEmbeddedLaunch ? 'Şu an APK ile gelen ilk sürüm çalışıyor.' : Updates.createdAt ? 'Çalışan güncelleme: ' + Updates.createdAt.toLocaleString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + '.' : ''}</Text>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <Dugme yazi="Güncellemeleri denetle" tur="ikinci" stil={{ flex: 1 }} onPress={() => calis(async () => { const r = await guncellemeDenetle(true); if (r === 'indirildi') { setGuncel(true); return; } throw new Error(r === 'gelistirme' ? 'Geliştirme sürümünde güncelleme denetlenmez' : r === 'hata' ? 'Güncelleme sunucusuna ulaşılamadı' : 'Uygulama güncel'); }, 'Güncelleme indirildi')} />
+            {guncel && <Dugme yazi="Yeniden başlat" onPress={() => yenidenBaslat()} />}
+          </View>
+        </View>
         <View style={s.kart}>
           <Text style={{ color: '#fff', fontSize: 15, fontWeight: '600', marginBottom: 6 }}>Yapay zekâ</Text>
           <Text style={s.soluk}>Claude API henüz bağlı değil. Echo kayıtlardan cevap verir; diğer çalışanlara yazılanlar bağlantı kurulunca cevaplanır.</Text>

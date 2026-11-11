@@ -102,10 +102,12 @@ const kisa = (k: string) => { const a = k.split('-').map(Number), d = new Date(a
 
 export function echoCevap(o: Ozet, t: string): { t: string; qr: string[] } | null {
   if (!o.ts) return null; // masaüstünden veri gelmedi
-  const q = t.toLocaleLowerCase('tr');
+  const q = t.toLocaleLowerCase('tr').trim();
+  // Yalnız kısa soru kalıplarına hızlı cevap; izin/doktor raporu gibi bildirimler ve uzun mesajlar yapay zekâya (Echo) gider
+  if (/doktor|hastane|hasta|raporlu|raporum|rapor al|izin|sevk|mazeret|refakat/.test(q) || q.split(/\s+/).length > 6) return null;
   if (/eksik|hata|boş/.test(q)) return eksikGunler(o);
   if (/\bay\b|ayın|aylık|bu ay/.test(q)) return buAy(o);
-  if (/hafta|rapor|özet|durum/.test(q)) return buHafta(o);
+  if (/hafta|^rapor$|özet|durum/.test(q)) return buHafta(o);
   return null;
 }
 function buHafta(o: Ozet) {

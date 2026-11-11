@@ -9,7 +9,7 @@ function ikAlanBul(t){t=String(t||'').trim().toLocaleLowerCase('tr');for(var i=0
 function gHBar(rows,mx){var W=260,R=17,L=78,H=rows.length*R+4,s='<svg viewBox="0 0 '+W+' '+H+'" class="ch">';mx=mx||1;
 rows.forEach(function(r,i){var y=i*R+2,x=L,tot=0;s+='<text x="0" y="'+(y+11)+'">'+esc(String(r[0]).slice(0,13))+'</text>';
 r[1].forEach(function(v,j){var w=Math.max(0,v/mx*(W-L-34));if(w>0)s+='<rect x="'+x+'" y="'+(y+2)+'" width="'+w+'" height="11" rx="3" fill="'+r[2][j]+'"><title>'+esc(r[4]||'')+'</title></rect>';x+=w;tot+=v});
-s+='<text x="'+(x+4)+'" y="'+(y+11)+'">'+esc(r[3]!=null?r[3]:String(tot))+'</text>'});return s+'</svg>'}
+s+='<text x="'+(x+4)+'" y="'+(y+11)+'">'+esc(r[3]!=null?r[3]:String(tot))+'</text>'});return '<div class="iksc">'+s+'</svg></div>'}
 function ikLeg(a){return '<div class="hn" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:2px">'+a.map(function(x){return '<span><i style="display:inline-block;width:8px;height:8px;border-radius:2px;background:'+x[1]+';margin-right:4px"></i>'+esc(x[0])+'</span>'}).join('')+'</div>'}
 
 // 1) Gelişim: onaylanan gelişim (beceri + hafıza) sayısı, eşitlikte bekleyen talepler

@@ -1,8 +1,9 @@
 // Çalışan sayfası: Sohbet · Görevler · Beceriler · Hafıza (masaüstü çalışan sayfasının telefon hâli)
 import { useLocalSearchParams } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useKlavye } from '@/lib/klavye';
 import { AltPencere, Bos, GelisimFormu, GorevFormu, GorevSinir } from '@/bilesen/formlar';
 import { GelisimSatiri } from '@/bilesen/gelisim';
 import { Dugme, Ekran, Foto, Ikon, Nokta, Rozet, s } from '@/bilesen/ortak';
@@ -84,19 +85,19 @@ export default function CalisanSayfasi() {
 }
 
 function Sohbet({ c }: { c: Calisan }) {
-  const o = useGorunum(), olaylar = useDurum((d) => d.olaylar), senk = useDurum((d) => d.senk), alt = useSafeAreaInsets().bottom;
+  const o = useGorunum(), olaylar = useDurum((d) => d.olaylar), senk = useDurum((d) => d.senk), alt = useSafeAreaInsets().bottom, kl = useKlavye();
   const [t, setT] = useState(''), [mod, setMod] = useState<'mesaj' | 'not'>('mesaj'), sc = useRef<any>(null);
   const a = o.ekip.sohbet[c.id] || [], bek = new Set(olaylar.filter((e) => !e.gitti).map((e) => e.id));
   const cevapsiz = a.filter((m) => m.bek).length;
   const gonder = (metin?: string) => {
     const x = (metin ?? t).trim(); if (!x) return; if (metin == null) setT('');
-    const md = metin != null ? 'mesaj' : mod, r = md === 'mesaj' && c.id === 'echo' ? echoCevap(o, x) : null;
+    const md = metin != null ? 'mesaj' : mod, r = md === 'mesaj' && c.id === 'echo' && (metin != null || !o.zeka?.bagli) ? echoCevap(o, x) : null; // yapay zekâ bağlıysa yazılan mesajı Echo cevaplar
     olayEkle('mesaj', { kim: c.id, t: x, mod: md, bek: md === 'mesaj' && !r ? 1 : 0 });
     if (r) olayEkle('cevap', { kim: c.id, t: r.t, qr: r.qr });
     esitleSonra(); setTimeout(() => sc.current?.scrollToEnd({ animated: true }), 80);
   };
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+    <View ref={kl.ref} style={{ flex: 1 }}>
       <ScrollView ref={sc} onContentSizeChange={() => sc.current?.scrollToEnd({ animated: false })} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 8, gap: 14 }}>
         {!a.length && <Bot c={c} t={'Merhaba, ben ' + c.ad + '. ' + c.gorev + ' işlerine bakıyorum.' + (c.id === 'echo' ? ' Kayıtlarına bakıp hemen özet çıkarabilirim.' : ' Yapay zekâ bağlantısı kurulunca sohbet edebileceğiz; şimdiden mesaj ya da not bırakabilirsin.')} qr={c.id === 'echo' ? ['Bu haftanın raporu', 'Eksik günler', 'Bu ayın özeti'] : []} gonder={gonder} />}
         {a.map((m) => m.r === 'sys' ? (
@@ -116,7 +117,7 @@ function Sohbet({ c }: { c: Calisan }) {
           <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', backgroundColor: 'rgba(47,123,245,0.08)', borderWidth: 1, borderColor: 'rgba(47,123,245,0.3)', borderRadius: 14, padding: 11 }}><Ikon ad="bilgi" boy={18} renk={R.bilgi} /><Text style={{ flex: 1, color: R.bilgi, fontSize: 13 }}>{o.zeka?.bagli ? cevapsiz + ' mesaj cevap bekliyor · bilgisayardaki Orvane açıkken ' + c.ad + ' birkaç saniyede cevaplar.' : 'Yapay zekâ bağlı değil · ' + cevapsiz + ' mesaj cevap bekliyor. Bağlantı kurulunca ' + c.ad + ' cevaplayacak.'}</Text></View>
         ) : null}
       </ScrollView>
-      <View style={{ paddingHorizontal: 12, paddingTop: 6, paddingBottom: Math.max(alt, 10) + 6 }}>
+      <View style={{ paddingHorizontal: 12, paddingTop: 6, paddingBottom: kl.ortu > 0 ? kl.ortu + 8 : Math.max(alt, 10) + 6 }}>
         <View style={{ backgroundColor: '#252528', borderWidth: 1, borderColor: mod === 'not' ? 'rgba(224,149,47,0.45)' : 'rgba(255,255,255,0.09)', borderRadius: 26, paddingTop: 10, paddingBottom: 8, paddingHorizontal: 12 }}>
           <TextInput value={t} onChangeText={setT} multiline placeholder={mod === 'not' ? c.ad + '’ya not bırak…' : c.ad + '’ya mesaj yaz…'} placeholderTextColor={R.soluk} accessibilityLabel="Mesaj" style={{ color: '#fff', fontSize: 15, maxHeight: 120, paddingHorizontal: 2, paddingBottom: 8 }} />
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -135,7 +136,7 @@ function Sohbet({ c }: { c: Calisan }) {
           </View>
         </View>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 

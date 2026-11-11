@@ -131,3 +131,6 @@ html.motion .gc,html.motion .kp5>div,html.motion .ti3,html.motion .sk{background
 @media (max-width:1100px){.kg{grid-template-columns:repeat(4,1fr)}.kp5{grid-template-columns:repeat(3,1fr)}.kp5 .tk{grid-column:span 2}}
 /* Sesli sohbet açıkken üst çubuk yazıları gizlenir (başlık yerine süre görünür) */
 .w:has(.vc) .mb>*{opacity:0;transition:opacity .2s}
+
+/* İK grafikleri: sabit yükseklikte kaydırılabilir, çubuk yalnız üzerine gelince görünür */
+.iksc{max-height:138px;overflow-y:auto;overflow-x:hidden;margin-bottom:4px;padding-right:2px}.iksc::-webkit-scrollbar{width:6px}.iksc::-webkit-scrollbar-thumb{background:transparent;border:0}.iksc:hover::-webkit-scrollbar-thumb{background:#4a4a52;border-radius:4px}

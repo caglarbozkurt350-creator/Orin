@@ -1,6 +1,6 @@
 // Çalışan sayfası: Sohbet · Görevler · Beceriler · Hafıza (masaüstü çalışan sayfasının telefon hâli)
 import { useLocalSearchParams } from 'expo-router';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useKlavye } from '@/lib/klavye';
@@ -89,6 +89,8 @@ function Sohbet({ c }: { c: Calisan }) {
   const [t, setT] = useState(''), [mod, setMod] = useState<'mesaj' | 'not'>('mesaj'), sc = useRef<any>(null);
   const a = o.ekip.sohbet[c.id] || [], bek = new Set(olaylar.filter((e) => !e.gitti).map((e) => e.id));
   const cevapsiz = a.filter((m) => m.bek).length;
+  // Claude sohbeti gibi: klavye açılınca yazı kutusu klavyenin hemen üstünde, son mesaj görünür
+  useEffect(() => { const z = setTimeout(() => sc.current?.scrollToEnd({ animated: true }), 60); return () => clearTimeout(z); }, [kl.ortu]);
   const gonder = (metin?: string) => {
     const x = (metin ?? t).trim(); if (!x) return; if (metin == null) setT('');
     const md = metin != null ? 'mesaj' : mod, r = md === 'mesaj' && c.id === 'echo' && (metin != null || !o.zeka?.bagli) ? echoCevap(o, x) : null; // yapay zekâ bağlıysa yazılan mesajı Echo cevaplar
@@ -117,7 +119,7 @@ function Sohbet({ c }: { c: Calisan }) {
           <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', backgroundColor: 'rgba(47,123,245,0.08)', borderWidth: 1, borderColor: 'rgba(47,123,245,0.3)', borderRadius: 14, padding: 11 }}><Ikon ad="bilgi" boy={18} renk={R.bilgi} /><Text style={{ flex: 1, color: R.bilgi, fontSize: 13 }}>{o.zeka?.bagli ? cevapsiz + ' mesaj cevap bekliyor · bilgisayardaki Orvane açıkken ' + c.ad + ' birkaç saniyede cevaplar.' : 'Yapay zekâ bağlı değil · ' + cevapsiz + ' mesaj cevap bekliyor. Bağlantı kurulunca ' + c.ad + ' cevaplayacak.'}</Text></View>
         ) : null}
       </ScrollView>
-      <View style={{ paddingHorizontal: 12, paddingTop: 6, paddingBottom: kl.ortu > 0 ? kl.ortu + 8 : Math.max(alt, 10) + 6 }}>
+      <View style={{ paddingHorizontal: 10, paddingTop: 6, paddingBottom: kl.ortu > 0 ? kl.ortu + 6 : Math.max(alt, 10) + 6 }}>
         <View style={{ backgroundColor: '#252528', borderWidth: 1, borderColor: mod === 'not' ? 'rgba(224,149,47,0.45)' : 'rgba(255,255,255,0.09)', borderRadius: 26, paddingTop: 10, paddingBottom: 8, paddingHorizontal: 12 }}>
           <TextInput value={t} onChangeText={setT} multiline placeholder={mod === 'not' ? c.ad + '’ya not bırak…' : c.ad + '’ya mesaj yaz…'} placeholderTextColor={R.soluk} accessibilityLabel="Mesaj" style={{ color: '#fff', fontSize: 15, maxHeight: 120, paddingHorizontal: 2, paddingBottom: 8 }} />
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>

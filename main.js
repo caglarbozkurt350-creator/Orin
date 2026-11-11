@@ -147,6 +147,15 @@ function mainTests() {
     writeJSON(PIN(), { v: '0.0.1' });
     t('Başka sürümün duraklatma kaydı silinir', pinOku() === null && !fs.existsSync(PIN()));
     t('Güncelleme kurulumu öncesi yedek bağlı', String(ipcHandlers['update:install'] || '').indexOf('yedekAl') >= 0);
+    // Abonelik (Claude Code CLI): API anahtarı ve oturum değişkenleri alt sürece geçmez, araçlar kısıtlı, sonuç okunur
+    const ab = require('./abonelik'), eskiK = process.env.ANTHROPIC_API_KEY; process.env.ANTHROPIC_API_KEY = 'sk-test'; process.env.CLAUDE_CODE_TEST_X = '1';
+    const env = ab.temizEnv(); if (eskiK === undefined) delete process.env.ANTHROPIC_API_KEY; else process.env.ANTHROPIC_API_KEY = eskiK; delete process.env.CLAUDE_CODE_TEST_X;
+    t('Abonelik: API anahtarı alt sürece geçmez', !env.ANTHROPIC_API_KEY && !env.CLAUDE_CODE_TEST_X && !!env.PATH === !!process.env.PATH);
+    const ar = ab.argsOf({}, 'x.txt');
+    t('Abonelik: yalnız okuma/araştırma araçları ve MCP kapalı', ar.includes('--strict-mcp-config') && ar[ar.indexOf('--tools') + 1] === 'Read,Glob,Grep,WebSearch,WebFetch' && ar.includes('--no-session-persistence') && !ar.join(' ').includes('Bash'), ar.join(' '));
+    t('Abonelik: başarılı sonuç okunur', ab.sonucOku('{"type":"result","subtype":"success","is_error":false,"result":"tamam","num_turns":1,"usage":{"input_tokens":5,"output_tokens":3}}').metin === 'tamam');
+    let lim = null; try { ab.sonucOku('{"subtype":"success","is_error":true,"result":"Claude AI usage limit reached|1794410000"}'); } catch (e) { lim = e; }
+    t('Abonelik: limit hatası tanınır', lim && lim.kod === 'limit' && /limit/.test(lim.message), lim && lim.message);
   } catch (e) { t('Ana süreç testleri', false, e.stack); }
   try { fs.unlinkSync(LOC()); } catch (e) {}
   KONUM_OK = bkK; DWARN = bkW;
@@ -313,6 +322,15 @@ ipcMain.handle('zeka:setKey', wrap(k => zeka.setKey(k)));
 ipcMain.handle('zeka:clearKey', wrap(() => zeka.clearKey()));
 ipcMain.handle('zeka:setBudget', wrap(b => zeka.setBudget(b)));
 ipcMain.handle('zeka:sor', wrap(o => zeka.sor(o)));
+// Ada'nın soracağı geliştirme fikirleri: GitHub main'deki güncel liste, yoksa uygulamayla gelen
+ipcMain.handle('fikir:liste', wrap(async () => { if (!SMOKE) { try { const r = await fetch('https://raw.githubusercontent.com/caglarbozkurt350-creator/Orin/main/fikirler.json?t=' + Date.now(), { cache: 'no-store' }); if (r.ok) { const j = await r.json(); if (Array.isArray(j.fikirler)) return { kaynak: 'github', fikirler: j.fikirler }; } } catch (e) {} } return { kaynak: 'yerel', fikirler: readJSON(path.join(__dirname, 'fikirler.json'), { fikirler: [] }).fikirler }; }));
+// Claude aboneliği (Claude Code CLI, headless): ağır işler abonelikte
+const abonelik = require('./abonelik');
+abonelik.init(DATA(), app.getPath('documents'));
+ipcMain.handle('abonelik:status', wrap(() => abonelik.status()));
+ipcMain.handle('abonelik:ayar', wrap(a => abonelik.setAyar(a)));
+ipcMain.handle('abonelik:test', wrap(() => SMOKE ? abonelik.status() : abonelik.test()));
+ipcMain.handle('abonelik:calistir', wrap(o => { if (SMOKE) throw new Error('Testte abonelik çalıştırılmaz'); return abonelik.calistir(o); }));
 ipcMain.handle('sheets:config', wrap(p => sheets.setConfig(p)));
 ipcMain.handle('sheets:login', wrap(() => sheets.login()));
 ipcMain.handle('sheets:cancel', wrap(() => sheets.cancel()));

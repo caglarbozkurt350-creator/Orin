@@ -1,0 +1,11 @@
+{
+ "aciklama": "Claude Code'un önerdiği program geliştirme fikirleri. Ada bunları Çağlar'a sırayla sorar; 'Evet' denenler sıradaki güncellemede yapılır. Yeni fikir eklerken id benzersiz olsun, eskileri silme.",
+ "fikirler": [
+  { "id": "echo-izin", "baslik": "Echo izin ve rapor gününü işlesin", "aciklama": "\"Bugün doktor raporum var\" ya da \"yarın izinliyim\" deyince Echo onayını alıp o günü rapor/izin günü olarak işaretlesin ve Sheets'e yazsın." },
+  { "id": "tel-ik-grafik", "baslik": "Telefonda Nika'nın grafikleri", "aciklama": "Masaüstündeki üç İK grafiği (gelişim, yeni çalışan ihtiyacı, token verimi) telefonun İK ekranında da görünsün." },
+  { "id": "gun-sonu-hatirlat", "baslik": "Gün sonu eksik süre hatırlatması", "aciklama": "Mesai bitimine 30 dakika kala o gün eksik süre varsa telefona bildirim gelsin: \"Bugün 45 dk eksik, Günü doldur?\"" },
+  { "id": "cuma-ozet", "baslik": "Cuma haftalık özet bildirimi", "aciklama": "Her Cuma mesai sonunda Echo haftanın özetini (tam gün, izin, en çok çalışılan proje) telefona bildirim olarak göndersin." },
+  { "id": "google-giris", "baslik": "Google ile giriş", "aciklama": "Telefon ve masaüstünde e-posta/şifre yerine tek dokunuşla Google hesabıyla giriş." },
+  { "id": "v1-guvenlik", "baslik": "v1.0 güvenlik çalışmasına başlama", "aciklama": "Depoyu gizliye alma, verileri şifreleme, girişleri kayıt altına alma ve olağandışı girişte bildirim. Sonraki büyük sürümün ana işi olur." }
+ ]
+}

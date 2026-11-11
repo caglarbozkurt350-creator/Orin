@@ -37,3 +37,5 @@ return API.data.backup()}).then(function(r){t('Elle yedek hâlâ çalışır',r.
 var __at13=window.__asyncTest;window.__asyncTest=function(){return __at13().then(function(a){return window.__v071Test().then(function(b){return a.concat(b)})})};
 // İK grafikleri testleri (0.7.2)
 var __at14=window.__asyncTest;window.__asyncTest=function(){return __at14().then(function(a){return a.concat(window.__ikTest?window.__ikTest():[])})};
+// Abonelik ve Ada fikir testleri (0.7.2)
+var __at15=window.__asyncTest;window.__asyncTest=function(){return __at15().then(function(a){return (window.__abnTest?window.__abnTest():Promise.resolve([])).then(function(b){return a.concat(b)})}).then(function(a){return (window.__adaTest?window.__adaTest():Promise.resolve([])).then(function(b){return a.concat(b)})})};

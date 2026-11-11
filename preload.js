@@ -34,6 +34,13 @@ contextBridge.exposeInMainWorld('api', {
     setBudget: b => ipcRenderer.invoke('zeka:setBudget', b),
     sor: o => ipcRenderer.invoke('zeka:sor', o)
   },
+  fikirler: () => ipcRenderer.invoke('fikir:liste'),
+  abonelik: {
+    status: () => ipcRenderer.invoke('abonelik:status'),
+    ayar: a => ipcRenderer.invoke('abonelik:ayar', a),
+    test: () => ipcRenderer.invoke('abonelik:test'),
+    calistir: o => ipcRenderer.invoke('abonelik:calistir', o)
+  },
   bulut: {
     status: () => ipcRenderer.invoke('bulut:status'),
     config: c => ipcRenderer.invoke('bulut:config', c),

@@ -1,7 +1,7 @@
 {
   "name": "orin",
   "productName": "Orvane",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "Orvane · iş raporu ve yapay zekâ çalışanları masaüstü uygulaması",
   "main": "main.js",
   "author": "Çağlar",
@@ -34,7 +34,9 @@
       "bulut.js",
       "zeka.js",
       "surum.js",
-      "onayli-surumler.json"
+      "onayli-surumler.json",
+      "abonelik.js",
+      "fikirler.json"
     ],
     "win": {
       "target": "nsis",

@@ -129,7 +129,7 @@ function tmGelCeo(id,ok){var g=TMS().gel.filter(function(x){return x.id==id})[0]
 function tmGelApply(g){var b=tmSkills(g.kim).map(function(x){return Object.assign({},x)});
 if(g.tur=='beceri'){var ex=b.filter(function(x){return x.ad.toLocaleLowerCase('tr')==g.ad.toLocaleLowerCase('tr')})[0];if(ex)ex.sv=Math.min(5,ex.sv+1);else b.push({ad:g.ad,sv:1,not:g.metin});tmSet(g.kim,{bec:b})}
 else if(g.tur=='seviye'){b.forEach(function(x){if(x.ad==g.ad)x.sv=Math.min(5,x.sv+1)});tmSet(g.kim,{bec:b})}
-else{var h=tmMem(g.kim).slice();h.push({id:uid(),metin:g.metin,kaynak:(g.kimden=='nika'?'Nika önerdi':'Çağlar istedi')+' · Nika ve Orin onayladı',ts:Date.now()});tmSet(g.kim,{haf:h})}}
+else{var h=tmMem(g.kim).slice();h.push({id:uid(),metin:g.metin,kaynak:(g.kimden=='nika'?'Nika önerdi':g.kimden=='abonelik'?'Abonelik işinden öğrendi':'Çağlar istedi')+' · Nika ve Orin onayladı',ts:Date.now()});tmSet(g.kim,{haf:h})}}
 function tmGelLabel(g){return GT[g.tur]+(g.ad?' · '+g.ad:'')}
 function tmFlow(g){var s=function(t,on,c){return '<span class="bdg '+(on?c:'')+'">'+t+'</span>'};
 return '<div class="flw">'+s(g.kimden=='nika'?'Nika önerdi':'Çağlar istedi','',1)+'<i class="ti ti-chevron-right"></i>'+s(g.ik?(g.ik.ok?'İK onayı ✓':'İK reddetti'):'İK incelemesi',1,g.ik?(g.ik.ok?'ok':'red'):'ik')+'<i class="ti ti-chevron-right"></i>'+s(g.ceo?(g.ceo.ok?'CEO onayı ✓':'CEO reddetti'):'CEO onayı',1,g.ceo?(g.ceo.ok?'ok':'red'):g.asama=='ceo'?'ceo':'')+'</div>'}

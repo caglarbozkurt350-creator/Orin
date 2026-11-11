@@ -1,7 +1,7 @@
 {
   "name": "orin",
   "productName": "Orvane",
-  "version": "0.7.8",
+  "version": "0.7.9",
   "description": "Orvane · iş raporu ve yapay zekâ çalışanları masaüstü uygulaması",
   "main": "main.js",
   "author": "Çağlar",

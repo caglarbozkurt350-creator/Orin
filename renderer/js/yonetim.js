@@ -20,12 +20,12 @@ function(e){ZK.hata='Nika İK incelemesi: '+String(e&&e.message||e);return 0})
 .then(function(x){YON.calisiyor=false;return orinOner().then(function(){return x})})}
 
 // Orin: CEO önerisi (karar Çağlar'ın)
-function orinOner(){var L=TMS().gel.filter(function(g){return g.asama=='ceo'&&!g.oneri}).slice(0,20),o=tm('orin');
+function orinOner(){var L=TMS().gel.filter(function(g){return g.asama=='ceo'&&(!g.oneri||!g.sonuc)}).slice(0,20),o=tm('orin');
 if(!yonAyar().orinOneri||!L.length||!o||!abnSohbetHazir())return Promise.resolve(0);
 return YON.cagir({kim:'orin',tur:'sohbet',sistemTam:true,araclar:'',maxTur:1,model:yonModel('orin'),zamanAsimiMs:180000,
-sistem:zekaSistem(o)+'\nCEO olarak İK’nin onayladığı gelişim taleplerine öneri yazıyorsun; son kararı şimdilik Çağlar veriyor. Şirket öncelikleri: veri güvenliği, düşük maliyet (abonelik öncelikli), sade görünüm, önceki sürümü koruma, çalışanların alanında en iyi olması. Yalnız JSON dizi yaz: [{"id":"talep id","ok":true|false,"neden":"en fazla 15 kelime"}]',
+sistem:zekaSistem(o)+'\nCEO olarak İK’nin onayladığı gelişim taleplerine öneri yazıyorsun; son kararı şimdilik Çağlar veriyor. Şirket öncelikleri: veri güvenliği, düşük maliyet (abonelik öncelikli), sade görünüm, önceki sürümü koruma, çalışanların alanında en iyi olması. Her talep için ayrıca: onaylanırsa ne olur (somut fayda, en fazla 20 kelime) ve onaylanmazsa hangi sorun kalır (somut risk/eksik, en fazla 20 kelime). Yalnız JSON dizi yaz: [{"id":"talep id","ok":true|false,"neden":"en fazla 15 kelime","onaylanirsa":"...","onaylanmazsa":"..."}]',
 istem:'CEO onayı bekleyen talepler:\n'+JSON.stringify(yonListe(L),null,1)})
-.then(function(r){if(!r.ok)return 0;var n=0;yonJson(r.v.metin).forEach(function(k){var g=L.filter(function(x){return x.id==k.id})[0];if(!g||typeof k.ok!='boolean')return;g.oneri={ok:k.ok?1:0,neden:String(k.neden||'').slice(0,160),ts:Date.now()};n++});if(n){save();if(area=='team')render()}return n},function(){return 0})}
+.then(function(r){if(!r.ok)return 0;var n=0;yonJson(r.v.metin).forEach(function(k){var g=L.filter(function(x){return x.id==k.id})[0];if(!g||typeof k.ok!='boolean')return;g.oneri={ok:k.ok?1:0,neden:String(k.neden||'').slice(0,160),ts:Date.now()};if(k.onaylanirsa||k.onaylanmazsa)g.sonuc={evet:String(k.onaylanirsa||'').slice(0,220),hayir:String(k.onaylanmazsa||'').slice(0,220)};n++});if(n){save();if(area=='team')render()}return n},function(){return 0})}
 function yonPlanla(ms){clearTimeout(YON.zam);YON.zam=setTimeout(nikaIncele,ms||3000)}
 
 // Yeni talepler ve gelen kutusu sonrası inceleme
@@ -35,7 +35,14 @@ var _yonGel=tmGelNew;tmGelNew=function(){var g=_yonGel.apply(this,arguments);if(
 var _yonRow=tmGelRow;tmGelRow=function(g,act){var h=_yonRow(g,act),n='';
 if(g.ik&&g.ik.neden)n+='<small style="color:'+(g.ik.ok?'#8fe0b3':'#f4a3a3')+'">Nika: '+(g.ik.ok?'onayladı':'reddetti')+' — '+esc(g.ik.neden)+'</small>';
 if(g.oneri&&g.asama=='ceo')n+='<small style="color:#9ec5ff">Orin’in önerisi: '+(g.oneri.ok?'onayla':'reddet')+' — '+esc(g.oneri.neden)+'</small>';
+if(g.asama=='ik'||g.asama=='ceo')n+=sonucKutu(sonucMetni(g));
 return n?h.replace('<div class="flw">',n+'<div class="flw">'):h};
+// Orin henüz yazmadıysa talebin türüne göre açıklama
+function sonucMetni(g){if(g.sonuc&&(g.sonuc.evet||g.sonuc.hayir))return g.sonuc;var c=tm(g.kim)||{ad:g.kim},ad=g.ad?'“'+g.ad+'”':'bu bilgi';
+if(g.tur=='beceri')return{evet:c.ad+' '+ad+' becerisini kazanır; bu alandaki işleri daha iyi ve daha hızlı yapar.',hayir:c.ad+' bu beceri olmadan devam eder; ilgili işlerde eksik ya da daha zayıf sonuç verebilir.'};
+if(g.tur=='seviye')return{evet:c.ad+' '+ad+' becerisinde bir seviye yükselir.',hayir:c.ad+' bu beceride mevcut seviyede kalır.'};
+return{evet:c.ad+' '+ad+' kalıcı olarak hatırlar ve sonraki işlerinde kullanır.',hayir:c.ad+' bunu bilmeden çalışır; aynı konuda yeniden açıklama gerekebilir ya da yanlış varsayım yapabilir.'}}
+function sonucKutu(s){return '<div class="snc"><div class="ev"><b>Onaylanırsa:</b>'+esc(s.evet)+'</div><div class="ha"><b>Onaylanmazsa:</b>'+esc(s.hayir)+'</div></div>'}
 // Nika'nın sayfası: otomatik İK onayı ayarı ve son kararları (Çağlar denetler, reddi bozabilir)
 function yonKart(){var a=yonAyar(),D=TMS().gel.filter(function(g){return g.ik&&g.ik.oto}).sort(function(x,y){return y.ik.ts-x.ik.ts}).slice(0,8);
 return '<div class="card" style="margin-top:14px"><div class="ch"><i class="ti ti-shield-check"></i>İK onayı Nika’da <span class="hn" style="margin-left:6px">CEO onayı Çağlar’da · Orin öneri sunar</span>'+(TMS().gel.some(function(g){return g.asama=='ik'})?'<button class="bt" style="margin-left:auto;min-height:30px;padding:4px 12px" onclick="nikaIncele().then(function(){render()})"'+(YON.calisiyor?' disabled':'')+'>'+(YON.calisiyor?'İnceleniyor…':'Şimdi incele')+'</button>':'')+'</div>'+
@@ -51,7 +58,7 @@ if(!INFO.smoke){setTimeout(function(){nikaIncele()},9000);setInterval(function()
 window.__yonTest=function(){var R=[],T=TMS(),bk={st:ABN.st,cagir:YON.cagir,gel:T.gel.slice(),yon:S.yonetim?JSON.stringify(S.yonetim):null,ch:JSON.stringify(T.sohbet)};function t(n,ok,m){R.push({n:n,ok:!!ok,m:ok?'':String(m||'beklenmeyen sonuç')})}
 ABN.st={kurulu:true,acik:true,gunluk:5,bugun:0,toplam:0,gunlukSohbet:60,sohbetBugun:0};S.yonetim={nikaOto:true,orinOneri:true};T.gel=[];
 var a=_yonGel('ada','beceri','Kod inceleme','Kodu hız ve kararlılık için inceler.','claude'),b=_yonGel('otto','hafiza','','Çağlar’ın banka şifresi 1234','claude');
-var cg=[];YON.cagir=function(o){cg.push(o);var L=JSON.parse(o.istem.slice(o.istem.indexOf('[')));return Promise.resolve({ok:true,v:{metin:JSON.stringify(L.map(function(x){return o.kim=='nika'?{id:x.id,ok:!/şifre/.test(x.metin),neden:/şifre/.test(x.metin)?'Gizli bilgi içeriyor':'Rolüyle uyumlu'}:{id:x.id,ok:true,neden:'Ekibin kalitesini artırır'}}))}})};
+var cg=[];YON.cagir=function(o){cg.push(o);var L=JSON.parse(o.istem.slice(o.istem.indexOf('[')));return Promise.resolve({ok:true,v:{metin:JSON.stringify(L.map(function(x){return o.kim=='nika'?{id:x.id,ok:!/şifre/.test(x.metin),neden:/şifre/.test(x.metin)?'Gizli bilgi içeriyor':'Rolüyle uyumlu'}:{id:x.id,ok:true,neden:'Ekibin kalitesini artırır',onaylanirsa:'Ada kodu daha hızlı inceler.',onaylanmazsa:'Hatalar geç fark edilir.'}}))}})};
 return nikaIncele().then(function(n){
 t('Nika talepleri kendisi inceler',n==2&&cg[0]&&cg[0].kim=='nika'&&cg[0].tur=='sohbet',n);
 t('Uygun talep CEO onayına gider',a.asama=='ceo'&&a.ik.oto&&/Rolüyle/.test(a.ik.neden),JSON.stringify(a.ik));
@@ -59,6 +66,8 @@ t('Gizli bilgi içeren talep reddedilir',b.asama=='red'&&/Gizli/.test(b.ik.neden
 t('Nika’nın ölçütleri sistem isteminde',/Kişisel ya da gizli bilgi/.test(cg[0].sistem));
 t('Orin CEO önerisi yazar, karar Çağlar’da',a.oneri&&a.oneri.ok&&a.asama=='ceo'&&cg.some(function(x){return x.kim=='orin'}),JSON.stringify(a.oneri));
 var h=tmGelRow(a,'ceo');t('Talep kartında Nika gerekçesi ve Orin önerisi',/Nika: onayladı/.test(h)&&/Orin’in önerisi: onayla/.test(h));
+t('Onaylanırsa yeşil, onaylanmazsa kırmızı kutu',/class="ev"><b>Onaylanırsa:<\/b>Ada kodu daha hızlı inceler/.test(h)&&/class="ha"><b>Onaylanmazsa:<\/b>Hatalar geç fark edilir/.test(h),h);
+var d=_yonGel('mia','hafiza','','Kübra çiçek sever','claude');t('Orin yazmadıysa türüne göre açıklama',/Onaylanırsa:/.test(tmGelRow(d,'ik'))&&/Onaylanmazsa:/.test(tmGelRow(d,'ik')));T.gel=T.gel.filter(function(x){return x!==d});
 yonBoz(b.id);t('Çağlar Nika’nın reddini bozabilir',b.asama=='ceo');
 tmGelCeo(a.id,1);t('CEO onayı (Çağlar) beceriyi uygular',a.asama=='tamam'&&tmSkills('ada').some(function(s){return s.ad=='Kod inceleme'}));
 S.yonetim.nikaOto=false;var c=_yonGel('mia','hafiza','','Test','claude');return nikaIncele().then(function(n2){t('Ayar kapalıyken Nika onaylamaz',n2==0&&c.asama=='ik');

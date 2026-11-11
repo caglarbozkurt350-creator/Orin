@@ -1,11 +1,47 @@
 {
  "aciklama": "Claude Code'un önerdiği program geliştirme fikirleri. Ada bunları Çağlar'a sırayla sorar; 'Evet' denenler sıradaki güncellemede yapılır. Yeni fikir eklerken id benzersiz olsun, eskileri silme.",
  "fikirler": [
-  { "id": "echo-izin", "baslik": "Echo izin ve rapor gününü işlesin", "aciklama": "\"Bugün doktor raporum var\" ya da \"yarın izinliyim\" deyince Echo onayını alıp o günü rapor/izin günü olarak işaretlesin ve Sheets'e yazsın." },
-  { "id": "tel-ik-grafik", "baslik": "Telefonda Nika'nın grafikleri", "aciklama": "Masaüstündeki üç İK grafiği (gelişim, yeni çalışan ihtiyacı, token verimi) telefonun İK ekranında da görünsün." },
-  { "id": "gun-sonu-hatirlat", "baslik": "Gün sonu eksik süre hatırlatması", "aciklama": "Mesai bitimine 30 dakika kala o gün eksik süre varsa telefona bildirim gelsin: \"Bugün 45 dk eksik, Günü doldur?\"" },
-  { "id": "cuma-ozet", "baslik": "Cuma haftalık özet bildirimi", "aciklama": "Her Cuma mesai sonunda Echo haftanın özetini (tam gün, izin, en çok çalışılan proje) telefona bildirim olarak göndersin." },
-  { "id": "google-giris", "baslik": "Google ile giriş", "aciklama": "Telefon ve masaüstünde e-posta/şifre yerine tek dokunuşla Google hesabıyla giriş." },
-  { "id": "v1-guvenlik", "baslik": "v1.0 güvenlik çalışmasına başlama", "aciklama": "Depoyu gizliye alma, verileri şifreleme, girişleri kayıt altına alma ve olağandışı girişte bildirim. Sonraki büyük sürümün ana işi olur." }
+  {
+   "id": "echo-izin",
+   "baslik": "Echo izin ve rapor gününü işlesin",
+   "aciklama": "\"Bugün doktor raporum var\" ya da \"yarın izinliyim\" deyince Echo onayını alıp o günü rapor/izin günü olarak işaretlesin ve Sheets'e yazsın.",
+   "onaylanirsa": "Rapor ve izin günlerini Echo’ya söylemen yeter; gün doğru işaretlenir ve Sheets’e yazılır.",
+   "onaylanmazsa": "İzin/rapor günlerini elle işaretlemeye devam edersin; unutulursa gün “girdi hatası” görünür."
+  },
+  {
+   "id": "tel-ik-grafik",
+   "baslik": "Telefonda Nika'nın grafikleri",
+   "aciklama": "Masaüstündeki üç İK grafiği (gelişim, yeni çalışan ihtiyacı, token verimi) telefonun İK ekranında da görünsün.",
+   "onaylanirsa": "Nika’nın grafiklerini telefondan da görürsün; masaüstü ve telefon aynı olur.",
+   "onaylanmazsa": "Grafikler yalnız masaüstünde kalır; telefonda İK durumu eksik görünür."
+  },
+  {
+   "id": "gun-sonu-hatirlat",
+   "baslik": "Gün sonu eksik süre hatırlatması",
+   "aciklama": "Mesai bitimine 30 dakika kala o gün eksik süre varsa telefona bildirim gelsin: \"Bugün 45 dk eksik, Günü doldur?\"",
+   "onaylanirsa": "Eksik süre mesai bitmeden hatırlatılır; girdi hataları azalır.",
+   "onaylanmazsa": "Eksik günler sonradan fark edilir; ay sonunda düzeltme gerekir."
+  },
+  {
+   "id": "cuma-ozet",
+   "baslik": "Cuma haftalık özet bildirimi",
+   "aciklama": "Her Cuma mesai sonunda Echo haftanın özetini (tam gün, izin, en çok çalışılan proje) telefona bildirim olarak göndersin.",
+   "onaylanirsa": "Haftanın özeti Cuma telefonuna gelir; programı açmadan durumu görürsün.",
+   "onaylanmazsa": "Haftalık durumu görmek için programı açıp bakman gerekir."
+  },
+  {
+   "id": "google-giris",
+   "baslik": "Google ile giriş",
+   "aciklama": "Telefon ve masaüstünde e-posta/şifre yerine tek dokunuşla Google hesabıyla giriş.",
+   "onaylanirsa": "Telefon ve masaüstüne şifresiz, tek dokunuşla girersin.",
+   "onaylanmazsa": "E-posta ve şifreyle girmeye devam edersin."
+  },
+  {
+   "id": "v1-guvenlik",
+   "baslik": "v1.0 güvenlik çalışmasına başlama",
+   "aciklama": "Depoyu gizliye alma, verileri şifreleme, girişleri kayıt altına alma ve olağandışı girişte bildirim. Sonraki büyük sürümün ana işi olur.",
+   "onaylanirsa": "Depo gizlenir, veriler şifrelenir, olağandışı girişte haber alırsın.",
+   "onaylanmazsa": "Kod herkese açık kalır; veriler şifresiz durur, ihlal fark edilmeyebilir."
+  }
  ]
 }

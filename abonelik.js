@@ -53,7 +53,7 @@ function argsOf(o, sistemDosyasi) {
     '--allowedTools', ...GELISTIR_IZIN, '--disallowedTools', ...GELISTIR_YASAK, ...koruKurallari(o.koru), '--append-system-prompt-file', sistemDosyasi];
   return ['-p', '--output-format', 'json', '--model', MODELLER.includes(o.model) ? o.model : c.model, '--max-turns', String(Math.max(1, Math.min(40, Number(o.maxTur) || c.maxTur))),
     '--strict-mcp-config', '--disable-slash-commands', '--setting-sources', '', '--no-session-persistence', '--tools', o.mod === 'inceleme' ? INCELEME_ARAC : o.araclar != null ? o.araclar : ARACLAR,
-    ...(o.mod === 'inceleme' ? ['--allowedTools', ...INCELEME_IZIN] : o.mod === 'jarvis' ? ['--allowedTools', 'Read', 'Glob', 'Grep', '--disallowedTools', 'Edit', 'Write', 'Bash', 'WebFetch', 'WebSearch'] : []), o.sistemTam ? '--system-prompt-file' : '--append-system-prompt-file', sistemDosyasi]; // sohbet: Claude Code'un kendi istemi yerine yalnız çalışanın istemi (≈700 token)
+    ...(o.mod === 'inceleme' ? ['--allowedTools', ...INCELEME_IZIN] : o.mod === 'jarvis' ? ['--allowedTools', 'Read', 'Glob', 'Grep', '--disallowedTools', 'Edit', 'Write', 'Bash', 'WebFetch', 'WebSearch'] : []), ...(o.mcpDosya ? ['--mcp-config', o.mcpDosya, '--allowedTools', 'mcp__apify'] : []), o.sistemTam ? '--system-prompt-file' : '--append-system-prompt-file', sistemDosyasi]; // sohbet: Claude Code'un kendi istemi yerine yalnız çalışanın istemi (≈700 token)
 }
 function sonucOku(out) {
   let j = null; try { j = JSON.parse(out.trim().split(/\r?\n/).filter(Boolean).pop()); } catch (e) {}
@@ -80,12 +80,13 @@ function calistir(o) {
   if (gel && !(o.cwd && fs.existsSync(o.cwd))) return Promise.reject(new Error('Geliştirme çalışma klasörü yok'));
   const cwd = gel ? o.cwd : inc ? kay : path.join(DOCS || os.homedir(), 'Orin', 'Calisma', kim); fs.mkdirSync(cwd, { recursive: true });
   const sf = path.join(os.tmpdir(), 'orvane-sistem-' + process.pid + '-' + Date.now() + '.txt'); fs.writeFileSync(sf, String(o.sistem || ''), 'utf8');
+  let mf = null; if (o.mcp && typeof o.mcp === 'object') { mf = path.join(os.tmpdir(), 'orvane-mcp-' + process.pid + '-' + Date.now() + '.json'); fs.writeFileSync(mf, JSON.stringify(o.mcp), { mode: 0o600 }); o = Object.assign({}, o, { mcpDosya: mf }); }
   const sure = Math.max(30000, Math.min(60 * 60000, Number(o.zamanAsimiMs) || c.sureDk * 60000));
   return new Promise((res, rej) => {
     let out = '', err = '', bitti = false;
     const p = spawn(exe, argsOf(o, sf), { cwd, env: temizEnv(), windowsHide: true });
     const zam = setTimeout(() => { if (bitti) return; bitti = true; try { p.kill(); } catch (e) {} temizle(); rej(Object.assign(new Error('Süre doldu (' + Math.round(sure / 60000) + ' dk)'), { kod: 'sure' })); }, sure);
-    function temizle() { clearTimeout(zam); try { fs.unlinkSync(sf); } catch (e) {} }
+    function temizle() { clearTimeout(zam); try { fs.unlinkSync(sf); } catch (e) {} if (mf) { try { fs.unlinkSync(mf); } catch (e) {} } }
     p.stdout.on('data', d => { out += d; }); p.stderr.on('data', d => { err += d; });
     p.on('error', e => { if (bitti) return; bitti = true; temizle(); rej(e); });
     p.on('close', code => {

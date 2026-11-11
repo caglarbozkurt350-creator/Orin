@@ -37,6 +37,7 @@
       "onayli-surumler.json",
       "abonelik.js",
       "gelistir.js",
+      "apify.js",
       "fikirler.json"
     ],
     "win": {

@@ -173,6 +173,9 @@ function mainTests() {
     const ex = ecbAyikla({ base: 'USD', date: '2026-11-11', rates: { TRY: 50, EUR: 0.9, GBP: 0.75 } });
     t('Yedek kur kaynağı (ECB) okunur', ex.kur.usd.satis === 50 && Math.abs(ex.kur.eur.satis - 55.5556) < 0.001 && ex.tarih === '11.11.2026' && /ECB/.test(ex.kaynak), JSON.stringify(ex));
     t('TCMB kur listesi okunur (dolar, euro)', tx.tarih === '12.11.2026' && tx.kur.usd.satis === 41.2 && tx.kur.eur.alis === 47.5 && !tx.kur.gbp, JSON.stringify(tx));
+    const am = ab.argsOf({ mcpDosya: 'C:/t/mcp.json' }, 'x.txt'), ad = ab.argsOf({}, 'x.txt'), hz = abonelikHazirla({ kim: 'sage', mcp: { mcpServers: { kotu: {} } }, mcpDosya: 'C:/kotu.json' });
+    t('Apify: MCP bağlantısı yalnız ana süreç verirse eklenir; arayüzün gönderdiği yapılandırma silinir', am.includes('--mcp-config') && am[am.indexOf('--mcp-config') + 1] === 'C:/t/mcp.json' && am.includes('mcp__apify') && am.includes('--strict-mcp-config') && !ad.includes('--mcp-config') && !hz.mcpDosya && !(hz.mcp && hz.mcp.mcpServers && hz.mcp.mcpServers.kotu), am.join(' '));
+    t('Apify: anahtar biçimi denetlenir', apify.gecerli('apify_api_' + 'A'.repeat(30)) && !apify.gecerli('sk-ant-123') && !apify.gecerli(''));
     t('İş emri durumu güncellenir', gl.emirGuncelle(e1.dosya, { durum: 'inceleme', dal: 'is-emri/ada-x' }).durum === 'inceleme' && gl.emirler().some(x => x.id === 'test1' && x.dal === 'is-emri/ada-x'));
   } catch (e) { t('Ana süreç testleri', false, e.stack); }
   try { fs.unlinkSync(LOC()); } catch (e) {}
@@ -365,7 +368,19 @@ ipcMain.handle('abonelik:status', wrap(() => abonelik.status()));
 ipcMain.handle('abonelik:ayar', wrap(a => abonelik.setAyar(a)));
 ipcMain.handle('abonelik:isler', wrap(() => abonelik.isler()));
 ipcMain.handle('abonelik:test', wrap(() => SMOKE ? abonelik.status() : abonelik.test()));
-ipcMain.handle('abonelik:calistir', wrap(o => { if (SMOKE) throw new Error('Testte abonelik çalıştırılmaz'); return abonelik.calistirIzle(o); }));
+ipcMain.handle('abonelik:calistir', wrap(o => { if (SMOKE) throw new Error('Testte abonelik çalıştırılmaz'); return abonelik.calistirIzle(abonelikHazirla(o)); }));
+// Arayüz MCP yapılandırması gönderemez; Apify bağlantısını yalnız ana süreç, izinli çalışanın görevine ekler
+function abonelikHazirla(o) { o = Object.assign({}, o || {}); delete o.mcp; delete o.mcpDosya; if (!o.mod && o.tur !== 'sohbet' && o.tur !== 'toplanti' && apify.izinli(o.kim)) o.mcp = apify.mcp(); return o; }
+const apify = require('./apify');
+apify.init(DATA());
+ipcMain.handle('apify:durum', wrap(() => apify.durum()));
+ipcMain.handle('apify:kaydet', wrap(t => apify.kaydet(t)));
+ipcMain.handle('apify:sil', wrap(() => apify.sil()));
+ipcMain.handle('apify:calisanlar', wrap(L => apify.calisanlar(L)));
+ipcMain.handle('apify:test', wrap(async () => { if (SMOKE) throw new Error('Testte Apify çalıştırılmaz'); const m = apify.mcp(); if (!m) throw new Error('Apify anahtarı kayıtlı değil');
+  try { const r = await abonelik.calistir({ test: true, kim: 'sage', mcp: m, araclar: '', model: 'haiku', maxTur: 6, zamanAsimiMs: 180000, sistem: 'Orvane Apify bağlantı denemesi. Yalnız Apify araçlarını kullan. Hiçbir aktörü ÇALIŞTIRMA; yalnız ara. Kısa yaz.', istem: 'Apify aktör arama aracıyla "instagram" aktörlerini ara ve ilk 3 aktörün adını tek satırda yaz.' });
+    return apify.testKaydet({ ok: r.tur >= 2 && !!String(r.metin).trim(), ts: Date.now(), metin: String(r.metin).slice(0, 300), adim: r.tur, hata: r.tur >= 2 ? '' : 'Apify aracı kullanılmadı' }); }
+  catch (e) { return apify.testKaydet({ ok: false, ts: Date.now(), hata: String(e.message).slice(0, 300) }); } }));
 // İş emirleri (0.7.14): onaylı iş isteği → Belgeler\Orin\Giden; tam otomatik kipte Claude Code ayrı git dalında yapar (main'e dokunmaz)
 const gelistir = require('./gelistir');
 gelistir.init(SMOKE ? DATA() : app.getPath('documents'), abonelik, kay => [dataDir(), DATA(), path.join(app.getPath('documents'), 'Orin', 'Veriler'), kay && path.join(kay, 'renderer', 'js', 'kisisel.js')].filter(Boolean));

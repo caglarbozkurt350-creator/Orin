@@ -175,3 +175,33 @@ nav('team','sirket');t('Piyasa kartında altın ve borsa',/4\.100,5 ₺/.test(do
 bulutUygula({id:'tel-fn-1',tur:'finans_kayit',ts:Date.now(),veri:{tur:'gider',kim:'cagla',tutar:250,kalem:'Market',tarih:ay+'-10'}});bulutUygula({id:'tel-fn-1',tur:'finans_kayit',ts:Date.now(),veri:{tur:'gider',kim:'cagla',tutar:250,kalem:'Market',tarih:ay+'-10'}});
 t('Telefondan gelir/gider kaydı bir kez eklenir',fnS().kayit.filter(function(x){return x.kaynak=='telefon'}).length==1);
 var n=document.getElementById('r_sirket_n');t('Şirketim düğmesinde bekleyen/canlı işareti alanı',!!n);return R})}).catch(function(e){t('0.7.18 testi',false,e.stack)}).then(function(){if(bk.fn)S.finans=JSON.parse(bk.fn);else delete S.finans;ZK.st=bk.zk;T.sohbet=JSON.parse(bk.ch);T.gorev=bk.gor;ABN.st=bk.st;ABN.cagir=bk.cg;FN.tcmb=bk.tc;if(bk.sp)S.sirketPg=bk.sp;else delete S.sirketPg;FN.tablo=false;FN.aralik=6;try{cfNo()}catch(e){}save();nav('home','gun',TODAY);return R})};
+
+// ---------- Apify (Sage'in sosyal medya araştırması) ----------
+// Anahtar Ayarlar › Yapay zekâ'da girilir, ana süreçte Windows şifrelemesiyle saklanır; arayüz anahtarı hiç görmez
+var APF={st:null,dene:false,api:function(){return API&&API.apify}};
+function apfYukle(){if(!APF.api())return Promise.resolve(null);return API.apify.durum().then(function(r){APF.st=r.ok?r.v:null;return APF.st},function(){return null})}
+function apfKart(){if(!APF.api())return '';var s=APF.st;if(!s){if(!APF.yk){APF.yk=1;apfYukle().then(function(){APF.yk=0;if(area=='set'&&pg=='zeka')render()})}return '<div class="card"><div class="ch"><i class="ti ti-world-search"></i>Apify · sosyal medya araştırması</div><div class="hn">Yükleniyor…</div></div>'}
+var t=s.test,L=s.calisanlar||[];
+return '<div class="card apf"><div class="ch"><i class="ti ti-world-search"></i>Apify · sosyal medya araştırması</div>'+
+'<div class="hn" style="margin-bottom:8px">Seçili çalışanlar görevlerinde Instagram, YouTube, TikTok gibi platformlardan herkese açık veriyi Apify ile çeker. Anahtar bu bilgisayarda şifreli saklanır. Apify kullanımı ücretli ya da kredilidir; Apify’da aylık harcama sınırı koy.</div>'+
+(s.var?'<div class="kr"><span>Anahtar<div class="hn">Kayıtlı '+esc(s.ipucu)+'</div></span><button class="bt" onclick="apfSil()">Anahtarı sil</button></div>':
+'<div class="kr" style="gap:8px"><input id="apfk" type="password" class="in" autocomplete="off" placeholder="apify_api_… (Apify › Settings › API & Integrations)" style="flex:1"><button class="bt p" onclick="apfKaydet()">Kaydet</button></div>')+
+'<div class="kr"><span>Kullanan çalışanlar</span><span class="apfc">'+tmAll().filter(function(c){return ['sage','otto','luca','cleo','ada'].indexOf(c.id)>=0}).map(function(c){var on=L.indexOf(c.id)>=0;return '<label class="tpc" style="width:auto"><input type="checkbox" data-id="'+esc(c.id)+'"'+(on?' checked':'')+' onchange="apfCal(this.dataset.id,this.checked)"> '+esc(c.ad)+'</label>'}).join('')+'</span></div>'+
+'<div class="kr"><span>Bağlantı<div class="hn">'+(APF.dene?'Deneniyor…':t?(t.ok?'<span style="color:#8ee6a9">Bağlı</span> · '+esc(new Date(t.ts).toLocaleString('tr-TR'))+(t.metin?' · '+esc(t.metin.slice(0,120)):''):'<span style="color:#f4a3a3">Bağlanamadı</span> · '+esc(t.hata||'')):'Henüz denenmedi')+'</div></span><button class="bt" onclick="apfTest()"'+(s.var&&!APF.dene?'':' disabled')+'>Bağlantıyı dene</button></div></div>'}
+function apfKaydet(){var e=document.getElementById('apfk'),v=e?e.value:'';if(e)e.value='';API.apify.kaydet(v).then(function(r){if(r.ok){APF.st=r.v;toast('Apify anahtarı kaydedildi; şimdi “Bağlantıyı dene”');render()}else toast(r.err)})}
+function apfSil(){confirmBox('Apify anahtarı silinsin mi? Çalışanlar Apify’ı kullanamaz.',function(){API.apify.sil().then(function(r){if(r.ok)APF.st=r.v;render()})},'Sil')}
+function apfCal(id,on){var L=((APF.st&&APF.st.calisanlar)||[]).filter(function(x){return x!=id});if(on)L.push(id);API.apify.calisanlar(L).then(function(r){if(r.ok)APF.st=r.v;render()})}
+function apfTest(){APF.dene=true;render();toast('Apify bağlantısı deneniyor (en fazla ~2 dk)…');API.apify.test().then(function(r){APF.dene=false;if(r.ok){APF.st=r.v;var t=r.v.test||{};toast(t.ok?'Apify bağlı':'Apify bağlanamadı: '+(t.hata||''));if(t.ok)apfBaglandi()}else toast(r.err);render()})}
+function apfBaglandi(){var L=(APF.st&&APF.st.calisanlar)||[];L.forEach(function(k){if(tm(k))tmPush(k,{r:'sys',t:'Apify bağlantısı kuruldu: görevlerinde sosyal medyadan (Instagram, YouTube, TikTok) herkese açık veri çekebilirsin.'})});var it=typeof isBul=='function'&&isBul('k717-apify');if(it&&it.durum=='liste'){it.durum='yapildi';it.bitis=Date.now()}save()}
+var _apfPz=P.zeka;P.zeka=function(){return _apfPz()+apfKart()};
+var APIFY_KURAL='\nGörevlerinde Apify araçların var (mcp__apify__…): Instagram, YouTube, TikTok gibi platformlardan veri gerektiğinde önce uygun Apify aktörünü ara, sonra çalıştır. Maliyeti düşük tut: en fazla 2 aktör çalıştırma, sonuç sayısını 20 ile sınırla. Yalnız herkese açık içerik; kişisel veri toplama. Kaynağı ve tarihi belirt. Sohbette bu araçlar yok; gerekiyorsa görev olarak verilmesini iste.';
+var _apfZs=zekaSistem;zekaSistem=function(c){var h=_apfZs(c),s=APF.st;return s&&s.var&&(s.calisanlar||[]).indexOf(c.id)>=0?h+APIFY_KURAL:h};
+apfYukle();
+window.__apfTest=function(){var R=[],bk=APF.st;function t(n,ok,m){R.push({n:n,ok:!!ok,m:ok?'':String(m||'beklenmeyen sonuç')})}
+APF.st={var:false,ipucu:'',calisanlar:['sage'],test:null};nav('set','zeka');var h=document.getElementById('ct').innerHTML;
+t('Ayarlar › Yapay zekâ’da Apify kartı (şifre alanı, kullanan çalışanlar, bağlantı denemesi)',/Apify · sosyal medya araştırması/.test(h)&&/id="apfk" type="password"/.test(h)&&/Kullanan çalışanlar/.test(h)&&/Bağlantıyı dene/.test(h));
+t('Anahtar yokken Sage’e Apify kuralı eklenmez',!/mcp__apify/.test(zekaSistem(tm('sage'))));
+APF.st={var:true,ipucu:'…abcd',calisanlar:['sage'],test:{ok:true,ts:Date.now(),metin:'Instagram Scraper'}};render();h=document.getElementById('ct').innerHTML;
+t('Anahtar kayıtlıyken yalnız son 4 hane görünür, bağlantı durumu',/Kayıtlı …abcd/.test(h)&&!/id="apfk"/.test(h)&&/Bağlı/.test(h));
+t('Apify yalnız seçili çalışanın kuralında',/mcp__apify/.test(zekaSistem(tm('sage')))&&!/mcp__apify/.test(zekaSistem(tm('echo'))));
+APF.st=bk;nav('home','gun',TODAY);return R};

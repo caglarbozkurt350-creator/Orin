@@ -1,10 +1,11 @@
 // İş günü: haftanın günleri, girilen kayıtlar, telefondan kayıt (masaüstü Sheets'e yazar)
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { Bos } from '@/bilesen/formlar';
-import { Dugme, Ekran, Rozet, s } from '@/bilesen/ortak';
+import { Dugme, Ekran, Ikon, Rozet, s } from '@/bilesen/ortak';
 import { olayEkle, useDurum } from '@/lib/depo';
 import { bekleyenGelisim, gunAnahtari, useGorunum } from '@/lib/ekip';
+import { etiketOku } from '@/lib/etiket';
 import { esitleSonra } from '@/lib/senk';
 import { R, saydam } from '@/lib/tema';
 
@@ -27,6 +28,18 @@ export default function IsGunu() {
     if (!k) return setHata('Proje kodunu yaz'); if (!is.trim()) return setHata('Yapılan işi yaz'); if (!d || d <= 0) return setHata('Dakikayı yaz');
     if (g?.D) return setHata('Bu gün izin günü; ayrıca kayıt gerekmez');
     olayEkle('kayit', { k: sec, kod: k, is: is.trim(), dk: d }); esitleSonra(); setDk(''); setIs('');
+  };
+  // Etiket fotoğrafı: kod ve iş adı dolar, dakikayı Çağlar girer. Fotoğraf saklanmaz; yanlışsa yeniden çekilir.
+  const [okuyor, setOkuyor] = useState(false), [okunan, setOkunan] = useState('');
+  const etiket = async () => {
+    setHata(''); setOkunan(''); setOkuyor(true);
+    try {
+      const r = await etiketOku(); if (!r) return;
+      if (!r.kod && !r.is) return setHata('Etiket okunamadı; daha yakından ve düz çekip tekrar dene');
+      if (r.kod) setKod(r.kod); if (r.is) setIs(r.is);
+      setOkunan('Okundu: ' + (r.kod || '—') + (r.is ? ' · ' + r.is : '') + (r.guven < 0.6 ? ' · emin değil, kontrol et' : '') + '. Dakikayı yaz.');
+    } catch (e: any) { setHata('Etiket okunamadı: ' + (e?.message || e)); }
+    finally { setOkuyor(false); }
   };
   const doldur = () => { if (!L) return setHata('Bu gün için iş süresi yok'); const kalan = H - T; if (kalan <= 0) return setHata('Gün zaten dolu'); kaydet(kalan); };
   return (
@@ -54,7 +67,13 @@ export default function IsGunu() {
         ))}
         {!g?.D && <>
           <View style={{ flexDirection: 'row', gap: 8, marginTop: 6 }}>
-            <View style={[s.giris, { flex: 1 }]}><Text style={s.girisEt}>Proje kodu</Text><TextInput value={kod} onChangeText={setKod} placeholder="78.26.03.19" placeholderTextColor={R.solukk} style={s.girisY} autoCapitalize="none" /></View>
+            <View style={[s.giris, { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }]}>
+              <View style={{ flex: 1 }}><Text style={s.girisEt}>Proje kodu</Text><TextInput value={kod} onChangeText={setKod} placeholder="78.26.03.19" placeholderTextColor={R.solukk} style={s.girisY} autoCapitalize="none" /></View>
+              <Pressable onPress={etiket} disabled={okuyor} accessibilityRole="button" accessibilityLabel="Etiketi fotoğrafla oku" hitSlop={8}
+                style={{ width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: okuyor ? saydam(R.ana, 0.25) : '#2e2e33' }}>
+                {okuyor ? <ActivityIndicator color="#fff" /> : <Ikon ad="kamera" boy={22} renk="#e4e4e8" />}
+              </Pressable>
+            </View>
             <View style={[s.giris, { width: 110 }]}><Text style={s.girisEt}>Dakika</Text><TextInput value={dk} onChangeText={setDk} keyboardType="number-pad" placeholder="120" placeholderTextColor={R.solukk} style={s.girisY} /></View>
           </View>
           <View style={s.giris}><Text style={s.girisEt}>Yapılan iş</Text><TextInput value={is} onChangeText={setIs} placeholder="Sancak GC montajı" placeholderTextColor={R.solukk} style={s.girisY} /></View>
@@ -63,6 +82,7 @@ export default function IsGunu() {
               <Pressable key={p} onPress={() => setKod(p)} style={{ paddingHorizontal: 13, paddingVertical: 8, borderRadius: 999, backgroundColor: kod === p ? R.secili : '#2e2e33' }}><Text style={{ color: '#d4d4da', fontSize: 13 }}>{p}</Text></Pressable>
             ))}
           </View>
+          {!!okunan && !hata && <Text style={{ color: '#9fd8b8', fontSize: 13 }}>{okunan}</Text>}
           {!!hata && <Text style={{ color: '#f4a3a3', fontSize: 13 }}>{hata}</Text>}
           <View style={{ flexDirection: 'row', gap: 8 }}>
             <Dugme yazi="Günü doldur" tur="ikinci" onPress={doldur} stil={{ flex: 1 }} />

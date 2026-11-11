@@ -31,6 +31,7 @@ const P: Record<string, string> = {
   wifi: 'M3 3l18 18M8.5 16.5a5 5 0 0 1 7 0M5 12.5a10 10 0 0 1 4-2.4M12 20h.01M19 12.5a10 10 0 0 0-3.2-2',
   beyin: 'M12 4a3 3 0 0 0-3 3 3 3 0 0 0-3 3 3 3 0 0 0 1 5 3 3 0 0 0 5 2 3 3 0 0 0 5-2 3 3 0 0 0 1-5 3 3 0 0 0-3-3 3 3 0 0 0-3-3zM12 4v16',
   yildiz: 'M12 3l2.2 5.6L20 9.5l-4.5 3.9L17 20l-5-3.2L7 20l1.5-6.6L4 9.5l5.8-.9z',
+  kamera: 'M4 8h3l2-3h6l2 3h3v11H4zM12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',
 };
 export function Ikon({ ad, boy = 22, renk = R.yazi2, kalin = 1.8 }: { ad: string; boy?: number; renk?: string; kalin?: number }) {
   return (

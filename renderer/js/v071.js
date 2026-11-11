@@ -89,3 +89,12 @@ for(var i=5;i>=0;i--){var x=new Date(d.getFullYear(),d.getMonth()-i,5),a=x.getFu
 fnS().katki.push({id:'kx',kim:'sage',tur:'kazanc',aciklama:'Örnek kazanç fikri',tutar:2500,durum:'oneri',tarih:ay+'-11'});nav('team','sirket');return {}};
 // 0.7.18: Apify kartı
 var __at27=window.__asyncTest;window.__asyncTest=function(){return __at27().then(function(a){return a.concat(window.__apfTest?window.__apfTest():[])})};
+// 0.7.18: Şirketim'de CEO onayı bekleyen talep açıkça ve doğrudan onaylanabilir
+window.__skCeoTest=function(){var R=[],T=TMS(),bk=T.gel.slice();function t(n,ok,m){R.push({n:n,ok:!!ok,m:ok?'':String(m||'beklenmeyen sonuç')})}
+var g={id:'gceo1',kim:'otto',tur:'hafiza',ad:'Finans Uzmanı görev tanımı',metin:'Şirketin tüm finans işlerinden sorumlusun.',asama:'ceo',kimden:'cagla',ts:Date.now(),ik:{ts:Date.now(),ok:1,neden:'Finans görevine doğrudan ilgili.'}};T.gel.push(g);
+nav('team','sirket');var sb=document.getElementById('sb').innerHTML,h=document.getElementById('ct').innerHTML;
+t('İK satırında ne beklediği yazar (turuncu)',/1 onayın bekliyor: Otto · Finans Uzmanı görev tanımı/.test(sb)&&/color:#ffb454">1 onayın bekliyor/.test(sb),sb.slice(0,200));
+t('Genel bakışta talep, Nika’nın gerekçesi ve Onayla / Reddet',/Finans Uzmanı görev tanımı<\/b>/.test(h)&&/Nika onayladı: Finans görevine doğrudan ilgili/.test(h)&&/Onayla ve uygula/.test(h)&&/Reddet/.test(h));
+tmGelCeo('gceo1',1);t('Doğrudan onaylanır ve uygulanır',g.asama=='tamam'&&tmMem('otto').some(function(x){return /tüm finans işlerinden/.test(x.metin)}));
+T.gel=bk;save();nav('home','gun',TODAY);return R};
+var __at28=window.__asyncTest;window.__asyncTest=function(){return __at28().then(function(a){return a.concat(window.__skCeoTest?window.__skCeoTest():[])})};

@@ -127,7 +127,7 @@ return{t:a.length?'Bu ay düzeltilmesi gereken günler: '+a.join(', ')+'. İş G
 var GT={beceri:'Yeni beceri',seviye:'Seviye yükseltme',hafiza:'Hafızaya ekleme'};
 function tmGelNew(kim,tur,ad,metin,kimden){var o={id:uid(),kim:kim,tur:tur,ad:ad||'',metin:metin||'',asama:kimden=='nika'?'ceo':'ik',kimden:kimden||'cagla',ts:Date.now()};if(kimden=='nika')o.ik={ts:Date.now(),ok:1};TMS().gel.push(o);save();return o}
 function tmGelIk(id,ok){var g=TMS().gel.filter(function(x){return x.id==id})[0];if(!g||g.asama!='ik')return;g.ik={ts:Date.now(),ok:ok?1:0};g.asama=ok?'ceo':'red';save();toast(ok?'Nika onayladı · Orin’in onayına gitti':'Talep reddedildi');render()}
-function tmGelCeo(id,ok){var g=TMS().gel.filter(function(x){return x.id==id})[0];if(!g||g.asama!='ceo')return;g.ceo={ts:Date.now(),ok:ok?1:0};g.asama=ok?'tamam':'red';if(ok)tmGelApply(g);save();toast(ok?'Orin onayladı · '+(tm(g.kim)||{}).ad+' gelişti':'Talep reddedildi');render()}
+function tmGelCeo(id,ok){var g=TMS().gel.filter(function(x){return x.id==id})[0];if(!g||g.asama!='ceo')return;g.ceo={ts:Date.now(),ok:ok?1:0};g.asama=ok?'tamam':'red';if(ok)tmGelApply(g);save();toast(ok?'Onaylandı · '+(tm(g.kim)||{}).ad+' gelişti':'Talep reddedildi');render()}
 function tmGelApply(g){var b=tmSkills(g.kim).map(function(x){return Object.assign({},x)});
 if(g.tur=='beceri'){var ex=b.filter(function(x){return x.ad.toLocaleLowerCase('tr')==g.ad.toLocaleLowerCase('tr')})[0];if(ex)ex.sv=Math.min(5,ex.sv+1);else b.push({ad:g.ad,sv:1,not:g.metin});tmSet(g.kim,{bec:b})}
 else if(g.tur=='seviye'){b.forEach(function(x){if(x.ad==g.ad)x.sv=Math.min(5,x.sv+1)});tmSet(g.kim,{bec:b})}

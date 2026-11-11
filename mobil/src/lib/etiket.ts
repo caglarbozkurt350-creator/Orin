@@ -1,5 +1,5 @@
 // İş etiketi fotoğrafından proje kodu ve iş adı okuma.
-// Akış: kamera → 1280 piksele küçült (≈150–300 KB) → Supabase 'etiket-oku' işlevi (Claude Haiku görsel) → kod + iş adı.
+// Akış: kamera → uzun kenar 1600 piksel (≈130–250 KB; 1280'de uzaktan çekilen etiket okunamadı) → Supabase 'etiket-oku' işlevi (Claude Haiku görsel) → kod + iş adı.
 // Fotoğraf telefonda SAKLANMAZ: çekilen ve küçültülen dosyalar okuma biter bitmez silinir; sunucu da kaydetmez.
 import { File } from 'expo-file-system';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
@@ -23,9 +23,9 @@ export async function etiketOku(): Promise<Etiket | null> {
   if (r.canceled || !r.assets?.[0]) return null;
   const a = r.assets[0]; let kucuk: string | null = null;
   try {
-    const boy = (a.width || 0) >= (a.height || 0) ? { width: 1280 } : { height: 1280 };
+    const boy = (a.width || 0) >= (a.height || 0) ? { width: 1600 } : { height: 1600 };
     const ref = await ImageManipulator.manipulate(a.uri).resize(boy).renderAsync();
-    const s = await ref.saveAsync({ compress: 0.6, format: SaveFormat.JPEG, base64: true });
+    const s = await ref.saveAsync({ compress: 0.8, format: SaveFormat.JPEG, base64: true });
     kucuk = s.uri;
     if (!s.base64) throw new Error('Fotoğraf hazırlanamadı');
     const { data, error } = await c.functions.invoke('etiket-oku', { body: { resim: s.base64 } });

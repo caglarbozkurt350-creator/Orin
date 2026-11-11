@@ -39,10 +39,10 @@ export default function Ekip() {
         </View>
       </View>
       <ScrollView contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 16 }}>
-        <Pressable onPress={() => router.push('/ik' as any)} accessibilityRole="button" style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 10, borderRadius: 16, backgroundColor: '#222225', borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)', marginBottom: 6 }}>
+        <Pressable onPress={() => (onay > 0 ? router.replace('/onaylar' as any) : router.push('/ik' as any))} accessibilityRole="button" style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 10, borderRadius: 16, backgroundColor: '#222225', borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)', marginBottom: 6 }}>
           <View style={{ width: 40, height: 40, borderRadius: 13, backgroundColor: R.ikBas, alignItems: 'center', justifyContent: 'center' }}><Ikon ad="kart" boy={20} renk="#fff" kalin={1.9} /></View>
           <View style={{ flex: 1 }}><Text style={{ color: R.yazi, fontSize: 15, fontWeight: '600' }}>İnsan Kaynakları</Text><Text style={{ color: R.soluk, fontSize: 12.5 }}>Çalışan kartları · Nika</Text></View>
-          {onay > 0 ? <View style={{ backgroundColor: R.turuncu, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3 }}><Text style={{ color: '#1b1b1d', fontSize: 12, fontWeight: '600' }}>{onay} onay</Text></View>
+          {onay > 0 ? <Pressable onPress={() => router.replace('/onaylar' as any)} accessibilityLabel={onay + ' onay bekliyor'} hitSlop={8} style={{ backgroundColor: R.turuncu, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3 }}><Text style={{ color: '#1b1b1d', fontSize: 12, fontWeight: '600' }}>{onay} onay</Text></Pressable>
             : <View style={{ backgroundColor: '#34343a', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 1 }}><Text style={{ color: R.yazi2, fontSize: 11.5 }}>{hepsi.length}</Text></View>}
         </Pressable>
         {!o.ts && (

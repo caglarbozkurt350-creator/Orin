@@ -11,8 +11,9 @@ import { R } from '@/lib/tema';
 
 export default function Onaylar() {
   const o = useGorunum(), hepsi = useMemo(() => calisanlar(o), [o]);
-  const [sek, setSek] = useState<'ik' | 'ceo'>('ik'), [form, setForm] = useState(false);
-  const ik = bekleyenGelisim(o, 'nika'), ceo = bekleyenGelisim(o, 'orin'), liste = sek === 'ik' ? ik : ceo;
+  const ik = bekleyenGelisim(o, 'nika'), ceo = bekleyenGelisim(o, 'orin');
+  const [sek, setSek] = useState<'ik' | 'ceo'>(!ik.length && ceo.length ? 'ceo' : 'ik'), [form, setForm] = useState(false);
+  const liste = sek === 'ik' ? ik : ceo;
   const karar = (id: string, ok: boolean) => { olayEkle('gelisim_karar', { id, asama: sek, ok }); esitleSonra(); };
   const son = o.ekip.gel.filter((g) => g.asama === 'tamam' || g.asama === 'red').slice(-5).reverse();
   return (

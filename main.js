@@ -198,6 +198,13 @@ ipcMain.handle('bulut:signup', wrap(o => bulut.signup(o)));
 ipcMain.handle('bulut:logout', wrap(() => bulut.logout()));
 ipcMain.handle('bulut:pull', wrap(s => bulut.pull(s)));
 ipcMain.handle('bulut:push', wrap(v => bulut.push(v)));
+// Yapay zekâ çalışanları (Claude API)
+const zeka = require('./zeka');
+ipcMain.handle('zeka:status', wrap(() => zeka.status()));
+ipcMain.handle('zeka:setKey', wrap(k => zeka.setKey(k)));
+ipcMain.handle('zeka:clearKey', wrap(() => zeka.clearKey()));
+ipcMain.handle('zeka:setBudget', wrap(b => zeka.setBudget(b)));
+ipcMain.handle('zeka:sor', wrap(o => zeka.sor(o)));
 ipcMain.handle('sheets:config', wrap(p => sheets.setConfig(p)));
 ipcMain.handle('sheets:login', wrap(() => sheets.login()));
 ipcMain.handle('sheets:cancel', wrap(() => sheets.cancel()));

@@ -75,7 +75,7 @@ return '<div class="kp5"><div><small><i class="ti ti-list-check"></i> Açık gö
 '<div><small><i class="ti ti-circle-check"></i> Biten görev</small><b>'+tmDoneWeek(co?null:c.id).length+'</b><em>bu hafta</em></div>'+
 '<div><small><i class="ti ti-hourglass"></i> Bekleyen onay</small><b style="color:#ffb35b">'+tmGelFor(c).length+'</b></div>'+
 '<div><small><i class="ti ti-users"></i> Ekip durumu</small><b><span style="color:#4fd18b">'+act+'</span> <span class="sm">aktif · '+(A.length-act)+' boşta</span></b></div>'+
-'<div class="tk"><small><i class="ti ti-coin"></i> Token / dolar <span>'+(co?'şirket toplamı':AY[pk(TODAY).getMonth()])+'</span></small><div class="tkr"><b>—</b><span class="sm">/ — token</span><b class="usd">$0</b></div><div class="pb"><i style="width:0%"></i></div><em>Yapay zekâ bağlı değil · API bağlanınca gerçek harcama görünür</em></div></div>'}
+(typeof zekaKart=='function'?zekaKart(c,co):'')+'</div>'}
 
 // ---------- Sohbet ----------
 function tmMsgs(c){var a=tmChat(c.id),on=tmOnline(),h='';
@@ -103,7 +103,7 @@ function tmMode(id,m){if(m=='mesaj'&&!tmOnline()){toast('Çevrimdışıyken yaln
 function tmSend(id,txt,tur){var e=document.getElementById('tmi'),t=(txt!=null?txt:(e?e.value:'')).trim();if(!t)return;var c=tm(id),on=tmOnline(),md=tur||(on?(TMMODE[id]||'mesaj'):'not');
 if(txt==null){TMD[id]='';if(e)e.value=''}
 if(md=='not'){if(on)tmPush(id,{r:'ben',t:t,tur:'not'});else{TMS().not.push({id:uid(),kim:id,metin:t,ts:Date.now(),durum:'bekliyor'});save()}toast(on?'Not kaydedildi':'Not kaydedildi · bağlantı gelince sorulacak')}
-else{tmPush(id,{r:'ben',t:t,tur:md=='ses'?'ses':'mesaj'});var r=tmReply(c,t);if(r)tmPush(id,{r:'o',t:r.t,qr:r.qr});else tmChat(id)[tmChat(id).length-1].bek=1}
+else{tmPush(id,{r:'ben',t:t,tur:md=='ses'?'ses':'mesaj'});var r=null;if(typeof zekaHazir=='function'&&zekaHazir()){tmChat(id)[tmChat(id).length-1].bek=1;zekaCevapla(id)}else{r=tmReply(c,t);if(r)tmPush(id,{r:'o',t:r.t,qr:r.qr});else tmChat(id)[tmChat(id).length-1].bek=1}}
 render();return r}
 function tmQuick(id,q){tmSend(id,q,'mesaj')}
 // Yapay zekâ bağlı değilken yerel cevaplar: yalnız Echo, gerçek kayıtlardan

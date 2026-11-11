@@ -113,7 +113,7 @@ function Sohbet({ c }: { c: Calisan }) {
         {senk.hata ? (
           <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center', backgroundColor: 'rgba(224,149,47,0.1)', borderWidth: 1, borderColor: 'rgba(224,149,47,0.35)', borderRadius: 14, padding: 11 }}><Ikon ad="wifi" boy={20} renk="#f1c88a" /><Text style={{ flex: 1, color: '#f1c88a', fontSize: 13.5 }}><Text style={{ fontWeight: '700' }}>Bağlantı yok.</Text> Yazdıkların saklanır, bağlantı gelince {c.ad}’ya iletilir.</Text></View>
         ) : cevapsiz > 0 ? (
-          <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', backgroundColor: 'rgba(47,123,245,0.08)', borderWidth: 1, borderColor: 'rgba(47,123,245,0.3)', borderRadius: 14, padding: 11 }}><Ikon ad="bilgi" boy={18} renk={R.bilgi} /><Text style={{ flex: 1, color: R.bilgi, fontSize: 13 }}>Yapay zekâ bağlı değil · {cevapsiz} mesaj cevap bekliyor. Bağlantı kurulunca {c.ad} cevaplayacak.</Text></View>
+          <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', backgroundColor: 'rgba(47,123,245,0.08)', borderWidth: 1, borderColor: 'rgba(47,123,245,0.3)', borderRadius: 14, padding: 11 }}><Ikon ad="bilgi" boy={18} renk={R.bilgi} /><Text style={{ flex: 1, color: R.bilgi, fontSize: 13 }}>{o.zeka?.bagli ? cevapsiz + ' mesaj cevap bekliyor · bilgisayardaki Orvane açıkken ' + c.ad + ' birkaç saniyede cevaplar.' : 'Yapay zekâ bağlı değil · ' + cevapsiz + ' mesaj cevap bekliyor. Bağlantı kurulunca ' + c.ad + ' cevaplayacak.'}</Text></View>
         ) : null}
       </ScrollView>
       <View style={{ paddingHorizontal: 12, paddingTop: 6, paddingBottom: Math.max(alt, 10) + 6 }}>

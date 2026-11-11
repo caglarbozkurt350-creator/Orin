@@ -16,6 +16,7 @@
     "arsivle": "node tools/arsivle.js"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.8.0",
     "electron-updater": "^6.8.11"
   },
   "build": {
@@ -30,7 +31,8 @@
       "!renderer/js/kisisel.js",
       "export.js",
       "calisanlar.json",
-      "bulut.js"
+      "bulut.js",
+      "zeka.js"
     ],
     "win": {
       "target": "nsis",
@@ -54,9 +56,9 @@
     "artifactName": "Orvane-Kurulum-${version}.${ext}"
   },
   "devDependencies": {
+    "@tabler/icons-webfont": "3.19.0",
     "electron": "^45.3.0",
-    "electron-builder": "^26.18.0",
-    "@tabler/icons-webfont": "3.19.0"
+    "electron-builder": "^26.18.0"
   },
   "repository": "https://github.com/caglarbozkurt350-creator/Orin"
 }

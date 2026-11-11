@@ -26,6 +26,13 @@ contextBridge.exposeInMainWorld('api', {
   openPath: p => ipcRenderer.invoke('fs:open', p),
   external: url => ipcRenderer.invoke('shell:external', url),
   win: (cmd, arg) => ipcRenderer.send('win:cmd', cmd, arg),
+  zeka: {
+    status: () => ipcRenderer.invoke('zeka:status'),
+    setKey: k => ipcRenderer.invoke('zeka:setKey', k),
+    clearKey: () => ipcRenderer.invoke('zeka:clearKey'),
+    setBudget: b => ipcRenderer.invoke('zeka:setBudget', b),
+    sor: o => ipcRenderer.invoke('zeka:sor', o)
+  },
   bulut: {
     status: () => ipcRenderer.invoke('bulut:status'),
     config: c => ipcRenderer.invoke('bulut:config', c),

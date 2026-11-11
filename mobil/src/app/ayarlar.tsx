@@ -61,7 +61,7 @@ export default function Ayarlar() {
         </View>
         <View style={s.kart}>
           <Text style={{ color: '#fff', fontSize: 15, fontWeight: '600', marginBottom: 6 }}>Yapay zekâ</Text>
-          <Text style={s.soluk}>Claude API henüz bağlı değil. Echo kayıtlardan cevap verir; diğer çalışanlara yazılanlar bağlantı kurulunca cevaplanır.</Text>
+          <Text style={s.soluk}>{o.zeka?.bagli ? 'Claude bağlı · bu ay $' + o.zeka.usd.toFixed(3).replace('.', ',') + ' / $' + o.zeka.butce + '. Telefondan yazdıkların, bilgisayardaki Orvane açıkken cevaplanır.' : 'Claude API henüz bağlı değil. Echo kayıtlardan cevap verir; diğer çalışanlara yazılanlar bağlantı kurulunca cevaplanır.'}</Text>
         </View>
         <Text style={[s.soluk, { textAlign: 'center', marginTop: 8 }]}>ORVANE · sürüm {SURUM} · masaüstüyle aynı sürüm</Text>
       </ScrollView>

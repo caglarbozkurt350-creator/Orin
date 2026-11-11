@@ -188,3 +188,26 @@ t('Alt+Enter alt satıra geçer, göndermez',function(){var n=tmChat('otto').len
 t('Enter gönderir',function(){var n=tmChat('otto').length;e=document.getElementById('tmi');e.value='satır 1\nsatır 2';tmKey({key:'Enter',altKey:false,shiftKey:false,target:e,preventDefault:function(){}},'otto');var a=tmChat('otto');return a.length==n+1&&a[a.length-1].t=='satır 1\nsatır 2'});
 S.team=bk=='null'?undefined:JSON.parse(bk);nav('home','gun',TODAY);return R};
 var __at9=window.__asyncTest;window.__asyncTest=function(){return __at9().then(function(a){return a.concat(window.__altEnterTest())})};
+
+// Orvane 0.7.0: yapay zekâ çalışanları (API sahte; gerçek istek gitmez)
+var __sr7=window.__smokeRoutes;window.__smokeRoutes=function(){return __sr7().concat([['set','zeka','']])};
+window.__zekaTest=function(){var R=[];function t(n,c,m){try{var ok=typeof c=='function'?c():c;R.push({n:n,ok:!!ok,m:ok?'':String(m||'')})}catch(e){R.push({n:n,ok:false,m:e.message})}}
+var bk=JSON.stringify(S.team||null),bAPI=API,bST=ZK.st,giden=null;
+var H={ay:'2026-11',usd:0.01,giris:100,cikis:50,onbellek:0,istek:1,kisi:{otto:{usd:0.01,token:150,istek:1}},gun:{11:0.01}};
+API=Object.assign({},bAPI||{},{zeka:{status:function(){return Promise.resolve({ok:true,v:ZK.st})},sor:function(o){giden=o;var h=JSON.parse(JSON.stringify(H));h.usd+=0.002;h.gun[11]+=0.002;return Promise.resolve({ok:true,v:{metin:'Merhaba Çağlar, buradayım.',model:o.model,usd:0.002,harcama:h,aylar:{'2026-11':h.usd},butce:10}})}}});
+ZK.st={anahtar:true,ipucu:'…abcd',butce:10,harcama:H,aylar:{'2026-11':0.01}};
+t('Model varsayılanları: Orin/Orla Sonnet, diğerleri Haiku',tmModel(tm('orin'))=='claude-sonnet-5-5'&&tmModel(tm('orla'))=='claude-sonnet-5-5'&&tmModel(tm('nika'))=='claude-haiku-5-5'&&tmModel(tm('echo'))=='claude-haiku-5-5');
+t('Model sonradan değiştirilebilir',function(){zekaModel('kai','claude-sonnet-5-5');var a=tmModel(tm('kai'))=='claude-sonnet-5-5';tmSet('kai',{model:undefined});return a});
+t('Sistem istemi Türkçe kurallar ve beceriler içerir',function(){var s=zekaSistem(tm('echo'));return /Sen Echo/.test(s)&&/Türkçe/.test(s)&&/İş günü kaydı/.test(s)});
+t('Echo bağlamında gerçek kayıt özeti',/İş günü kayıtları/.test(zekaBaglam(tm('echo'))));
+t('Geçmiş user ile başlar ve sıralı',function(){var T0=TMS();T0.sohbet.vera=[{r:'o',t:'selam',ts:1},{r:'ben',t:'a',ts:2},{r:'ben',t:'b',ts:3},{r:'sys',t:'not',ts:4}];var m=zekaGecmis('vera');return m.length==1&&m[0].role=='user'&&/a\n\nb/.test(m[0].content)&&/\[Bilgi\]/.test(m[0].content)});
+t('Token kartı gerçek harcamayı gösterir',function(){nav('team','calisan','otto');return /\$0,010/.test(document.getElementById('ct').innerHTML)});
+t('Orin sayfasında canlı harcama grafikleri',function(){nav('team','calisan','orin');var h=document.getElementById('ct').innerHTML;return h.indexOf('API harcaması')>0&&h.indexOf('Çalışan başına')>0});
+t('Bütçe dolunca çalışanlar durur',function(){var o=ZK.st.harcama.usd;ZK.st.harcama.usd=10;var a=!zekaHazir();ZK.st.harcama.usd=o;return a&&zekaHazir()});
+t('Yapay zekâ ayar sayfası',function(){nav('set','zeka','');var h=document.getElementById('ct').innerHTML;return h.indexOf('Çalışan modelleri')>0&&h.indexOf('Sonnet 5.5')>0&&document.getElementById('sb').innerHTML.indexOf('Yapay zekâ')>0});
+nav('team','calisan','otto');var n0=tmChat('otto').length;tmSend('otto','Merhaba','mesaj');
+return new Promise(function(res){setTimeout(res,60)}).then(function(){var a=tmChat('otto');
+t('Mesaj Claude’a gider, cevap sohbete düşer',giden&&giden.model=='claude-haiku-5-5'&&giden.messages[giden.messages.length-1].role=='user'&&a.length==n0+2&&a[a.length-1].r=='o'&&!a[a.length-2].bek,JSON.stringify(a.slice(-2)));
+t('Harcama canlı güncellenir',Math.abs(ZK.st.harcama.usd-0.012)<1e-9);
+API=bAPI;ZK.st=bST;S.team=bk=='null'?undefined:JSON.parse(bk);nav('home','gun',TODAY);return R})};
+var __at10=window.__asyncTest;window.__asyncTest=function(){return __at10().then(function(a){return window.__zekaTest().then(function(b){return a.concat(b)})})};

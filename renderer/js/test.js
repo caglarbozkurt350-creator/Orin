@@ -182,3 +182,9 @@ t('Bilgi notu kısa, görev metni yok',bilgiNotu('Iris')=='Bilgi notu: Çağlar,
 t('Türkçe yönelme eki',yonelme('Echo')=='Echo’ya'&&yonelme('Kai')=='Kai’ye'&&yonelme('Remy')=='Remy’ye'&&yonelme('Orin')=='Orin’e'&&yonelme('Luca')=='Luca’ya');
 return R};
 var __at8=window.__asyncTest;window.__asyncTest=function(){return __at8().then(function(a){return a.concat(window.__notTest())})};
+window.__altEnterTest=function(){var R=[];function t(n,c,m){try{var ok=typeof c=='function'?c():c;R.push({n:n,ok:!!ok,m:ok?'':String(m||'')})}catch(e){R.push({n:n,ok:false,m:e.message})}}
+var bk=JSON.stringify(S.team||null);nav('team','calisan','otto');var e=document.getElementById('tmi');
+t('Alt+Enter alt satıra geçer, göndermez',function(){var n=tmChat('otto').length;e.value='birinci';e.selectionStart=e.selectionEnd=8;tmKey({key:'Enter',altKey:true,shiftKey:false,target:e,preventDefault:function(){}},'otto');return e.value=='birinci\n'&&tmChat('otto').length==n});
+t('Enter gönderir',function(){var n=tmChat('otto').length;e=document.getElementById('tmi');e.value='satır 1\nsatır 2';tmKey({key:'Enter',altKey:false,shiftKey:false,target:e,preventDefault:function(){}},'otto');var a=tmChat('otto');return a.length==n+1&&a[a.length-1].t=='satır 1\nsatır 2'});
+S.team=bk=='null'?undefined:JSON.parse(bk);nav('home','gun',TODAY);return R};
+var __at9=window.__asyncTest;window.__asyncTest=function(){return __at9().then(function(a){return a.concat(window.__altEnterTest())})};

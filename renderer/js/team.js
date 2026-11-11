@@ -97,7 +97,8 @@ return '<div class="cmp'+(on?(md=='not'?' nt2':''):' ofc')+'"><textarea id="tmi"
 '<span class="md"><span class="'+(md=='mesaj'?'on':'')+'" onclick="tmMode(\''+jq(c.id)+'\',\'mesaj\')"><i class="ti ti-message-circle"></i> Mesaj</span><span class="'+(md=='not'?'on':'')+'" onclick="tmMode(\''+jq(c.id)+'\',\'not\')"><i class="ti ti-note"></i> Not</span></span><span style="flex:1"></span>'+
 '<span class="ib" id="tmmic" title="Sesli sohbet" onclick="voiceOpen(\''+jq(c.id)+'\')"><i class="ti ti-microphone"></i></span><button class="snd" title="'+(md=='not'?'Notu kaydet':'Gönder')+'" onclick="tmSend(\''+jq(c.id)+'\')"><i class="ti ti-'+(md=='not'?'device-floppy':'arrow-up')+'"></i></button></div></div>'}
 function tmGrow(e){TMD[arg]=e.value;e.style.height='auto';e.style.height=Math.min(160,e.scrollHeight)+'px'}
-function tmKey(ev,id){if(ev.key=='Enter'&&!ev.shiftKey){ev.preventDefault();tmSend(id)}}
+// Enter gönderir; Alt+Enter ya da Shift+Enter alt satıra geçer
+function tmKey(ev,id){if(ev.key!='Enter')return;if(ev.altKey||ev.shiftKey){if(ev.altKey){ev.preventDefault();var e=ev.target,a=e.selectionStart,b=e.selectionEnd;e.value=e.value.slice(0,a)+'\n'+e.value.slice(b);e.selectionStart=e.selectionEnd=a+1;tmGrow(e)}return}ev.preventDefault();tmSend(id)}
 function tmMode(id,m){if(m=='mesaj'&&!tmOnline()){toast('Çevrimdışıyken yalnız not bırakılabilir');return}TMMODE[id]=m;render()}
 function tmSend(id,txt,tur){var e=document.getElementById('tmi'),t=(txt!=null?txt:(e?e.value:'')).trim();if(!t)return;var c=tm(id),on=tmOnline(),md=tur||(on?(TMMODE[id]||'mesaj'):'not');
 if(txt==null){TMD[id]='';if(e)e.value=''}

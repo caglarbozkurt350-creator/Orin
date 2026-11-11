@@ -162,3 +162,10 @@ html.light .snc .ha{background:#fdeceb;border-color:#f3b0ab;color:#a40e26}
 html.light .hyk{background:#fff;border-color:#dcdce2}html.light .hyk b{color:#222}html.light .msil .mdel{background:#fff}
 .hyt ul.yap{margin-left:12px;padding-left:18px;border-left:1px dashed rgba(255,255,255,.18)}.hyt ul.yap>li::before,.hyt ul.yap>li::after{display:none}
 #jvm{text-align:left;font-family:inherit;font-size:13.5px;line-height:1.5}
+/* 0.7.15: Jarvis planlama sohbeti, toplantı odası */
+.jvcv{max-height:420px;overflow:auto;padding-right:4px}
+.tpk{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}.tpkk{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 4px;border-radius:999px;background:#232326;border:1px solid rgba(255,255,255,.09);font-size:12.5px;color:#ddd}
+.tpkk small{color:#8e8e95}.tpkk i{cursor:pointer;color:#8e8e95}.tpkk i:hover{color:#ffa4a0}.tpkk.yz{border-color:#5b8cff;box-shadow:0 0 0 2px #5b8cff33}
+.tpsec{display:grid;grid-template-columns:1fr 1fr;gap:4px;max-height:260px;overflow:auto;margin-top:4px}.tpc{display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:8px;cursor:pointer;font-size:13px;color:#ddd}
+.tpc:hover{background:rgba(255,255,255,.05)}.tpc small{color:#8e8e95;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tpc input{margin:0}
+html.light .tpkk{background:#fff;border-color:#dcdce2;color:#333}html.light .tpc{color:#333}

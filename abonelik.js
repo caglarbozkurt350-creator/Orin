@@ -53,7 +53,7 @@ function argsOf(o, sistemDosyasi) {
     '--allowedTools', ...GELISTIR_IZIN, '--disallowedTools', ...GELISTIR_YASAK, ...koruKurallari(o.koru), '--append-system-prompt-file', sistemDosyasi];
   return ['-p', '--output-format', 'json', '--model', MODELLER.includes(o.model) ? o.model : c.model, '--max-turns', String(Math.max(1, Math.min(40, Number(o.maxTur) || c.maxTur))),
     '--strict-mcp-config', '--disable-slash-commands', '--setting-sources', '', '--no-session-persistence', '--tools', o.mod === 'inceleme' ? INCELEME_ARAC : o.araclar != null ? o.araclar : ARACLAR,
-    ...(o.mod === 'inceleme' ? ['--allowedTools', ...INCELEME_IZIN] : []), o.sistemTam ? '--system-prompt-file' : '--append-system-prompt-file', sistemDosyasi]; // sohbet: Claude Code'un kendi istemi yerine yalnız çalışanın istemi (≈700 token)
+    ...(o.mod === 'inceleme' ? ['--allowedTools', ...INCELEME_IZIN] : o.mod === 'jarvis' ? ['--allowedTools', 'Read', 'Glob', 'Grep', '--disallowedTools', 'Edit', 'Write', 'Bash', 'WebFetch', 'WebSearch'] : []), o.sistemTam ? '--system-prompt-file' : '--append-system-prompt-file', sistemDosyasi]; // sohbet: Claude Code'un kendi istemi yerine yalnız çalışanın istemi (≈700 token)
 }
 function sonucOku(out) {
   let j = null; try { j = JSON.parse(out.trim().split(/\r?\n/).filter(Boolean).pop()); } catch (e) {}
@@ -74,7 +74,7 @@ function calistir(o) {
   if (!o.test && !sohbet && c.sayi >= c.gunluk) return Promise.reject(Object.assign(new Error('Bugünkü abonelik görevi sınırı doldu (' + c.gunluk + ')'), { kod: 'gunluk' }));
   if (!o.test && sohbet && (c.sohbet || 0) >= c.gunlukSohbet) return Promise.reject(Object.assign(new Error('Bugünkü abonelik sohbet sınırı doldu (' + c.gunlukSohbet + ')'), { kod: 'gunluk' }));
   const kim = String(o.kim || 'genel').replace(/[^\w-]/g, '');
-  const inc = o.mod === 'inceleme', kay = inc ? kaynak() : null, gel = o.mod === 'gelistir';
+  const inc = o.mod === 'inceleme', kay = inc ? kaynak() : null, gel = o.mod === 'gelistir' || o.mod === 'jarvis'; // jarvis (0.7.15): Jarvis klasöründe, yalnız okuma
   if (inc && !kay) return Promise.reject(new Error('Orvane kaynak klasörü bulunamadı (Ayarlar › Yapay zekâ › Claude aboneliği › Kaynak klasörü)'));
   if (gel && !(o.cwd && fs.existsSync(o.cwd))) return Promise.reject(new Error('Geliştirme çalışma klasörü yok'));
   const cwd = gel ? o.cwd : inc ? kay : path.join(DOCS || os.homedir(), 'Orin', 'Calisma', kim); fs.mkdirSync(cwd, { recursive: true });

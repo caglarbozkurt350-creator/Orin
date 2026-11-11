@@ -150,7 +150,7 @@ function tmMsgSilUygula(kim,mid,ts){var a=TMS().sohbet[kim];if(!a)return 0;var n
 function tmTemizleUygula(kim,ts){var a=TMS().sohbet[kim];if(!a)return 0;var n=a.length;TMS().sohbet[kim]=a.filter(function(m){return ts&&m.ts>ts});if(kim=='ada'&&S.ada)S.ada.soru=null;return n-TMS().sohbet[kim].length}
 function tmMsgSil(kim,mid){confirmBox('Bu mesaj silinsin mi? Telefondan da kalkar.',function(){if(tmMsgSilUygula(kim,mid)){save();render();if(typeof bulutTick=='function')bulutTick()}},'Sil')}
 function tmSohbetTemizle(kim){var c=tm(kim)||{ad:kim};confirmBox(esc(c.ad)+' ile sohbetin tamamı silinsin mi? Telefondan da kalkar; görevler, beceriler ve hafıza silinmez.',function(){tmTemizleUygula(kim,Date.now()+1);save();render();toast('Sohbet temizlendi');if(typeof bulutTick=='function')bulutTick()},'Temizle')}
-var _isMs=tmMsgs;tmMsgs=function(c){var h=_isMs(c);if(!tmChat(c.id).length)return h;return h.replace('<div class="cv" id="tmcv">','<div class="cv" id="tmcv"><div class="sct"><span onclick="tmSohbetTemizle(\''+jq(c.id)+'\')"><i class="ti ti-eraser"></i> Sohbeti temizle</span></div>')};
+var _isMs=tmMsgs;tmMsgs=function(c){var h=_isMs(c);return h.replace('<div class="cv" id="tmcv">','<div class="cv" id="tmcv"><div class="sct">'+(tmChat(c.id).length?'<span onclick="tmSohbetTemizle(\''+jq(c.id)+'\')"><i class="ti ti-eraser"></i> Sohbeti temizle</span>':'')+'</div>')};
 var _isBu=bulutUygula;bulutUygula=function(e){var v=e.veri||{};if(e.tur=='mesaj_sil'){tmMsgSilUygula(v.kim,v.id,v.ts);return}if(e.tur=='sohbet_temizle'){tmTemizleUygula(v.kim,e.ts);return}return _isBu(e)};
 
 // ---------- Şirket hiyerarşisi (sürüklenebilir kartlar) ----------
@@ -241,7 +241,7 @@ var L2=isAdaListe();t('Ada’nın inceleme bulguları listeye girer',L2.filter(f
 a.incelemeler=bi;
 nav('team','calisan','ada');var h4=document.getElementById('ct').innerHTML;t('Ada sayfasında güncelleme listesi ve sürüm önerisi düğmesi',/Güncelleme listesi/.test(h4)&&/Sürüm önerisi hazırla/.test(h4)&&/Günü doldur/.test(h4));
 isOncDegis(h3.id);t('Öncelik değiştirilebilir',h3.onc=='orta');
-var sv=isSurumOner();t('Ada sürüm önerisini onay kartıyla sunar',sv&&sv.tur=='surum'&&sv.durum=='onay'&&sv.maddeler.length>=4&&h3.durum=='surumde'&&/Orvane 0\.7\.15/.test(sv.baslik),JSON.stringify(sv&&sv.baslik));
+var sv=isSurumOner();t('Ada sürüm önerisini onay kartıyla sunar',sv&&sv.tur=='surum'&&sv.durum=='onay'&&sv.maddeler.length>=4&&h3.durum=='surumde'&&sv.baslik.indexOf('Orvane '+isSonrakiSurum())==0,JSON.stringify(sv&&sv.baslik));
 cg=[];ISG.cagir=function(o){cg.push(o);return Promise.resolve({ok:true,v:{durum:'inceleme',dal:'is-emri/ada-x',yol:'C:/w',degisen:['a.js'],test:{ok:true,gecen:1,toplam:1},metin:'tamam'}})};
 return isOnay(sv.id,1).then(function(){return bekle(30)}).then(function(){t('Sürüm onayı → iş emri (maddelerle)',yz.slice(-1)[0].maddeler.length==sv.maddeler.length&&sv.durum=='inceleme');
 GELEN_TUR.is_sonuc({tur:'is_sonuc',id:sv.id,kim:'ada',durum:'yapildi'});t('Sürüm yapılınca maddeleri de yapıldı olur',h3.durum=='yapildi')})}).then(function(){

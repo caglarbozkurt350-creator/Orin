@@ -68,3 +68,6 @@ var __at22=window.__asyncTest;window.__asyncTest=function(){return __at22().then
 // 0.7.14 ekran görüntüleri: İK hiyerarşi görünümü ve Jarvis sayfası
 var __sr8=window.__smokeRoutes;window.__smokeRoutes=function(){return __sr8().concat([['team','ik','hiy'],['team','jarvis','']])};
 var __sg8=window.__smokeGo;window.__smokeGo=function(r){if(r[0]=='team'&&r[1]=='ik')HRV=r[2]=='hiy'?'hiy':'kart';return __sg8(r)};
+// 0.7.15: Jarvis planlama sohbeti, toplantı odası
+var __at23=window.__asyncTest;window.__asyncTest=function(){return __at23().then(function(a){return (window.__v0715Test?window.__v0715Test():Promise.resolve([])).then(function(b){return a.concat(b)})})};
+var __sr9=window.__smokeRoutes;window.__smokeRoutes=function(){return __sr9().concat([['team','toplanti','']])};

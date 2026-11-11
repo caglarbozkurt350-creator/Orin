@@ -244,6 +244,7 @@ ipcMain.on('win:cmd', (e, cmd, arg) => {
   const w = BrowserWindow.fromWebContents(e.sender); if (!w) return;
   if (cmd === 'close') w.close();
   else if (cmd === 'new') createWindow();
+  else if (cmd === 'show') { if (w.isMinimized()) w.restore(); w.show(); w.focus(); } // 0.7.15: toplantı bildirimine tıklanınca
   else if (cmd === 'fullscreen') w.setFullScreen(!w.isFullScreen());
   else if (cmd === 'zoom') w.webContents.setZoomFactor(arg);
   else if (cmd === 'devtools') w.webContents.toggleDevTools();
@@ -368,7 +369,28 @@ ipcMain.handle('isemri:liste', wrap(() => gelistir.emirler()));
 ipcMain.handle('isemri:durum', wrap(() => gelistir.durum()));
 ipcMain.handle('isemri:gelistir', wrap(o => { if (SMOKE) throw new Error('Testte geliştirme çalıştırılmaz'); return gelistir.gelistir(o); }));
 // Jarvis (0.7.14): Jarvis projesinin giden/ klasöründeki prompt taslakları (yalnız okuma; şirkete yalnız Çağlar'ın düğmesiyle gider)
-const JARVIS = () => path.join(app.getPath('documents'), 'Cloude Dosyaları', 'Jarvis', 'giden');
+const JARVIS_DIR = () => path.join(app.getPath('documents'), 'Cloude Dosyaları', 'Jarvis');
+const JARVIS = () => path.join(JARVIS_DIR(), 'giden');
+// Jarvis planlama sohbeti (0.7.15): Çağlar'ın aboneliğinde, Jarvis klasöründe, Jarvis'in kendi kurallarıyla; yalnız okuma
+function jarvisSistem() {
+  const oku = f => { try { return fs.readFileSync(path.join(JARVIS_DIR(), f), 'utf8'); } catch (e) { return ''; } };
+  return oku('CLAUDE.md') + '\n\n## Çağlar hakkında bildiklerin (hafiza/caglar.md)\n' + oku(path.join('hafiza', 'caglar.md')).slice(0, 6000) + '\n\n## Olgunlaşan fikirler (hafiza/fikirler.md)\n' + oku(path.join('hafiza', 'fikirler.md')).slice(0, 4000) +
+    '\n\n## Bu ortam: Orvane › Jarvis sayfası (planlama sohbeti)\n- Çağlar seninle Orvane masaüstündeki Jarvis sayfasından yazışıyor. Kısa, net, Türkçe cevap ver; her seferinde tek soru.\n' +
+    '- Bu sohbette token tahmini/onayı isteme: Orvane her cevabı abonelik sayacında tutuyor ve Çağlar ekranda görüyor.\n- Dosya değiştiremezsin, kaydedemezsin, gönderemezsin (yalnız Read/Glob/Grep). Kayıt ve gönderimi Çağlar sayfadaki düğmelerle yapar: "Prompt oluştur" → "Şirkete gönder" (yalnız CEO Orin\'e).\n' +
+    '- Orvane verisi (durum.json) büyüktür; tamamını okuma. Gerekirse Grep ile küçük parça ara.';
+}
+function jarvisIstem(o) {
+  const G = (o.gecmis || []).slice(-24).map(m => (m.r === 'ben' ? 'Çağlar' : 'Jarvis') + ': ' + String(m.t || '').slice(0, 4000)).join('\n\n');
+  if (o.mod === 'prompt') return 'Aşağıda Çağlar’la planlama sohbetimiz var.\n\n' + G + '\n\nGörev: Aramızda KARARLAŞTIRILAN konuyu CEO Orin’e gidecek net bir iş promptuna çevir. Ölçütler: Amaç (neden) · Kapsam (ne dahil, ne değil) · Beklenen çıktı (biçim, uzunluk, süre) · Ölçüt (iyi iş neye benzer) · Kısıtlar (veri güvenliği, abonelik öncelikli düşük maliyet, sade görünüm, önceki sürümü koruma, her yayın onaylı) · Kime rapor verilecek ve hangi çalışana verilmesi gerektiği önerisi. İlk satır kısa bir başlık olsun ("# Başlık"). Yalnız promptu yaz; açıklama, soru ya da "Çağlar’dan" öneki yazma. Karar verilmemiş bir nokta varsa promptun sonunda "Açık nokta:" diye tek satırla belirt.';
+  return (G ? 'Sohbetin şimdiye kadarki kısmı:\n\n' + G + '\n\n' : '') + 'Çağlar’ın son mesajı: ' + String(o.mesaj || '') + '\n\nJarvis olarak cevap ver (başına adını yazma).';
+}
+ipcMain.handle('jarvis:sor', wrap(o => { if (SMOKE) throw new Error('Testte Jarvis çalıştırılmaz'); if (!fs.existsSync(JARVIS_DIR())) throw new Error('Jarvis klasörü bulunamadı: ' + JARVIS_DIR());
+  return abonelik.calistir({ kim: 'jarvis', tur: 'sohbet', mod: 'jarvis', cwd: JARVIS_DIR(), sistemTam: true, araclar: 'Read,Glob,Grep', maxTur: 8, model: (o && o.model) || 'sonnet', zamanAsimiMs: 240000, sistem: jarvisSistem(), istem: jarvisIstem(o || {}) }); }));
+// Şirkete giden iş dosyası: Jarvis\giden\YYYY-MM-DD-orin-<konu>.md
+function jarvisDosyaAdi(metin, d) { d = d || new Date(); const p = n => String(n).padStart(2, '0'), bas = String(metin || '').split(/\r?\n/).find(x => x.trim()) || 'is', konu = bas.replace(/^#+\s*/, '').toLocaleLowerCase('tr').replace(/ı/g, 'i').replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's').replace(/ö/g, 'o').replace(/ç/g, 'c').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'is';
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes()) + '-orin-' + konu + '.md'; }
+ipcMain.handle('jarvis:kaydet', wrap(o => { const t = String(o && o.metin || '').trim(); if (!t) throw new Error('Boş iş dosyası'); const d = SMOKE ? path.join(DATA(), 'jarvis-giden') : JARVIS(); fs.mkdirSync(d, { recursive: true });
+  const f = path.join(d, jarvisDosyaAdi(t)); fs.writeFileSync(f, '<!-- Orvane › Jarvis sayfasından şirkete (CEO Orin) gönderildi: ' + new Date().toLocaleString('tr-TR') + ' -->\n' + t + '\n', 'utf8'); return f; }));
 ipcMain.handle('jarvis:taslaklar', wrap(() => { if (SMOKE) return []; const d = JARVIS(); if (!fs.existsSync(d)) return []; return fs.readdirSync(d).filter(f => /\.md$/i.test(f)).map(f => { const p = path.join(d, f), st = fs.statSync(p); return { ad: f, ts: st.mtimeMs, metin: st.size < 60000 ? fs.readFileSync(p, 'utf8') : '' }; }).sort((a, b) => b.ts - a.ts).slice(0, 15); }));
 ipcMain.handle('sheets:config', wrap(p => sheets.setConfig(p)));
 ipcMain.handle('sheets:login', wrap(() => sheets.login()));

@@ -50,6 +50,7 @@ contextBridge.exposeInMainWorld('api', {
     durum: () => ipcRenderer.invoke('isemri:durum'),
     gelistir: o => ipcRenderer.invoke('isemri:gelistir', o)
   },
+  toplanti: { kaydet: o => ipcRenderer.invoke('toplanti:kaydet', o) },
   jarvis: { taslaklar: () => ipcRenderer.invoke('jarvis:taslaklar'), sor: o => ipcRenderer.invoke('jarvis:sor', o), kaydet: o => ipcRenderer.invoke('jarvis:kaydet', o) },
   bulut: {
     status: () => ipcRenderer.invoke('bulut:status'),

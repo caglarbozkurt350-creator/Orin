@@ -71,3 +71,10 @@ var __sg8=window.__smokeGo;window.__smokeGo=function(r){if(r[0]=='team'&&r[1]=='
 // 0.7.15: Jarvis planlama sohbeti, toplantı odası
 var __at23=window.__asyncTest;window.__asyncTest=function(){return __at23().then(function(a){return (window.__v0715Test?window.__v0715Test():Promise.resolve([])).then(function(b){return a.concat(b)})})};
 var __sr9=window.__smokeRoutes;window.__smokeRoutes=function(){return __sr9().concat([['team','toplanti','']])};
+// 0.7.16: toplantı kararları, gizlilik dereceleri, görev yetkisi
+var __at24=window.__asyncTest;window.__asyncTest=function(){return __at24().then(function(a){return (window.__v0716Test?window.__v0716Test():Promise.resolve([])).then(function(b){return a.concat(b)})})};
+// 0.7.16 ekran görüntüsü: örnek toplantı odası (yalnız smoke, geçici)
+var __sr10=window.__smokeRoutes;window.__smokeRoutes=function(){return __sr10().concat([['tpdemo','','']])};
+var __sg10=window.__smokeGo;window.__smokeGo=function(r){if(r[0]!='tpdemo')return __sg10(r);ABN.st=ABN.st||{};ABN.st.toplantiBugun=48;ABN.st.gunlukToplanti=300;var n=Date.now(),t={id:'tpdemo',ev:'orin',kim:['orin','orla','nika','remy'],konu:'Şirketin genel durumu',zaman:n-1500000,basla:n-1500000,durum:'acik',ts:n-1500000,
+mes:[{r:'ben',t:'@Orin görev listesi ne durumda? +Remy',ts:n-1400000,kime:'orin'},{r:'sys',t:'Çağlar +Remy’yı toplantıya çağırdı.',ts:n-1390000},{r:'o',kim:'orin',kime:'cagla',t:'Luca’nın testi kapandı. @Orla, bir sorum var: 14.00 kontrolü hazır mı?',ts:n-1300000},{r:'o',kim:'orla',kime:'orin',t:'Hazır. Iris için yalnız “ulaşıldı/ulaşılmadı” bildireceğim.',ts:n-1000000},{r:'karar',kim:'orin',t:'Toplantılarda kısa ve öz konuşulur.',ts:n-900000},{r:'o',kim:'remy',kime:'cagla',t:'Çağlar Bey, bir sorum var: hatırlatıcıları ben mi tutayım?',ts:n-400000}],
+kararlar:[{kim:'orin',metin:'Toplantılarda kısa ve öz konuşulur.',ts:n-900000}],cagri:[{kim:'cagla',kimi:'remy',ts:n-1390000}],sayac:{orin:{cagla:1},orla:{orin:1},remy:{cagla:1}}};S.toplanti=(S.toplanti||[]).filter(function(x){return x.id!='tpdemo'}).concat([t]);nav('team','toplanti','tpdemo');return {}};

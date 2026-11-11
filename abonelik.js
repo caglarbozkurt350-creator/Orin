@@ -8,7 +8,7 @@ const { spawn, execFile, execFileSync } = require('child_process');
 let SURUM = null; // claude --version önbelleği (arka planda bir kez okunur)
 
 let DIR = null, DOCS = null, CFG = null, EXE;
-const VARS = { acik: false, gunluk: 5, gunlukSohbet: 60, model: 'sonnet', maxTur: 12, sureDk: 15, gun: '', sayi: 0, sohbet: 0, toplam: 0 };
+const VARS = { acik: false, gunluk: 5, gunlukSohbet: 60, gunlukToplanti: 300, model: 'sonnet', maxTur: 12, sureDk: 15, gun: '', sayi: 0, sohbet: 0, toplanti: 0, toplam: 0 };
 const MODELLER = ['sonnet', 'haiku', 'opus'];
 const ARACLAR = 'Read,Glob,Grep,WebSearch,WebFetch';
 // İnceleme kipi (Ada'nın program incelemesi): kaynak klasörde yalnız okuma + tek izinli komut (smoke testi, geçici klasörde çalışır)
@@ -28,7 +28,7 @@ const CFGF = () => path.join(DIR, 'abonelik.json');
 function cfg() { if (!CFG) { try { CFG = Object.assign({}, VARS, JSON.parse(fs.readFileSync(CFGF(), 'utf8'))); } catch (e) { CFG = Object.assign({}, VARS); } } return CFG; }
 function kaydet() { try { fs.writeFileSync(CFGF(), JSON.stringify(CFG, null, 1)); } catch (e) {} }
 function bugun() { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
-function sayac() { const c = cfg(); if (c.gun !== bugun()) { c.gun = bugun(); c.sayi = 0; c.sohbet = 0; } return c; }
+function sayac() { const c = cfg(); if (c.gun !== bugun()) { c.gun = bugun(); c.sayi = 0; c.sohbet = 0; c.toplanti = 0; } return c; }
 
 // claude.exe: önce resmi npm kurulumu, sonra yerel kurulum, en son PATH
 function bul() {
@@ -70,9 +70,10 @@ function calistir(o) {
   o = o || {};
   const exe = bul(); if (!exe) return Promise.reject(new Error('Claude Code bu bilgisayarda kurulu değil'));
   const c = sayac();
-  const sohbet = o.tur === 'sohbet';
+  const toplanti = o.tur === 'toplanti', sohbet = o.tur === 'sohbet' || toplanti; // 0.7.16: toplantı cevapları ayrı sayaçta (sohbet sınırını doldurmaz)
   if (!o.test && !sohbet && c.sayi >= c.gunluk) return Promise.reject(Object.assign(new Error('Bugünkü abonelik görevi sınırı doldu (' + c.gunluk + ')'), { kod: 'gunluk' }));
-  if (!o.test && sohbet && (c.sohbet || 0) >= c.gunlukSohbet) return Promise.reject(Object.assign(new Error('Bugünkü abonelik sohbet sınırı doldu (' + c.gunlukSohbet + ')'), { kod: 'gunluk' }));
+  if (!o.test && toplanti && (c.toplanti || 0) >= (c.gunlukToplanti || 300)) return Promise.reject(Object.assign(new Error('Bugünkü toplantı cevabı sınırı doldu (' + (c.gunlukToplanti || 300) + ')'), { kod: 'gunluk' }));
+  if (!o.test && sohbet && !toplanti && (c.sohbet || 0) >= c.gunlukSohbet) return Promise.reject(Object.assign(new Error('Bugünkü abonelik sohbet sınırı doldu (' + c.gunlukSohbet + ')'), { kod: 'gunluk' }));
   const kim = String(o.kim || 'genel').replace(/[^\w-]/g, '');
   const inc = o.mod === 'inceleme', kay = inc ? kaynak() : null, gel = o.mod === 'gelistir' || o.mod === 'jarvis'; // jarvis (0.7.15): Jarvis klasöründe, yalnız okuma
   if (inc && !kay) return Promise.reject(new Error('Orvane kaynak klasörü bulunamadı (Ayarlar › Yapay zekâ › Claude aboneliği › Kaynak klasörü)'));
@@ -89,7 +90,7 @@ function calistir(o) {
     p.on('error', e => { if (bitti) return; bitti = true; temizle(); rej(e); });
     p.on('close', code => {
       if (bitti) return; bitti = true; temizle();
-      try { const r = sonucOku(out); if (inc) r.rapor = raporYaz(r); if (!o.test) { if (sohbet) c.sohbet = (c.sohbet || 0) + 1; else c.sayi++; c.toplam++; c.son = new Date().toISOString(); kaydet(); } res(r); }
+      try { const r = sonucOku(out); if (inc) r.rapor = raporYaz(r); if (!o.test) { if (toplanti) c.toplanti = (c.toplanti || 0) + 1; else if (sohbet) c.sohbet = (c.sohbet || 0) + 1; else c.sayi++; c.toplam++; c.son = new Date().toISOString(); kaydet(); } res(r); }
       catch (e) { if (!out.trim() && err.trim()) e.message = 'Claude Code çalışmadı (' + code + '): ' + err.trim().split(/\r?\n/).pop().slice(0, 200); rej(e); }
     });
     p.stdin.end(String(o.istem || ''), 'utf8');
@@ -107,13 +108,14 @@ function status() {
   const c = sayac(), exe = bul();
   if (exe && SURUM === null) { SURUM = ''; execFile(exe, ['--version'], { encoding: 'utf8', windowsHide: true, timeout: 15000, env: temizEnv() }, (e, o) => { SURUM = e ? '' : String(o).trim(); }); }
   const surum = SURUM || null;
-  return { kurulu: !!exe, yol: exe, surum, acik: !!c.acik, gunluk: c.gunluk, model: c.model, maxTur: c.maxTur, sureDk: c.sureDk, kaynak: kaynak(), raporlar: path.join(DOCS || os.homedir(), 'Orin', 'Ada Raporları'), bugun: c.sayi, gunlukSohbet: c.gunlukSohbet, sohbetBugun: c.sohbet || 0, toplam: c.toplam, son: c.son || null, test: c.test || null };
+  return { kurulu: !!exe, yol: exe, surum, acik: !!c.acik, gunluk: c.gunluk, model: c.model, maxTur: c.maxTur, sureDk: c.sureDk, kaynak: kaynak(), raporlar: path.join(DOCS || os.homedir(), 'Orin', 'Ada Raporları'), bugun: c.sayi, gunlukSohbet: c.gunlukSohbet, sohbetBugun: c.sohbet || 0, gunlukToplanti: c.gunlukToplanti || 300, toplantiBugun: c.toplanti || 0, toplam: c.toplam, son: c.son || null, test: c.test || null };
 }
 function setAyar(a) {
   const c = cfg(); a = a || {};
   if (a.acik != null) c.acik = !!a.acik;
   if (a.gunluk != null) c.gunluk = Math.max(0, Math.min(50, Math.round(Number(a.gunluk) || 0)));
   if (a.gunlukSohbet != null) c.gunlukSohbet = Math.max(0, Math.min(500, Math.round(Number(a.gunlukSohbet) || 0)));
+  if (a.gunlukToplanti != null) c.gunlukToplanti = Math.max(0, Math.min(1000, Math.round(Number(a.gunlukToplanti) || 0)));
   if (a.kaynak != null) c.kaynak = String(a.kaynak);
   if (a.model && MODELLER.includes(a.model)) c.model = a.model;
   if (a.maxTur != null) c.maxTur = Math.max(1, Math.min(40, Math.round(Number(a.maxTur) || 12)));

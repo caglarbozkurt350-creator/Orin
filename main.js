@@ -386,6 +386,10 @@ function jarvisIstem(o) {
 }
 ipcMain.handle('jarvis:sor', wrap(o => { if (SMOKE) throw new Error('Testte Jarvis çalıştırılmaz'); if (!fs.existsSync(JARVIS_DIR())) throw new Error('Jarvis klasörü bulunamadı: ' + JARVIS_DIR());
   return abonelik.calistir({ kim: 'jarvis', tur: 'sohbet', mod: 'jarvis', cwd: JARVIS_DIR(), sistemTam: true, araclar: 'Read,Glob,Grep', maxTur: 8, model: (o && o.model) || 'sonnet', zamanAsimiMs: 240000, sistem: jarvisSistem(), istem: jarvisIstem(o || {}) }); }));
+// Toplantı kayıtları (0.7.16): Belgeler\Orin\Toplantılar\<ad>.md — kişisel veri dosyasına dokunmadan okunabilsin
+const TOPLANTI_DIR = () => path.join(SMOKE ? DATA() : app.getPath('documents'), 'Orin', 'Toplantılar');
+ipcMain.handle('toplanti:kaydet', wrap(o => { const ad = String(o && o.ad || ''); if (!/^[\w.-]{5,90}\.md$/.test(ad)) throw new Error('Geçersiz toplantı dosya adı'); fs.mkdirSync(TOPLANTI_DIR(), { recursive: true });
+  const f = path.join(TOPLANTI_DIR(), ad), tmp = f + '.tmp'; fs.writeFileSync(tmp, String(o.md || ''), 'utf8'); fs.renameSync(tmp, f); return f; }));
 // Şirkete giden iş dosyası: Jarvis\giden\YYYY-MM-DD-orin-<konu>.md
 function jarvisDosyaAdi(metin, d) { d = d || new Date(); const p = n => String(n).padStart(2, '0'), bas = String(metin || '').split(/\r?\n/).find(x => x.trim()) || 'is', konu = bas.replace(/^#+\s*/, '').toLocaleLowerCase('tr').replace(/ı/g, 'i').replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's').replace(/ö/g, 'o').replace(/ç/g, 'c').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'is';
   return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes()) + '-orin-' + konu + '.md'; }

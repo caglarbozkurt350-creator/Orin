@@ -158,6 +158,16 @@ function mainTests() {
     t('Abonelik: başarılı sonuç okunur', ab.sonucOku('{"type":"result","subtype":"success","is_error":false,"result":"tamam","num_turns":1,"usage":{"input_tokens":5,"output_tokens":3}}').metin === 'tamam');
     let lim = null; try { ab.sonucOku('{"subtype":"success","is_error":true,"result":"Claude AI usage limit reached|1794410000"}'); } catch (e) { lim = e; }
     t('Abonelik: limit hatası tanınır', lim && lim.kod === 'limit' && /limit/.test(lim.message), lim && lim.message);
+    // 0.7.14 geliştirme kipi: düzenleme yalnız çalışma klasöründe, gerçek veri ve kişisel dosya yasak, git push/merge yok
+    const ga = ab.argsOf({ mod: 'gelistir', koru: ['C:\\Users\\PC\\Documents\\Orin\\Veriler', 'C:\\k\\renderer\\js\\kisisel.js'] }, 'x.txt'), gj = ga.join(' ');
+    t('Geliştirme kipi: düzenleme yalnız çalışma klasöründe (acceptEdits), Edit genel izinli değil', ga[ga.indexOf('--permission-mode') + 1] === 'acceptEdits' && !ga.slice(ga.indexOf('--allowedTools'), ga.indexOf('--disallowedTools')).some(x => /^(Edit|Write)/.test(x)), gj);
+    t('Geliştirme kipi: gerçek veri ve kişisel dosya yasak', ga.includes('Read(//c/Users/PC/Documents/Orin/Veriler/**)') && ga.includes('Edit(//c/Users/PC/Documents/Orin/Veriler/**)') && ga.includes('Read(//c/k/renderer/js/kisisel.js)'), gj);
+    t('Geliştirme kipi: git push/merge ve yayın yasak, internet yok', ['Bash(git push:*)', 'Bash(git merge:*)', 'Bash(npx eas-cli:*)', 'WebFetch'].every(x => ga.slice(ga.indexOf('--disallowedTools')).includes(x)) && ga.includes('--strict-mcp-config'), gj);
+    const gl = require('./gelistir'), e1 = gl.emirYaz({ id: 'test1', kim: 'ada', kimAd: 'Ada', baslik: 'Deneme', metin: 'Bir düğme ekle', maddeler: ['a', 'b'] }), ej = gl.emirOku(e1.dosya), em = fs.readFileSync(e1.md, 'utf8');
+    t('İş emri Giden klasörüne .md + .json yazılır', /^is-emri-ada-\d{4}/.test(e1.dosya) && ej.durum === 'onaylandi' && /Giden/.test(e1.md) && /main dalına dokunma/.test(em) && /is_sonuc/.test(em) && /kisisel\.js/.test(em), e1.md);
+    let ge = null; try { gl.emirOku('..\\durum'); } catch (e) { ge = e; }
+    t('İş emri adı doğrulanır (klasör dışı okunmaz)', ge && /Geçersiz/.test(ge.message));
+    t('İş emri durumu güncellenir', gl.emirGuncelle(e1.dosya, { durum: 'inceleme', dal: 'is-emri/ada-x' }).durum === 'inceleme' && gl.emirler().some(x => x.id === 'test1' && x.dal === 'is-emri/ada-x'));
   } catch (e) { t('Ana süreç testleri', false, e.stack); }
   try { fs.unlinkSync(LOC()); } catch (e) {}
   KONUM_OK = bkK; DWARN = bkW;
@@ -348,6 +358,16 @@ ipcMain.handle('abonelik:status', wrap(() => abonelik.status()));
 ipcMain.handle('abonelik:ayar', wrap(a => abonelik.setAyar(a)));
 ipcMain.handle('abonelik:test', wrap(() => SMOKE ? abonelik.status() : abonelik.test()));
 ipcMain.handle('abonelik:calistir', wrap(o => { if (SMOKE) throw new Error('Testte abonelik çalıştırılmaz'); return abonelik.calistir(o); }));
+// İş emirleri (0.7.14): onaylı iş isteği → Belgeler\Orin\Giden; tam otomatik kipte Claude Code ayrı git dalında yapar (main'e dokunmaz)
+const gelistir = require('./gelistir');
+gelistir.init(SMOKE ? DATA() : app.getPath('documents'), abonelik, kay => [dataDir(), DATA(), path.join(app.getPath('documents'), 'Orin', 'Veriler'), kay && path.join(kay, 'renderer', 'js', 'kisisel.js')].filter(Boolean));
+ipcMain.handle('isemri:yaz', wrap(o => gelistir.emirYaz(o)));
+ipcMain.handle('isemri:liste', wrap(() => gelistir.emirler()));
+ipcMain.handle('isemri:durum', wrap(() => gelistir.durum()));
+ipcMain.handle('isemri:gelistir', wrap(o => { if (SMOKE) throw new Error('Testte geliştirme çalıştırılmaz'); return gelistir.gelistir(o); }));
+// Jarvis (0.7.14): Jarvis projesinin giden/ klasöründeki prompt taslakları (yalnız okuma; şirkete yalnız Çağlar'ın düğmesiyle gider)
+const JARVIS = () => path.join(app.getPath('documents'), 'Cloude Dosyaları', 'Jarvis', 'giden');
+ipcMain.handle('jarvis:taslaklar', wrap(() => { if (SMOKE) return []; const d = JARVIS(); if (!fs.existsSync(d)) return []; return fs.readdirSync(d).filter(f => /\.md$/i.test(f)).map(f => { const p = path.join(d, f), st = fs.statSync(p); return { ad: f, ts: st.mtimeMs, metin: st.size < 60000 ? fs.readFileSync(p, 'utf8') : '' }; }).sort((a, b) => b.ts - a.ts).slice(0, 15); }));
 ipcMain.handle('sheets:config', wrap(p => sheets.setConfig(p)));
 ipcMain.handle('sheets:login', wrap(() => sheets.login()));
 ipcMain.handle('sheets:cancel', wrap(() => sheets.cancel()));

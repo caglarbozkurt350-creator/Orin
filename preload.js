@@ -44,6 +44,13 @@ contextBridge.exposeInMainWorld('api', {
     test: () => ipcRenderer.invoke('abonelik:test'),
     calistir: o => ipcRenderer.invoke('abonelik:calistir', o)
   },
+  isEmri: {
+    yaz: o => ipcRenderer.invoke('isemri:yaz', o),
+    liste: () => ipcRenderer.invoke('isemri:liste'),
+    durum: () => ipcRenderer.invoke('isemri:durum'),
+    gelistir: o => ipcRenderer.invoke('isemri:gelistir', o)
+  },
+  jarvis: { taslaklar: () => ipcRenderer.invoke('jarvis:taslaklar') },
   bulut: {
     status: () => ipcRenderer.invoke('bulut:status'),
     config: c => ipcRenderer.invoke('bulut:config', c),

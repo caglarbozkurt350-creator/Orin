@@ -80,14 +80,16 @@ return '<div class="kp5"><div><small><i class="ti ti-list-check"></i> Açık gö
 // ---------- Sohbet ----------
 function tmMsgs(c){var a=tmChat(c.id),on=tmOnline(),h='';
 if(!a.length)h+=tmBot(c,'Merhaba, ben '+c.ad+'. '+c.gorev+' işlerine bakıyorum.'+(c.id=='echo'?' Kayıtlarına bakıp hemen özet çıkarabilirim.':(typeof zekaHazir=='function'&&zekaHazir()?' Bana yazabilirsin; birkaç saniyede cevaplarım.':' Yapay zekâ bağlantısı kurulunca sohbet edebileceğiz; şimdiden mesaj ya da not bırakabilirsin.')),null,c.id=='echo'?['Bu haftanın raporu','Eksik günler','Bu ayın özeti']:null);
-a.forEach(function(m){if(m.r=='ben'){if(m.tur=='not')h+='<div class="nt"><i class="ti ti-note"></i><div style="flex:1">'+esc(m.t)+'<div class="nm">'+tmTime(m.ts)+' · not olarak kaydedildi</div></div><span class="qb ok"><i class="ti ti-check"></i> '+(m.ilt?'İletildi':'Kaydedildi')+'</span></div>';
+a.forEach(function(m){var h0=h.length;if(m.r=='ben'){if(m.tur=='not')h+='<div class="nt"><i class="ti ti-note"></i><div style="flex:1">'+esc(m.t)+'<div class="nm">'+tmTime(m.ts)+' · not olarak kaydedildi</div></div><span class="qb ok"><i class="ti ti-check"></i> '+(m.ilt?'İletildi':'Kaydedildi')+'</span></div>';
 else h+='<div class="mr"><div class="bme">'+esc(m.t)+'<small>'+(m.tur=='ses'?'<i class="ti ti-microphone"></i> sesli · ':'')+tmTime(m.ts)+(m.bek?' · cevap bekliyor':'')+'</small></div></div>'}
 else if(m.r=='sys')h+='<div class="inf"><i class="ti ti-info-circle"></i><div>'+esc(m.t)+'<div class="nm">'+tmTime(m.ts)+'</div></div></div>';
-else h+=tmBot(c,m.t,m.ts,m.qr,m.zn)});
+else h+=tmBot(c,m.t,m.ts,m.qr,m.zn);h=h.slice(0,h0)+tmSilSar(c.id,m,h.slice(h0))});
 var bk=a.filter(function(m){return m.bek}).length;
 if(!on){var p=tmPending(c.id);h+='<div class="ofl"><i class="ti ti-wifi-off"></i><div><b>Çevrimdışısın.</b> Yazdıkların not olarak saklanır, bağlantı gelince '+esc(c.ad)+'’ya iletilir.</div></div>'+p.map(function(n){return '<div class="nt"><i class="ti ti-note"></i><div style="flex:1">'+esc(n.metin)+'<div class="nm">'+tmTime(n.ts)+' · not olarak kaydedildi</div></div><span class="qb"><i class="ti ti-clock"></i> Bekliyor</span></div>'}).join('')}
 else if(bk)h+='<div class="inf"><i class="ti ti-plug-connected-x"></i><div>Yapay zekâ bağlı değil · '+bk+' mesaj cevap bekliyor. Bağlantı kurulunca '+esc(c.ad)+' cevaplayacak.</div></div>';
 return '<div class="cv" id="tmcv">'+h+'</div>'}
+// 0.7.14: mesaj silme düğmesi için kanca (is-istegi.js doldurur)
+function tmSilSar(id,m,x){return x}
 function tmBot(c,t,ts,qr,zn){return '<div class="mr l">'+av(c,32)+'<div style="flex:1;min-width:0"><div class="who">'+esc(c.ad)+(ts?' <span>· '+tmTime(ts)+'</span>':'')+'</div><div class="bo">'+tmFmt(t)+'</div>'+(zn?tmZincir(zn):'')+(qr&&qr.length?'<div class="qr">'+qr.map(function(q){return '<span onclick="tmQuick(\''+jq(c.id)+'\',\''+jq(q)+'\')">'+esc(q)+'</span>'}).join('')+'</div>':'')+'</div></div>'}
 function tmFmt(t){return esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')}
 function tmZincir(z){return '<div class="tr">'+z.map(function(n,i){var c=tmByName(n);return (i?'<i class="ti ti-chevron-right"></i>':'')+'<span>'+(c?av(c,18,false):'')+esc(n)+'</span>'}).join('')+'<em>✓</em></div>'}

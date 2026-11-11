@@ -46,6 +46,8 @@ export function uygula(o: Ozet, e: Olay) {
     const g = E.gel.find((x) => x.id === v.id); if (!g || g.asama !== v.asama) return;
     if (v.asama === 'ik') { g.ik = { ts: e.ts, ok: v.ok ? 1 : 0 }; g.asama = v.ok ? 'ceo' : 'red'; }
     else { g.ceo = { ts: e.ts, ok: v.ok ? 1 : 0 }; g.asama = v.ok ? 'tamam' : 'red'; if (v.ok) gelisimUygula(o, g, e.ts); }
+  } else if (e.tur === 'mesaj_sil') { const a = E.sohbet[v.kim]; if (a) { const vardi = a.some((m) => m.id === v.id); E.sohbet[v.kim] = a.filter((m) => !(m.id === v.id || (!vardi && v.ts && m.ts === v.ts))); } }
+  else if (e.tur === 'sohbet_temizle') { const a = E.sohbet[v.kim]; if (a) E.sohbet[v.kim] = a.filter((m) => m.ts > e.ts);
   } else if (e.tur === 'kayit') {
     const d = (o.gun[v.k] = o.gun[v.k] || { L: null, T: 0, OT: 0, e: [] });
     d.e.push([v.kod, v.is, v.dk]); d.T += v.dk;
@@ -70,9 +72,9 @@ export function useGorunum() { const d = useDurum((x) => x); return useMemo(() =
 // ---------- Çalışanlar ----------
 export function calisanlar(o: Ozet): Calisan[] {
   const m = o.ekip.m, r: Calisan[] = [], ids: Record<string, 1> = {};
-  (C0.calisanlar as Calisan[]).forEach((c) => { ids[c.id] = 1; r.push({ ...c, ...(m[c.id] as any) }); });
+  (C0.calisanlar as Calisan[]).forEach((c) => { ids[c.id] = 1; const u: any = { ...(m[c.id] as any) }; delete u.sil; r.push({ ...c, ...u }); });
   Object.keys(m).forEach((id) => { const x = m[id]; if (!ids[id] && x.yeni && !x.sil) r.push({ id, ad: x.ad || id, grup: x.grup || 'ekip', gorev: x.gorev || '', bagli: x.bagli || 'Orla', renk: x.renk || '#8f9bb3', aciklama: x.aciklama, hikaye: x.hikaye, yeni: 1 }); });
-  return r.filter((c) => !(m[c.id] && m[c.id].sil));
+  return r.filter((c) => ids[c.id] || !(m[c.id] && m[c.id].sil)); // 0.7.14: demirbaş 15 çalışan silinemez
 }
 export function beceriler(id: string, o: Ozet): Beceri[] { const m = o.ekip.m[id]; return (m && m.bec) || (BEC0[id] || []).map((x) => ({ ad: x[0], sv: x[1], not: x[2] })); }
 export function hafiza(id: string, o: Ozet): Hafiza[] { const m = o.ekip.m[id]; return (m && m.haf) || []; }

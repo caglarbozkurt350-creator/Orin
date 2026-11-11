@@ -143,3 +143,20 @@ html.motion .gc,html.motion .kp5>div,html.motion .ti3,html.motion .sk{background
 .snc .ha{background:rgba(248,81,73,.12);border:1px solid rgba(248,81,73,.45);color:#ffa4a0}
 html.light .snc .ev{background:#e9f7ee;border-color:#9fd8b0;color:#116329}
 html.light .snc .ha{background:#fdeceb;border-color:#f3b0ab;color:#a40e26}
+/* 0.7.14: sohbet silme, iş istekleri, hiyerarşi, Jarvis */
+.msil{position:relative}.msil .mdel{position:absolute;top:2px;right:2px;display:none;cursor:pointer;color:#8e8e95;background:#232326;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:2px 6px;font-size:13px}
+.msil:hover .mdel{display:block}.msil .mdel:hover{color:#ffa4a0;border-color:rgba(248,81,73,.45)}
+.sct{display:flex;justify-content:flex-end;margin:-4px 0 6px}.sct span{cursor:pointer;font-size:12px;color:#8e8e95;padding:3px 8px;border-radius:8px}.sct span:hover{color:#fff;background:rgba(255,255,255,.06)}
+.isr{align-items:flex-start}.ism{margin:6px 0 2px 18px;padding:0;font-size:12.5px;color:#c4c4ca}.ism li{margin:2px 0}
+.isonc{cursor:pointer}.isonc.yuksek{color:#ffb0a0;border-color:#e0705b}.isonc.orta{color:#ffc35b;border-color:rgba(255,195,91,.45)}.isonc.dusuk{color:#8fe0b3;border-color:rgba(79,209,139,.45)}
+.hyw{margin-top:16px;overflow:auto;padding-bottom:10px}.hyt ul{list-style:none;margin:0;padding:0 0 0 30px;position:relative}.hyt>ul{padding-left:0}
+.hyt li{position:relative;padding:6px 0 0 0}.hyt ul ul>li::before{content:'';position:absolute;left:-18px;top:0;bottom:0;border-left:1px dashed rgba(255,255,255,.18)}
+.hyt ul ul>li::after{content:'';position:absolute;left:-18px;top:28px;width:16px;border-top:1px dashed rgba(255,255,255,.18)}.hyt ul ul>li:last-child::before{bottom:auto;height:28px}
+.hyt ul.yap{display:flex;flex-wrap:wrap;gap:4px 8px}.hyt ul.yap>li{padding-top:6px}
+.hyr{display:flex;align-items:center;gap:0;flex-wrap:wrap}.hyj-cizgi{width:36px;border-top:2px dashed #7c5cff88;margin:0 4px}
+.hyk{display:inline-flex;align-items:center;gap:10px;min-width:170px;max-width:240px;padding:8px 12px;border-radius:12px;background:#232326;border:1px solid rgba(255,255,255,.09);cursor:grab;user-select:none;transition:transform .12s,border-color .12s,box-shadow .12s}
+.hyk:hover{border-color:rgba(255,255,255,.22);transform:translateY(-1px)}.hyk b{display:block;color:#fff;font-weight:600;font-size:13.5px}.hyk small{display:block;color:#8e8e95;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hyk.kok{cursor:default;background:linear-gradient(160deg,#3a3320,#232326);border-color:rgba(246,210,138,.35)}.hyk.hyj{cursor:pointer;border:1px dashed #7c5cffaa;background:#1f1a2e}
+.hyk.sur{opacity:.45}.hyk.hov{border-color:#5b8cff;box-shadow:0 0 0 2px #5b8cff55}.hyk.mini{min-width:0;padding:3px 10px}
+.hya{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:#3a3320;color:#f6d28a;font-size:18px;flex:none}
+html.light .hyk{background:#fff;border-color:#dcdce2}html.light .hyk b{color:#222}html.light .msil .mdel{background:#fff}

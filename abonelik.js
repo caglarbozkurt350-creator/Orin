@@ -13,6 +13,12 @@ const MODELLER = ['sonnet', 'haiku', 'opus'];
 const ARACLAR = 'Read,Glob,Grep,WebSearch,WebFetch';
 // İnceleme kipi (Ada'nın program incelemesi): kaynak klasörde yalnız okuma + tek izinli komut (smoke testi, geçici klasörde çalışır)
 const INCELEME_ARAC = 'Read,Glob,Grep,Bash', INCELEME_IZIN = ['Read', 'Glob', 'Grep', 'Bash(npx electron . --smoke)'];
+// Geliştirme kipi (0.7.14, iş emri): ayrı git dalındaki çalışma kopyasında okuma + düzenleme. Düzenleme yalnız çalışma klasöründe
+// (--permission-mode acceptEdits), gerçek veri ve kişisel dosya yasak (koru), git'te yalnız okuma; commit'i Orvane kendisi yapar, push/merge/yayın yok.
+const GELISTIR_ARAC = 'Read,Glob,Grep,Edit,Write,Bash', GELISTIR_IZIN = ['Read', 'Glob', 'Grep', 'Bash(npx electron . --smoke)', 'Bash(git status:*)', 'Bash(git diff:*)', 'Bash(git log:*)'];
+const GELISTIR_YASAK = ['Bash(git push:*)', 'Bash(git merge:*)', 'Bash(git checkout:*)', 'Bash(git reset:*)', 'Bash(git commit:*)', 'Bash(git branch:*)', 'Bash(git worktree:*)', 'Bash(npm publish:*)', 'Bash(npx eas-cli:*)', 'Bash(eas:*)', 'Bash(gh:*)', 'Bash(curl:*)', 'WebFetch', 'WebSearch'];
+function kuralYolu(p) { const s = String(p || '').replace(/\\/g, '/').replace(/^([A-Za-z]):/, (m, d) => '/' + d.toLowerCase()); return '/' + s.replace(/^\/+/, ''); } // C:\a\b → //c/a/b
+function koruKurallari(koru) { const r = []; (koru || []).filter(Boolean).forEach(p => { const k = kuralYolu(p), dosya = /\.\w+$/.test(p); ['Read', 'Edit', 'Write'].forEach(t => r.push(t + '(/' + k + (dosya ? '' : '/**') + ')')); }); return r; }
 function kaynakAday() { const c = cfg(); return [c.kaynak, DOCS && path.join(DOCS, 'Cloude Dosyaları', 'is-raporu')].filter(Boolean); }
 function kaynakGecerli(d) { try { return !!d && JSON.parse(fs.readFileSync(path.join(d, 'package.json'), 'utf8')).name === 'orin' && fs.existsSync(path.join(d, 'main.js')); } catch (e) { return false; } }
 function kaynak() { return kaynakAday().find(kaynakGecerli) || null; }
@@ -42,6 +48,9 @@ const ENV_TUT = /^(SystemRoot|SystemDrive|windir|PATH|PATHEXT|USERPROFILE|HOMEDR
 function temizEnv() { const o = {}; for (const k of Object.keys(process.env)) if (ENV_TUT.test(k)) o[k] = process.env[k]; return o; }
 function argsOf(o, sistemDosyasi) {
   const c = cfg();
+  if (o.mod === 'gelistir') return ['-p', '--output-format', 'json', '--model', MODELLER.includes(o.model) ? o.model : c.model, '--max-turns', String(Math.max(1, Math.min(60, Number(o.maxTur) || 40))),
+    '--strict-mcp-config', '--disable-slash-commands', '--setting-sources', '', '--no-session-persistence', '--permission-mode', 'acceptEdits', '--tools', GELISTIR_ARAC,
+    '--allowedTools', ...GELISTIR_IZIN, '--disallowedTools', ...GELISTIR_YASAK, ...koruKurallari(o.koru), '--append-system-prompt-file', sistemDosyasi];
   return ['-p', '--output-format', 'json', '--model', MODELLER.includes(o.model) ? o.model : c.model, '--max-turns', String(Math.max(1, Math.min(40, Number(o.maxTur) || c.maxTur))),
     '--strict-mcp-config', '--disable-slash-commands', '--setting-sources', '', '--no-session-persistence', '--tools', o.mod === 'inceleme' ? INCELEME_ARAC : o.araclar != null ? o.araclar : ARACLAR,
     ...(o.mod === 'inceleme' ? ['--allowedTools', ...INCELEME_IZIN] : []), o.sistemTam ? '--system-prompt-file' : '--append-system-prompt-file', sistemDosyasi]; // sohbet: Claude Code'un kendi istemi yerine yalnız çalışanın istemi (≈700 token)
@@ -65,9 +74,10 @@ function calistir(o) {
   if (!o.test && !sohbet && c.sayi >= c.gunluk) return Promise.reject(Object.assign(new Error('Bugünkü abonelik görevi sınırı doldu (' + c.gunluk + ')'), { kod: 'gunluk' }));
   if (!o.test && sohbet && (c.sohbet || 0) >= c.gunlukSohbet) return Promise.reject(Object.assign(new Error('Bugünkü abonelik sohbet sınırı doldu (' + c.gunlukSohbet + ')'), { kod: 'gunluk' }));
   const kim = String(o.kim || 'genel').replace(/[^\w-]/g, '');
-  const inc = o.mod === 'inceleme', kay = inc ? kaynak() : null;
+  const inc = o.mod === 'inceleme', kay = inc ? kaynak() : null, gel = o.mod === 'gelistir';
   if (inc && !kay) return Promise.reject(new Error('Orvane kaynak klasörü bulunamadı (Ayarlar › Yapay zekâ › Claude aboneliği › Kaynak klasörü)'));
-  const cwd = inc ? kay : path.join(DOCS || os.homedir(), 'Orin', 'Calisma', kim); fs.mkdirSync(cwd, { recursive: true });
+  if (gel && !(o.cwd && fs.existsSync(o.cwd))) return Promise.reject(new Error('Geliştirme çalışma klasörü yok'));
+  const cwd = gel ? o.cwd : inc ? kay : path.join(DOCS || os.homedir(), 'Orin', 'Calisma', kim); fs.mkdirSync(cwd, { recursive: true });
   const sf = path.join(os.tmpdir(), 'orvane-sistem-' + process.pid + '-' + Date.now() + '.txt'); fs.writeFileSync(sf, String(o.sistem || ''), 'utf8');
   const sure = Math.max(30000, Math.min(60 * 60000, Number(o.zamanAsimiMs) || c.sureDk * 60000));
   return new Promise((res, rej) => {
@@ -116,4 +126,4 @@ async function test() {
   catch (e) { c.test = { ok: false, ts: Date.now(), hata: e.message, kod: e.kod || null }; }
   kaydet(); return status();
 }
-module.exports = { kaynakGecerli, raporYaz, init, status, setAyar, test, calistir, bul, temizEnv, argsOf, sonucOku, MODELLER };
+module.exports = { kaynak, koruKurallari, kuralYolu, kaynakGecerli, raporYaz, init, status, setAyar, test, calistir, bul, temizEnv, argsOf, sonucOku, MODELLER };

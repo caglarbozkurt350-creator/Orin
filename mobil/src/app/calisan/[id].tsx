@@ -89,6 +89,9 @@ function Sohbet({ c }: { c: Calisan }) {
   const [t, setT] = useState(''), [mod, setMod] = useState<'mesaj' | 'not'>('mesaj'), sc = useRef<any>(null);
   const a = o.ekip.sohbet[c.id] || [], bek = new Set(olaylar.filter((e) => !e.gitti).map((e) => e.id));
   const cevapsiz = a.filter((m) => m.bek).length;
+  // 0.7.14: mesaja uzun bas → sil · üstte "Sohbeti temizle" (onaylı; masaüstüne olay olarak gider, özetle geri yansır)
+  const sil = (m: { id: string; ts: number }) => Alert.alert('Mesaj silinsin mi?', 'Bilgisayardaki Orvane’den de kalkar.', [{ text: 'Vazgeç', style: 'cancel' }, { text: 'Sil', style: 'destructive', onPress: () => { olayEkle('mesaj_sil', { kim: c.id, id: m.id, ts: m.ts }); esitleSonra(); } }]);
+  const temizle = () => Alert.alert(c.ad + ' ile sohbet temizlensin mi?', 'Tüm mesajlar bilgisayardan da silinir. Görevler, beceriler ve hafıza kalır.', [{ text: 'Vazgeç', style: 'cancel' }, { text: 'Temizle', style: 'destructive', onPress: () => { olayEkle('sohbet_temizle', { kim: c.id }); esitleSonra(); } }]);
   // Claude sohbeti gibi: klavye açılınca yazı kutusu klavyenin hemen üstünde, son mesaj görünür
   useEffect(() => { const z = setTimeout(() => sc.current?.scrollToEnd({ animated: true }), 60); return () => clearTimeout(z); }, [kl.ortu]);
   const gonder = (metin?: string) => {
@@ -101,17 +104,18 @@ function Sohbet({ c }: { c: Calisan }) {
   return (
     <View ref={kl.ref} style={{ flex: 1 }}>
       <ScrollView ref={sc} onContentSizeChange={() => sc.current?.scrollToEnd({ animated: false })} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 8, gap: 14 }}>
+        {!!a.length && <Pressable onPress={temizle} accessibilityRole="button" style={{ alignSelf: 'flex-end', paddingHorizontal: 10, paddingVertical: 4 }}><Text style={{ color: R.soluk, fontSize: 12.5 }}>Sohbeti temizle</Text></Pressable>}
         {!a.length && <Bot c={c} t={'Merhaba, ben ' + c.ad + '. ' + c.gorev + ' işlerine bakıyorum.' + (c.id === 'echo' ? ' Kayıtlarına bakıp hemen özet çıkarabilirim.' : ' Yapay zekâ bağlantısı kurulunca sohbet edebileceğiz; şimdiden mesaj ya da not bırakabilirsin.')} qr={c.id === 'echo' ? ['Bu haftanın raporu', 'Eksik günler', 'Bu ayın özeti'] : []} gonder={gonder} />}
         {a.map((m) => m.r === 'sys' ? (
-          <View key={m.id} style={{ flexDirection: 'row', gap: 10, backgroundColor: 'rgba(47,123,245,0.08)', borderWidth: 1, borderColor: 'rgba(47,123,245,0.3)', borderRadius: 14, padding: 11 }}><Ikon ad="simsek" boy={18} renk={R.bilgi} /><Text style={{ flex: 1, color: R.bilgi, fontSize: 13, lineHeight: 19 }}>{m.t}</Text></View>
-        ) : m.r === 'o' ? <Bot key={m.id} c={c} t={m.t} ts={m.ts} qr={m.qr} gonder={gonder} />
+          <Pressable key={m.id} onLongPress={() => sil(m)} style={{ flexDirection: 'row', gap: 10, backgroundColor: 'rgba(47,123,245,0.08)', borderWidth: 1, borderColor: 'rgba(47,123,245,0.3)', borderRadius: 14, padding: 11 }}><Ikon ad="simsek" boy={18} renk={R.bilgi} /><Text style={{ flex: 1, color: R.bilgi, fontSize: 13, lineHeight: 19 }}>{m.t}</Text></Pressable>
+        ) : m.r === 'o' ? <Bot key={m.id} c={c} t={m.t} ts={m.ts} qr={m.qr} gonder={gonder} sil={() => sil(m)} />
           : m.tur === 'not' ? (
-            <View key={m.id} style={[s.kart, { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12 }]}><Ikon ad="not" boy={18} renk={R.notTuruncu} /><View style={{ flex: 1 }}><Text style={{ color: '#e4e4e8', fontSize: 14 }}>{m.t}</Text><Text style={{ color: R.solukk, fontSize: 11.5, marginTop: 2 }}>{saat(m.ts)} · not</Text></View><Rozet yazi={bek.has(m.id) ? 'Bekliyor' : 'Kaydedildi'} renk={bek.has(m.id) ? R.notTuruncu : R.yesil} /></View>
+            <Pressable key={m.id} onLongPress={() => sil(m)} style={[s.kart, { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12 }]}><Ikon ad="not" boy={18} renk={R.notTuruncu} /><View style={{ flex: 1 }}><Text style={{ color: '#e4e4e8', fontSize: 14 }}>{m.t}</Text><Text style={{ color: R.solukk, fontSize: 11.5, marginTop: 2 }}>{saat(m.ts)} · not</Text></View><Rozet yazi={bek.has(m.id) ? 'Bekliyor' : 'Kaydedildi'} renk={bek.has(m.id) ? R.notTuruncu : R.yesil} /></Pressable>
           ) : (
-            <View key={m.id} style={{ alignItems: 'flex-end' }}><View style={{ backgroundColor: '#2f2f34', borderRadius: 20, borderBottomRightRadius: 6, paddingHorizontal: 15, paddingVertical: 10, maxWidth: '80%' }}>
+            <Pressable key={m.id} onLongPress={() => sil(m)} style={{ alignItems: 'flex-end' }}><View style={{ backgroundColor: '#2f2f34', borderRadius: 20, borderBottomRightRadius: 6, paddingHorizontal: 15, paddingVertical: 10, maxWidth: '80%' }}>
               <Text style={{ color: R.yazi, fontSize: 15, lineHeight: 21 }}>{m.t}</Text>
               <Text style={{ color: '#8e8e96', fontSize: 11, textAlign: 'right', marginTop: 3 }}>{m.tur === 'ses' ? 'sesli · ' : ''}{saat(m.ts)}{m.kaynak === 'telefon' ? ' · telefondan' : ''}{bek.has(m.id) ? ' · gönderilecek' : m.bek ? ' · cevap bekliyor' : ''}</Text>
-            </View></View>
+            </View></Pressable>
           ))}
         {senk.hata ? (
           <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center', backgroundColor: 'rgba(224,149,47,0.1)', borderWidth: 1, borderColor: 'rgba(224,149,47,0.35)', borderRadius: 14, padding: 11 }}><Ikon ad="wifi" boy={20} renk="#f1c88a" /><Text style={{ flex: 1, color: '#f1c88a', fontSize: 13.5 }}><Text style={{ fontWeight: '700' }}>Bağlantı yok.</Text> Yazdıkların saklanır, bağlantı gelince {c.ad}’ya iletilir.</Text></View>
@@ -142,9 +146,9 @@ function Sohbet({ c }: { c: Calisan }) {
   );
 }
 
-function Bot({ c, t, ts, qr, gonder }: { c: Calisan; t: string; ts?: number; qr?: string[]; gonder: (x: string) => void }) {
+function Bot({ c, t, ts, qr, gonder, sil }: { c: Calisan; t: string; ts?: number; qr?: string[]; gonder: (x: string) => void; sil?: () => void }) {
   return (
-    <View style={{ flexDirection: 'row', gap: 10 }}>
+    <Pressable onLongPress={sil} disabled={!sil} style={{ flexDirection: 'row', gap: 10 }}>
       <Foto c={c} boy={30} halka={false} />
       <View style={{ flex: 1, minWidth: 0 }}>
         <Text style={{ color: '#fff', fontSize: 12.5, fontWeight: '600', marginBottom: 4 }}>{c.ad}{ts ? <Text style={{ color: R.solukk, fontWeight: '400' }}> · {saat(ts)}</Text> : null}</Text>
@@ -153,6 +157,6 @@ function Bot({ c, t, ts, qr, gonder }: { c: Calisan; t: string; ts?: number; qr?
           <Pressable key={q} onPress={() => gonder(q)} accessibilityRole="button" style={{ paddingHorizontal: 13, paddingVertical: 8, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)' }}><Text style={{ color: '#d4d4da', fontSize: 13 }}>{q}</Text></Pressable>
         ))}</View>}
       </View>
-    </View>
+    </Pressable>
   );
 }

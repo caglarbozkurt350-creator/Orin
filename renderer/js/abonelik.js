@@ -105,10 +105,10 @@ ABN.st.sohbetBugun=60;t('Sohbet sınırı dolunca abonelik kullanılmaz',!abnSoh
 
 // Gelen kutusu (0.7.5): Claude Code'un bıraktığı mesajlar ve gelişim talepleri çalışanlara iletilir.
 // {tur:'mesaj', kim, metin} → çalışanın sohbetine · {tur:'gelisim', kim, gtur:'hafiza'|'beceri', ad, metin} → Nika → Orin onayı
-var GELEN_MESGUL=false;
+var GELEN_MESGUL=false,GELEN_TUR={}; // 0.7.14: ek türler (talimat, gorev, is_sonuc) GELEN_TUR[tur]=function(x){...} ile eklenir
 function gelenIsle(){if(!API||!API.gelen||GELEN_MESGUL)return Promise.resolve(0);GELEN_MESGUL=true;return API.gelen().then(function(r){if(!r.ok||!r.v.length)return 0;var n=0,ozet={},dosyalar=[],hata=r.v.filter(function(x){return x&&x.tur=='hata'});
 r.v.forEach(function(x){if(x&&x._dosya&&dosyalar.indexOf(x._dosya)<0)dosyalar.push(x._dosya)});if(hata.length){ABN.gelenHata=hata;toast('Gelen kutusunda okunamayan dosya: '+hata.map(function(x){return x.dosya}).join(', ')+' (Gelen\\Hatalı)')}
-r.v.forEach(function(x){if(!x||!tm(x.kim))return;if(x.tur=='mesaj'){var a=abnOgrenAyikla(x.metin);tmPush(x.kim,{r:'o',t:a.metin,model:x.model||'Claude Code'});abnOgrenEkle({kim:x.kim},a.liste);n++}
+r.v.forEach(function(x){if(!x||!tm(x.kim))return;if(GELEN_TUR[x.tur]){try{if(GELEN_TUR[x.tur](x)!==false)n++}catch(e){ZK.hata='Gelen kutusu: '+e.message}}else if(x.tur=='mesaj'){var a=abnOgrenAyikla(x.metin);tmPush(x.kim,{r:'o',t:a.metin,model:x.model||'Claude Code'});abnOgrenEkle({kim:x.kim},a.liste);n++}
 else if(x.tur=='gelisim'&&(x.gtur=='hafiza'||x.gtur=='beceri')){tmGelNew(x.kim,x.gtur,String(x.ad||'').slice(0,60),String(x.metin||'').slice(0,400),'claude');ozet[x.kim]=(ozet[x.kim]||0)+1;n++}});
 Object.keys(ozet).forEach(function(k){tmPush(k,{r:'sys',t:'Claude Code '+ozet[k]+' öğrenme maddesi gönderdi; Nika’nın ve Orin’in onayına gitti.'})});
 if(n){save();if(area=='team')render();toast('Gelen kutusu: '+n+' öğe çalışanlara iletildi')}return (dosyalar.length&&API.gelenTamam?API.gelenTamam(dosyalar):Promise.resolve()).then(function(){return n})}).then(function(n){GELEN_MESGUL=false;return n},function(e){GELEN_MESGUL=false;return 0})}

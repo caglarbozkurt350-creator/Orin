@@ -38,6 +38,8 @@ contextBridge.exposeInMainWorld('api', {
   fikirler: () => ipcRenderer.invoke('fikir:liste'),
   gelen: () => ipcRenderer.invoke('gelen:al'),
   gelenTamam: d => ipcRenderer.invoke('gelen:tamam', d),
+  ofisYaz: v => ipcRenderer.invoke('ofis:yaz', v),
+  ofisOku: () => ipcRenderer.invoke('ofis:oku'),
   abonelik: {
     status: () => ipcRenderer.invoke('abonelik:status'),
     ayar: a => ipcRenderer.invoke('abonelik:ayar', a),

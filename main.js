@@ -382,6 +382,10 @@ ipcMain.handle('gelen:tamam', wrap(a => {
   const tasi = (liste, klasor) => { const hedef = path.join(d, klasor); fs.mkdirSync(hedef, { recursive: true }); [...new Set(liste)].forEach(f => { if (!/^[^\\/:*?"<>|]+\.json$/i.test(f)) return; try { fs.renameSync(path.join(d, f), path.join(hedef, f)); n++; } catch (e) {} }); };
   tasi((o.tamam || []).filter(f => !hatali.has(f)), 'İşlenen'); if (hatali.size) tasi([...hatali], 'Hatalı'); return n;
 }));
+// Ofis oyunu (Unity) özeti: oyun YALNIZ bu dosyayı okur (durum.json'u değil); atomik yazım
+const OFIS_OZET = () => path.join(SMOKE ? DATA() : app.getPath('documents'), 'Orin', 'Veriler', 'ofis-ozet.json');
+ipcMain.handle('ofis:yaz', wrap(v => { if (!v || typeof v !== 'object') throw new Error('Geçersiz özet'); const f = OFIS_OZET(); writeJSON(f, v); return f; }));
+ipcMain.handle('ofis:oku', wrap(() => readJSON(OFIS_OZET(), null)));
 // Ada'nın soracağı geliştirme fikirleri: GitHub main'deki güncel liste, yoksa uygulamayla gelen
 ipcMain.handle('fikir:liste', wrap(async () => { if (!SMOKE) { try { const r = await fetch('https://raw.githubusercontent.com/caglarbozkurt350-creator/Orin/main/fikirler.json?t=' + Date.now(), { cache: 'no-store', signal: AbortSignal.timeout(6000) }); if (r.ok) { const j = await r.json(); if (Array.isArray(j.fikirler)) return { kaynak: 'github', fikirler: j.fikirler }; } } catch (e) {} } return { kaynak: 'yerel', fikirler: readJSON(path.join(__dirname, 'fikirler.json'), { fikirler: [] }).fikirler }; }));
 // Claude aboneliği (Claude Code CLI, headless): ağır işler abonelikte

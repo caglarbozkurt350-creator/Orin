@@ -25,7 +25,7 @@ function zekaGecmis(id){var a=tmChat(id).slice(-24),m=[];a.forEach(function(x){v
 while(m.length&&m[0].role!='user')m.shift();return m}
 
 // ---------- Cevap ----------
-function zekaCevapla(id){var c=tm(id);if(!c||ZK.yaz[id]||!zekaHazir()||zekaPayDoldu(id))return Promise.resolve();var msgs=zekaGecmis(id);if(!msgs.length||msgs[msgs.length-1].role!='user')return Promise.resolve();
+function zekaCevapla(id){if(komutMu(id))return Promise.resolve();var c=tm(id);if(!c||ZK.yaz[id]||!zekaHazir()||zekaPayDoldu(id))return Promise.resolve();var msgs=zekaGecmis(id);if(!msgs.length||msgs[msgs.length-1].role!='user')return Promise.resolve();
 ZK.yaz[id]=1;TMSCR=true;if(area=='team')render();
 return call(API.zeka.sor({kim:id,model:tmModel(c),payUsd:zekaPayUsd(id),system:zekaSistem(c)+'\n\n'+zekaBaglam(c),messages:msgs})).then(function(r){
 tmChat(id).forEach(function(m){if(m.bek)delete m.bek});tmPush(id,{r:'o',t:r.metin,model:r.model,usd:r.usd});

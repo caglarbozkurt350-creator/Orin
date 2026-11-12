@@ -98,3 +98,5 @@ t('Genel bakışta talep, Nika’nın gerekçesi ve Onayla / Reddet',/Finans Uzm
 tmGelCeo('gceo1',1);t('Doğrudan onaylanır ve uygulanır',g.asama=='tamam'&&tmMem('otto').some(function(x){return /tüm finans işlerinden/.test(x.metin)}));
 T.gel=bk;save();nav('home','gun',TODAY);return R};
 var __at28=window.__asyncTest;window.__asyncTest=function(){return __at28().then(function(a){return a.concat(window.__skCeoTest?window.__skCeoTest():[])})};
+// 0.7.19: gizli klasörler
+var __at29=window.__asyncTest;window.__asyncTest=function(){return __at29().then(function(a){return (window.__gizliTest?window.__gizliTest():Promise.resolve([])).then(function(b){return a.concat(b)})})};

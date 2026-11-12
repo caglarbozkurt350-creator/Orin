@@ -209,3 +209,26 @@ APF.st={var:true,ipucu:'…abcd',calisanlar:['sage'],test:{ok:true,ts:Date.now()
 t('Anahtar kayıtlıyken yalnız son 4 hane görünür, bağlantı durumu',/Kayıtlı …abcd/.test(h)&&!/id="apfk"/.test(h)&&/Bağlı/.test(h));
 t('Apify yalnız seçili çalışanın kuralında',/mcp__apify/.test(zekaSistem(tm('sage')))&&!/mcp__apify/.test(zekaSistem(tm('echo'))));
 APF.st=bk;nav('home','gun',TODAY);return R};
+
+// ---------- Gizli klasörler (Çağlar'ın kararı, 0.7.19) ----------
+// Belgelerim\Finans → yalnız Finans Uzmanı (Otto) · Belgelerim\Sağlık → yalnız Sağlıklı Yaşam Koçu (Iris)
+// Okuma yalnız ana süreçte, sahibin görevinde ve internetsiz; sonuç gizli işaretlenir: telefona, toplantıya, Nika onay zincirine gitmez
+var GZK={st:null,min:{otto:2,iris:3},yukle:function(){return API&&API.gizli?API.gizli.klasorler():Promise.resolve({ok:false})}};
+function gzkYukle(){return GZK.yukle().then(function(r){if(r&&r.ok)GZK.st=r.v;return GZK.st},function(){return null})}
+gzkYukle();
+var _gzkD=gzDerece;gzDerece=function(id){return Math.max(_gzkD(id),GZK.min[id]||0)};
+var _gzkZs=zekaSistem;zekaSistem=function(c){var h=_gzkZs(c),K=GZK.st||{finans:{kim:'otto'},saglik:{kim:'iris'}},k=Object.keys(K).filter(function(x){return K[x].kim==c.id})[0];if(!k)return h;var ad=k=='finans'?'Finans':'Sağlık';
+return h+'\nGizli klasörün: Belgelerim/'+ad+' (yalnız sen ulaşırsın). Okuyabilmen için Çağlar’ın görevinde “Belgelerim” ya da “'+ad+' klasörü” geçmeli; o görevde internet yoktur. İçeriğini yalnız Çağlar’a, kendi sohbetinde ve özet olarak ver; toplantıda, başka çalışana, KATKI / İŞ İSTEĞİ / ÖĞRENİLENLER satırlarında içerik verme; dosyaları aynen aktarma, arşivleme, kopyalama.'};
+// Telefona giden özet: gizli mesajlar ve gizli görev sonuçları çıkarılır
+var _gzkOz=bulutOzet;bulutOzet=function(){var o=_gzkOz(),E=o&&o.ekip;if(!E)return o;Object.keys(E.sohbet||{}).forEach(function(k){E.sohbet[k]=E.sohbet[k].filter(function(m){return !m.gizli})});
+E.gorev=(E.gorev||[]).map(function(g){return g.gizli?Object.assign({},g,{sonuc:'Gizli · yalnız bilgisayardaki Orvane’de',komut:undefined}):g});return o};
+window.__gizliTest=function(){var R=[],T=TMS(),bk={ch:JSON.stringify(T.sohbet),gor:T.gorev.slice(),cg:ABN.cagir,st:ABN.st,gel:T.gel.slice()};function t(n,ok,m){R.push({n:n,ok:!!ok,m:ok?'':String(m||'beklenmeyen sonuç')})}
+t('Finans Uzmanı ve Sağlıklı Yaşam Koçu’na gizli klasör kuralı; başkasına yok',/Belgelerim\/Finans \(yalnız sen/.test(zekaSistem(tm('otto')))&&/Belgelerim\/Sağlık/.test(zekaSistem(tm('iris')))&&!/Gizli klasörün/.test(zekaSistem(tm('sage'))));
+t('Otto’nun görevleri en az Gizli, Iris Çok gizli',gzDerece('otto')>=2&&gzDerece('iris')==3);
+ABN.st={kurulu:true,acik:true,gunluk:5,bugun:0,toplam:0,gunlukSohbet:60,sohbetBugun:0,test:{ok:true}};ABN.cagir=function(){return Promise.resolve({ok:true,v:{metin:'Faturalar: elektrik 900 TL.\nÖĞRENİLENLER: [{"tur":"hafiza","ad":"Fatura","metin":"Elektrik 900 TL"}]',tur:2,token:3000,model:'claude-haiku-5-5',gizli:true}})};
+T.sohbet.otto=[];var gn=T.gel.length,g=tmTaskNew('otto','Belgelerim Finans klasöründeki faturaları özetle','normal','',false,{});
+return new Promise(function(r){setTimeout(r,300)}).then(function(){var m=tmChat('otto').filter(function(x){return x.r=='o'}).slice(-1)[0];
+t('Gizli klasör sonucu gizli işaretlenir, öğrenme zincirine (Nika) gitmez',g.gizli&&m&&m.gizli&&T.gel.length==gn,JSON.stringify({g:g.gizli,m:m&&m.gizli,gel:T.gel.length-gn}));
+var oz=bulutOzet(),sm=(oz.ekip.sohbet.otto||[]),og=oz.ekip.gorev.filter(function(x){return x.id==g.id})[0];
+t('Telefona giden özette gizli mesaj ve sonuç yok',!sm.some(function(x){return /900 TL/.test(x.t)})&&og&&!/900/.test(og.sonuc||'')&&/yalnız bilgisayardaki/.test(og.sonuc),JSON.stringify(og));
+return R}).catch(function(e){t('Gizli klasör testi',false,e.stack)}).then(function(){T.sohbet=JSON.parse(bk.ch);T.gorev=bk.gor;T.gel=bk.gel;ABN.cagir=bk.cg;ABN.st=bk.st;save();return R})};

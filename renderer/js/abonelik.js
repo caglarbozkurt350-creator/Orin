@@ -32,8 +32,9 @@ ZK.yaz['g'+g.id]=1;g.durum='calisiyor';g.yol2='abonelik';delete g.hata;delete g.
 var komut='Doğrudan görev (Çağlar’dan): '+g.metin+(g.son?'\nSon tarih: '+tmSon(g.son):'')+'\n\nBağlam: '+zekaBaglam(c);g.komut=komut;
 return ABN.cagir({kim:g.kim,istem:komut,model:ABN_MODEL[tmModel(c)]||undefined,sistem:zekaSistem(c)+'\nBu iş Orvane’den otomatik geliyor; Çağlar şu an seni izlemiyor. Sonucu Türkçe, kısa başlıklarla ve doğrudan yaz. Dosya oluşturma ya da değiştirme; yalnız oku ve araştır.\n'+ABN_OGREN,zamanAsimiMs:g.bitis?Math.max(60000,g.bitis-Date.now()):0})
 .then(function(r){if(!r.ok){var e=new Error(r.err);throw e}var v=r.v,ay=abnOgrenAyikla(v.metin);g.sonuc=ay.metin;g.durum='bitti';g.bts=Date.now();g.abnTur=v.tur;g.abnToken=v.token;g.abnUsd=v.apiKarsiligiUsd;
-tmPush(g.kim,{r:'o',t:'Görev tamamlandı (Claude aboneliğinde): '+g.metin+'\n\n'+ay.metin,model:'abonelik · '+(v.model||'claude')});
-if(ABN.st){ABN.st.bugun++;ABN.st.toplam++}save();return abnOgrenEkle(g,ay.liste)})
+if(v.gizli)g.gizli=1;// 0.7.19: gizli klasörden gelen sonuç (telefona, toplantıya, öğrenme zincirine gitmez)
+tmPush(g.kim,{r:'o',t:'Görev tamamlandı (Claude aboneliğinde): '+g.metin+'\n\n'+ay.metin,model:'abonelik · '+(v.model||'claude'),gizli:v.gizli?1:undefined});
+if(ABN.st){ABN.st.bugun++;ABN.st.toplam++}save();return v.gizli?[]:abnOgrenEkle(g,ay.liste)})
 .catch(function(e){var m=String(e&&e.message||e);g.durum='acik';if(/limit/i.test(m)){ABN.bekle=Date.now()+30*60000;g.abnNot='Abonelik limiti doldu; sıfırlanınca yeniden denenecek'}else if(/sınırı doldu/.test(m)){g.abnNot=m}else g.hata='Abonelik: '+m;
 // Gerektiğinde API: abonelik limit/sınır yüzünden yapamadıysa ve API hazırsa görev API ile yapılır
 if(g.abnNot&&ABN.apiVar()){g.abn=false;g.abnNot='Abonelik kullanılamadı; API ile yapılıyor';save();delete ZK.yaz['g'+g.id];return _abnZg(g)}save()})

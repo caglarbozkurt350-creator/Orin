@@ -176,6 +176,13 @@ function mainTests() {
     const am = ab.argsOf({ mcpDosya: 'C:/t/mcp.json' }, 'x.txt'), ad = ab.argsOf({}, 'x.txt'), hz = abonelikHazirla({ kim: 'sage', mcp: { mcpServers: { kotu: {} } }, mcpDosya: 'C:/kotu.json' });
     t('Apify: MCP bağlantısı yalnız ana süreç verirse eklenir; arayüzün gönderdiği yapılandırma silinir', am.includes('--mcp-config') && am[am.indexOf('--mcp-config') + 1] === 'C:/t/mcp.json' && am.includes('mcp__apify') && am.includes('--strict-mcp-config') && !ad.includes('--mcp-config') && !hz.mcpDosya && !(hz.mcp && hz.mcp.mcpServers && hz.mcp.mcpServers.kotu), am.join(' '));
     t('Apify: anahtar biçimi denetlenir', apify.gecerli('apify_api_' + 'A'.repeat(30)) && !apify.gecerli('sk-ant-123') && !apify.gecerli(''));
+    const gK = gizliKlasorler(), g1 = abonelikHazirla({ kim: 'otto', istem: 'Belgelerim Finans klasöründeki faturaları özetle' }), g2 = abonelikHazirla({ kim: 'otto', istem: 'Günlük piyasa takibi' }), g3 = abonelikHazirla({ kim: 'sage', istem: 'Belgelerim içindeki dosyaları oku' }), g4 = abonelikHazirla({ kim: 'iris', istem: 'Sağlık klasöründeki ölçümleri özetle' }), g5 = abonelikHazirla({ kim: 'otto', tur: 'sohbet', istem: 'Belgelerim' }), g6 = abonelikHazirla({ kim: 'iris', okuDizin: ['C:/x'], istem: 'merhaba' });
+    t('Gizli klasör: Finans Uzmanı görevde, klasörü anınca, internetsiz ve yalnız okuyarak ulaşır', g1.okuDizin && g1.okuDizin[0] === gK.finans.yol && g1.araclar === 'Read,Glob,Grep' && !g1.mcp && g1.gizliSonuc && g1.koruEk.indexOf(gK.saglik.yol) >= 0 && g1.koruEk.indexOf(gK.finans.yol) < 0, JSON.stringify(g1));
+    t('Gizli klasör: klasörü anmayan görevde ve sohbette sahibi de okuyamaz', !g2.okuDizin && g2.koruEk.length === 2 && !g5.okuDizin && g5.koruEk.length === 2, JSON.stringify([g2, g5]));
+    t('Gizli klasör: başka çalışan (Sage) ulaşamaz; Sağlık yalnız Sağlıklı Yaşam Koçu’nda', !g3.okuDizin && g3.koruEk.length === 2 && g4.okuDizin && g4.okuDizin[0] === gK.saglik.yol && g4.koruEk.indexOf(gK.finans.yol) >= 0, JSON.stringify([g3, g4]));
+    t('Gizli klasör: arayüz okuma izni gönderemez', !g6.okuDizin && g6.koruEk.length === 2);
+    const ga2 = ab.argsOf({ okuDizin: ['C:\\Users\\PC\\Documents\\Orin\\Belgelerim\\Finans'], koruEk: ['C:\\Users\\PC\\Documents\\Orin\\Belgelerim\\Sağlık'], araclar: 'Read,Glob,Grep' }, 'x.txt'), gj2 = ga2.join(' ');
+    t('Gizli klasör: Claude Code bayrakları (yalnız okuma izni, diğer klasöre yasak, yazma aracı yok)', ga2.includes('--add-dir') && ga2.includes('Read(//c/Users/PC/Documents/Orin/Belgelerim/Finans/**)') && ga2.includes('Read(//c/Users/PC/Documents/Orin/Belgelerim/Sağlık/**)') && ga2[ga2.indexOf('--tools') + 1] === 'Read,Glob,Grep', gj2);
     t('İş emri durumu güncellenir', gl.emirGuncelle(e1.dosya, { durum: 'inceleme', dal: 'is-emri/ada-x' }).durum === 'inceleme' && gl.emirler().some(x => x.id === 'test1' && x.dal === 'is-emri/ada-x'));
   } catch (e) { t('Ana süreç testleri', false, e.stack); }
   try { fs.unlinkSync(LOC()); } catch (e) {}
@@ -368,9 +375,16 @@ ipcMain.handle('abonelik:status', wrap(() => abonelik.status()));
 ipcMain.handle('abonelik:ayar', wrap(a => abonelik.setAyar(a)));
 ipcMain.handle('abonelik:isler', wrap(() => abonelik.isler()));
 ipcMain.handle('abonelik:test', wrap(() => SMOKE ? abonelik.status() : abonelik.test()));
-ipcMain.handle('abonelik:calistir', wrap(o => { if (SMOKE) throw new Error('Testte abonelik çalıştırılmaz'); return abonelik.calistirIzle(abonelikHazirla(o)); }));
+ipcMain.handle('abonelik:calistir', wrap(o => { if (SMOKE) throw new Error('Testte abonelik çalıştırılmaz'); const h = abonelikHazirla(o); return abonelik.calistirIzle(h).then(r => { if (h.gizliSonuc) r.gizli = true; return r; }); }));
 // Arayüz MCP yapılandırması gönderemez; Apify bağlantısını yalnız ana süreç, izinli çalışanın görevine ekler
-function abonelikHazirla(o) { o = Object.assign({}, o || {}); delete o.mcp; delete o.mcpDosya; if (!o.mod && o.tur !== 'sohbet' && o.tur !== 'toplanti' && apify.izinli(o.kim)) o.mcp = apify.mcp(); return o; }
+function abonelikHazirla(o) { o = Object.assign({}, o || {}); delete o.mcp; delete o.mcpDosya; delete o.okuDizin; delete o.koruEk; delete o.gizliSonuc; if (!o.mod && o.tur !== 'sohbet' && o.tur !== 'toplanti' && apify.izinli(o.kim)) o.mcp = apify.mcp();
+  // Gizli klasörler: yalnız sahibi, yalnız görevde, görev metni klasörü anıyorsa ve internetsiz okur; herkes için diğer durumlarda yasak
+  const K = gizliKlasorler(), sahip = Object.keys(K).filter(k => K[k].kim === o.kim && !o.mod && o.tur !== 'sohbet' && o.tur !== 'toplanti' && K[k].anahtar.test(String(o.istem || '')));
+  if (sahip.length) { o.okuDizin = sahip.map(k => K[k].yol); o.araclar = 'Read,Glob,Grep'; delete o.mcp; o.gizliSonuc = true; }
+  o.koruEk = Object.keys(K).filter(k => sahip.indexOf(k) < 0).map(k => K[k].yol); return o; }
+// Gizli klasör sahipleri (Çağlar'ın kararı, 2026-11-12): içerik arşivlenmez, kopyalanmaz, taşınmaz; telefona ve toplantıya gitmez
+function gizliKlasorler() { const b = path.join(SMOKE ? DATA() : app.getPath('documents'), 'Orin', 'Belgelerim'); return { finans: { yol: path.join(b, 'Finans'), kim: 'otto', unvan: 'Finans Uzmanı', anahtar: /belgelerim|finans klas|gizli klas/i }, saglik: { yol: path.join(b, 'Sağlık'), kim: 'iris', unvan: 'Sağlıklı Yaşam Koçu', anahtar: /belgelerim|sağlık klas|saglik klas|gizli klas/i } }; }
+ipcMain.handle('gizli:klasorler', wrap(() => { const K = gizliKlasorler(), r = {}; Object.keys(K).forEach(k => { r[k] = { kim: K[k].kim, unvan: K[k].unvan, yol: K[k].yol, var: fs.existsSync(K[k].yol) }; }); return r; }));
 const apify = require('./apify');
 apify.init(DATA());
 ipcMain.handle('apify:durum', wrap(() => apify.durum()));
@@ -383,7 +397,7 @@ ipcMain.handle('apify:test', wrap(async () => { if (SMOKE) throw new Error('Test
   catch (e) { return apify.testKaydet({ ok: false, ts: Date.now(), hata: String(e.message).slice(0, 300) }); } }));
 // İş emirleri (0.7.14): onaylı iş isteği → Belgeler\Orin\Giden; tam otomatik kipte Claude Code ayrı git dalında yapar (main'e dokunmaz)
 const gelistir = require('./gelistir');
-gelistir.init(SMOKE ? DATA() : app.getPath('documents'), abonelik, kay => [dataDir(), DATA(), path.join(app.getPath('documents'), 'Orin', 'Veriler'), kay && path.join(kay, 'renderer', 'js', 'kisisel.js')].filter(Boolean));
+gelistir.init(SMOKE ? DATA() : app.getPath('documents'), abonelik, kay => [dataDir(), DATA(), path.join(app.getPath('documents'), 'Orin', 'Veriler'), path.join(app.getPath('documents'), 'Orin', 'Belgelerim'), kay && path.join(kay, 'renderer', 'js', 'kisisel.js')].filter(Boolean));
 ipcMain.handle('isemri:yaz', wrap(o => gelistir.emirYaz(o)));
 ipcMain.handle('isemri:liste', wrap(() => gelistir.emirler()));
 ipcMain.handle('isemri:durum', wrap(() => gelistir.durum()));
@@ -405,7 +419,7 @@ function jarvisIstem(o) {
   return (G ? 'Sohbetin şimdiye kadarki kısmı:\n\n' + G + '\n\n' : '') + 'Çağlar’ın son mesajı: ' + String(o.mesaj || '') + '\n\nJarvis olarak cevap ver (başına adını yazma).';
 }
 ipcMain.handle('jarvis:sor', wrap(o => { if (SMOKE) throw new Error('Testte Jarvis çalıştırılmaz'); if (!fs.existsSync(JARVIS_DIR())) throw new Error('Jarvis klasörü bulunamadı: ' + JARVIS_DIR());
-  return abonelik.calistirIzle({ kim: 'jarvis', tur: 'sohbet', mod: 'jarvis', cwd: JARVIS_DIR(), sistemTam: true, araclar: 'Read,Glob,Grep', maxTur: 8, model: (o && o.model) || 'sonnet', zamanAsimiMs: 240000, sistem: jarvisSistem(), istem: jarvisIstem(o || {}) }); }));
+  return abonelik.calistirIzle({ koruEk: Object.values(gizliKlasorler()).map(x => x.yol), kim: 'jarvis', tur: 'sohbet', mod: 'jarvis', cwd: JARVIS_DIR(), sistemTam: true, araclar: 'Read,Glob,Grep', maxTur: 8, model: (o && o.model) || 'sonnet', zamanAsimiMs: 240000, sistem: jarvisSistem(), istem: jarvisIstem(o || {}) }); }));
 // Piyasa (0.7.18): TCMB günlük resmî döviz kurları (anahtarsız, herkese açık XML); gün içinde önbellekten
 function tcmbAyikla(xml) { const tarih = (String(xml).match(/Tarih="([\d.]+)"/) || [])[1] || '', kur = {};
   ['USD', 'EUR', 'GBP'].forEach(k => { const b = String(xml).match(new RegExp('CurrencyCode="' + k + '"[\\s\\S]*?</Currency>')); if (!b) return; const al = (b[0].match(/<ForexBuying>([\d.]+)</) || [])[1], sat = (b[0].match(/<ForexSelling>([\d.]+)</) || [])[1]; if (sat) kur[k.toLowerCase()] = { alis: +al || null, satis: +sat }; });

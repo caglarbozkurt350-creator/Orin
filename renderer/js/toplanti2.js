@@ -234,7 +234,7 @@ t('Sohbet istemi kendi üslubuyla öneri kuralını içerir',/kendi üslubunla t
 S.gizlilik=null;var ig=tmTaskNew('iris','Gizli sağlık işi','normal','',false,{});var lg=tmTaskNew('luca','Deneme testi','normal','',false,{});
 var bo=zekaBaglam(tm('orin'));t('Iris çok gizli: Orin’in bağlamında içerik yok, yalnız durum',gzDerece('iris')==3&&!/Gizli sağlık işi/.test(bo)&&/Iris: gizli görev \(açık; içeriği yalnız Iris’da, tek el\)/.test(bo)&&/\[#/.test(bo),bo);
 t('Iris kendi görevini görür ve gizlilik kuralını alır',/Gizli sağlık işi/.test(zekaBaglam(tm('iris')))&&/Gizlilik derecen: Çok gizli/.test(zekaSistem(tm('iris'))));
-gzAyarla('otto',1,'test');t('Hassas: yönetim görür, ekip görmez',gzGorur('orla','otto')&&!gzGorur('sage','otto'));
+gzAyarla('kai',1,'test');t('Hassas: yönetim görür, ekip görmez',gzGorur('orla','kai')&&!gzGorur('sage','kai'));
 GZ.cagir=function(o){return Promise.resolve({ok:true,v:{metin:JSON.stringify(JSON.parse(o.istem).map(function(c){return{id:c.id,derece:c.id=='mia'?2:0,neden:c.id=='mia'?'Aile bilgisi':'İş bilgisi'}}).concat([{id:'iris',derece:0,neden:'deneme'}]))}})};
 ABN.st.sohbetBugun=0;return gzNikaBelirle().then(function(n){t('Nika gizlilik derecelerini belirler (Çağlar’ın kilitlediğine dokunmaz)',n>=10&&gzDerece('mia')==2&&gzDerece('iris')==3&&gzS().neden.mia=='Aile bilgisi',JSON.stringify(gzS().d));
 nav('team','calisan','nika');var hn=document.getElementById('ct').innerHTML;t('Nika sayfasında gizlilik dereceleri kartı',/Gizlilik dereceleri/.test(hn)&&/Nika belirlesin/.test(hn)&&/Çok gizli/.test(hn));

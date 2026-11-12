@@ -12,14 +12,14 @@ a.soru=f.id;var L=FIKIR.length,sira=FIKIR.indexOf(f)+1;
 tmPush('ada',{r:'o',t:'Claude’dan bir geliştirme fikri ('+sira+'/'+L+'): '+f.baslik+'\n'+f.aciklama+'\n\nSıradaki güncellemeye ekleyelim mi?',qr:ADA_QR.slice(),fikir:f.id});save();return f}
 function adaCevapTuru(t){t=String(t||'').trim().toLocaleLowerCase('tr');return /^evet/.test(t)?'evet':/^(hayır|hayir)/.test(t)?'hayir':/^sonra/.test(t)?'sonra':null}
 // Çağlar'ın cevabı (masaüstü sohbeti ya da telefondan gelen mesaj)
-var _adaPush=tmPush;tmPush=function(id,m){var a=S.ada,tur=id=='ada'&&m&&m.r=='ben'&&m.tur!='not'&&a&&a.soru?adaCevapTuru(m.t):null;
+tmPushKanca(60,'ada-fikir-cevap',function(id,m,_adaPush){var a=S.ada,tur=id=='ada'&&m&&m.r=='ben'&&m.tur!='not'&&a&&a.soru?adaCevapTuru(m.t):null;
 if(!tur)return _adaPush(id,m);
 var f=a.soru;a.cevap[f]={c:tur,ts:Date.now()};a.soru=null;m.fikirCevap=f;delete m.bek;var r=_adaPush(id,m);
 setTimeout(function(){tmChat('ada').forEach(function(x){if(x.fikirCevap)delete x.bek});var n=adaSiradaki().length,fk=fikirBul(f);
 _adaPush('ada',{r:'o',t:tur=='evet'?'Tamam, “'+(fk?fk.baslik:f)+'” sıradaki güncelleme listesine eklendi ('+n+' madde).':tur=='hayir'?'Anlaşıldı, bu fikri eklemiyoruz.':'Peki, bunu sonra yeniden soracağım.'});
-setTimeout(function(){if(!adaSor()){if(!a.bitti){a.bitti=1;_adaPush('ada',{r:'o',t:'Şimdilik sorulacak fikir kalmadı. Sıradaki güncellemede eklenecekler: '+(adaSiradaki().map(function(x){return x.baslik}).join(', ')||'yok')+'.'})}}else a.bitti=0;save();if(area=='team')render()},400)},50);return r};
+setTimeout(function(){if(!adaSor()){if(!a.bitti){a.bitti=1;_adaPush('ada',{r:'o',t:'Şimdilik sorulacak fikir kalmadı. Sıradaki güncellemede eklenecekler: '+(adaSiradaki().map(function(x){return x.baslik}).join(', ')||'yok')+'.'})}}else a.bitti=0;save();if(area=='team')render()},400)},50);return r});
 // Fikir cevabını yapay zekâ ayrıca cevaplamasın
-if(typeof zekaCevapla=='function'){var _adaZc=zekaCevapla;zekaCevapla=function(id){if(id=='ada'){var a=tmChat('ada'),s=a[a.length-1];if(s&&s.fikirCevap){delete s.bek;return Promise.resolve()}}return _adaZc(id)}}
+// 0.7.20: kontrol team.js komutMu() içinde (fikirCevap)
 // Ada'nın sayfası: sıradaki güncelleme listesi
 function adaKart(){var L=adaSiradaki(),a=adaS(),bek=(FIKIR||[]).filter(function(f){var c=a.cevap[f.id];return !c||c.c=='sonra'}).length;
 return '<div class="card" style="margin-top:14px"><div class="ch"><i class="ti ti-list-check"></i>Sıradaki güncellemede eklenecekler <span class="hn" style="margin-left:6px">'+L.length+' madde · '+bek+' fikir cevap bekliyor</span>'+(bek&&!a.soru?'<button class="bt" style="margin-left:auto;min-height:30px;padding:4px 12px" onclick="adaSor();render()">Fikir sor</button>':'')+'</div>'+
@@ -63,8 +63,8 @@ a.incelemeler=(a.incelemeler||[]).concat([{ts:Date.now(),dosya:v.rapor||'',tur:v
 tmPush('ada',{r:'o',t:'Program incelemesi tamamlandı ('+Math.round((v.sureMs||0)/6000)/10+' dk, '+v.tur+' adım).'+(v.rapor?' Rapor: '+v.rapor:'')+'\n\n'+ay.metin,model:'abonelik · '+(v.model||'sonnet')});abnOgrenEkle({kim:'ada'},ay.liste);if(ABN.st){ABN.st.bugun++;ABN.st.toplam++}save()},
 function(e){tmPush('ada',{r:'o',t:'Program incelemesi yapılamadı: '+String(e&&e.message||e)});save()})
 .then(function(){ADA_INC.calisiyor=false;if(area=='team')render()})}
-var _adaPush2=tmPush;tmPush=function(id,m){if(id=='ada'&&m&&m.r=='ben'&&m.tur!='not'&&/program\S*\s+incele/i.test(m.t||'')){m.komut=1;delete m.bek;var r=_adaPush2(id,m);setTimeout(function(){tmChat('ada').forEach(function(x){if(x.komut)delete x.bek});adaInceleme()},50);return r}return _adaPush2(id,m)};
-var _adaZc2=zekaCevapla;zekaCevapla=function(id){if(id=='ada'){var a=tmChat('ada'),s=a[a.length-1];if(s&&s.komut){delete s.bek;return Promise.resolve()}}return _adaZc2(id)};
+tmPushKanca(50,'ada-program-incele',function(id,m,_adaPush2){if(id=='ada'&&m&&m.r=='ben'&&m.tur!='not'&&/program\S*\s+incele/i.test(m.t||'')){m.komut=1;delete m.bek;var r=_adaPush2(id,m);setTimeout(function(){tmChat('ada').forEach(function(x){if(x.komut)delete x.bek});adaInceleme()},50);return r}return _adaPush2(id,m)});
+// 0.7.20: komut mesajı kontrolü team.js komutMu() içinde
 function adaIncKart(){var a=adaS(),L=(a.incelemeler||[]).slice(-1)[0],k=ABN.st&&ABN.st.kaynak;
 return '<div class="card" style="margin-top:14px"><div class="ch"><i class="ti ti-stethoscope"></i>Program incelemesi <span class="hn" style="margin-left:6px">hız · optimizasyon · kararlılık · nedensellik</span>'+
 '<button class="bt p" style="margin-left:auto;min-height:30px;padding:4px 12px" onclick="adaInceleme()"'+(ADA_INC.calisiyor?' disabled':'')+'>'+(ADA_INC.calisiyor?'İnceleniyor…':'Şimdi incele (~5 dk)')+'</button></div>'+

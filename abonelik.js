@@ -25,8 +25,17 @@ function kaynak() { return kaynakAday().find(kaynakGecerli) || null; }
 
 function init(userData, documents) { DIR = userData; DOCS = documents; }
 const CFGF = () => path.join(DIR, 'abonelik.json');
-function cfg() { if (!CFG) { try { CFG = Object.assign({}, VARS, JSON.parse(fs.readFileSync(CFGF(), 'utf8'))); } catch (e) { CFG = Object.assign({}, VARS); } } return CFG; }
-function kaydet() { try { fs.writeFileSync(CFGF(), JSON.stringify(CFG, null, 1)); } catch (e) {} }
+// 0.7.20 (Ada): ayar/sayaç dosyası atomik yazılır; bozuksa sessizce sıfırlanmaz, önce .bozuk-<zaman> yedeği alınır
+function cfg() {
+  if (!CFG) {
+    let t = null; try { t = fs.readFileSync(CFGF(), 'utf8'); } catch (e) {}
+    try { CFG = Object.assign({}, VARS, t ? JSON.parse(t) : {}); }
+    catch (e) { try { fs.copyFileSync(CFGF(), CFGF() + '.bozuk-' + Date.now()); } catch (er) {} CFG = Object.assign({}, VARS); }
+  }
+  return CFG;
+}
+let KAYIT_HATA = '';
+function kaydet() { try { const f = CFGF(), t = f + '.tmp'; fs.writeFileSync(t, JSON.stringify(CFG, null, 1)); fs.renameSync(t, f); KAYIT_HATA = ''; } catch (e) { KAYIT_HATA = e.message; } }
 function bugun() { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
 function sayac() { const c = cfg(); if (c.gun !== bugun()) { c.gun = bugun(); c.sayi = 0; c.sohbet = 0; c.toplanti = 0; } return c; }
 
@@ -78,20 +87,43 @@ function calistir(o) {
   const inc = o.mod === 'inceleme', kay = inc ? kaynak() : null, gel = o.mod === 'gelistir' || o.mod === 'jarvis'; // jarvis (0.7.15): Jarvis klasöründe, yalnız okuma
   if (inc && !kay) return Promise.reject(new Error('Orvane kaynak klasörü bulunamadı (Ayarlar › Yapay zekâ › Claude aboneliği › Kaynak klasörü)'));
   if (gel && !(o.cwd && fs.existsSync(o.cwd))) return Promise.reject(new Error('Geliştirme çalışma klasörü yok'));
-  const cwd = gel ? o.cwd : inc ? kay : path.join(DOCS || os.homedir(), 'Orin', 'Calisma', kim); fs.mkdirSync(cwd, { recursive: true });
-  const sf = path.join(os.tmpdir(), 'orvane-sistem-' + process.pid + '-' + Date.now() + '.txt'); fs.writeFileSync(sf, String(o.sistem || ''), 'utf8');
-  let mf = null; if (o.mcp && typeof o.mcp === 'object') { mf = path.join(os.tmpdir(), 'orvane-mcp-' + process.pid + '-' + Date.now() + '.json'); fs.writeFileSync(mf, JSON.stringify(o.mcp), { mode: 0o600 }); o = Object.assign({}, o, { mcpDosya: mf }); }
+  // 0.7.20 (Ada): sayaç iş BAŞLARKEN ayrılır (aynı anda başlayan işler günlük sınırı aşamaz); iş başarısız olursa geri verilir
+  const alan = toplanti ? 'toplanti' : sohbet ? 'sohbet' : 'sayi';
+  const gun0 = c.gun; if (!o.test) { c[alan] = (c[alan] || 0) + 1; kaydet(); }
+  const iade = () => { if (o.test) return; const c2 = sayac(); if (c2.gun === gun0 && c2[alan] > 0) { c2[alan]--; kaydet(); } };
+  return sirayaAl(!sohbet, () => calistirSimdi(o, c, exe, kim, inc, kay, gel)).then(r => r, e => { iade(); throw e; });
+}
+// Aynı anda en çok ES_ZAMAN Claude Code süreci; ağır işler (görev, inceleme, geliştirme) en çok ES_AGIR. Fazlası sırada bekler.
+const ES_ZAMAN = 3, ES_AGIR = 2, SIRA = []; let AKTIF = 0, AKTIF_AGIR = 0;
+function sirayaAl(agir, fn) { return new Promise((res, rej) => { SIRA.push({ agir, fn, res, rej }); pompa(); }); }
+function pompa() {
+  for (let i = 0; i < SIRA.length && AKTIF < ES_ZAMAN; i++) {
+    const s = SIRA[i]; if (s.agir && AKTIF_AGIR >= ES_AGIR) continue;
+    SIRA.splice(i--, 1); AKTIF++; if (s.agir) AKTIF_AGIR++;
+    let p; try { p = Promise.resolve(s.fn()); } catch (e) { p = Promise.reject(e); }
+    p.then(s.res, s.rej).then(() => { AKTIF--; if (s.agir) AKTIF_AGIR--; pompa(); });
+  }
+}
+function siraDurum() { return { aktif: AKTIF, agir: AKTIF_AGIR, bekleyen: SIRA.length }; }
+function calistirSimdi(o, c, exe, kim, inc, kay, gel) {
+  let sf = null, mf = null; const sil = () => [sf, mf].forEach(f => { if (f) { try { fs.unlinkSync(f); } catch (e) {} } });
+  const cwd = gel ? o.cwd : inc ? kay : path.join(DOCS || os.homedir(), 'Orin', 'Calisma', kim);
+  try {
+    fs.mkdirSync(cwd, { recursive: true });
+    sf = path.join(os.tmpdir(), 'orvane-sistem-' + process.pid + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6) + '.txt'); fs.writeFileSync(sf, String(o.sistem || ''), 'utf8');
+    if (o.mcp && typeof o.mcp === 'object') { mf = path.join(os.tmpdir(), 'orvane-mcp-' + process.pid + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6) + '.json'); fs.writeFileSync(mf, JSON.stringify(o.mcp), { mode: 0o600 }); o = Object.assign({}, o, { mcpDosya: mf }); }
+  } catch (e) { sil(); return Promise.reject(e); }
   const sure = Math.max(30000, Math.min(60 * 60000, Number(o.zamanAsimiMs) || c.sureDk * 60000));
   return new Promise((res, rej) => {
-    let out = '', err = '', bitti = false;
-    const p = spawn(exe, argsOf(o, sf), { cwd, env: temizEnv(), windowsHide: true });
+    let out = '', err = '', bitti = false, p;
+    try { p = spawn(exe, argsOf(o, sf), { cwd, env: temizEnv(), windowsHide: true }); } catch (e) { sil(); rej(e); return; } // eşzamanlı spawn hatasında geçici dosya kalmasın
     const zam = setTimeout(() => { if (bitti) return; bitti = true; try { p.kill(); } catch (e) {} temizle(); rej(Object.assign(new Error('Süre doldu (' + Math.round(sure / 60000) + ' dk)'), { kod: 'sure' })); }, sure);
     function temizle() { clearTimeout(zam); try { fs.unlinkSync(sf); } catch (e) {} if (mf) { try { fs.unlinkSync(mf); } catch (e) {} } }
     p.stdout.on('data', d => { out += d; }); p.stderr.on('data', d => { err += d; });
     p.on('error', e => { if (bitti) return; bitti = true; temizle(); rej(e); });
     p.on('close', code => {
       if (bitti) return; bitti = true; temizle();
-      try { const r = sonucOku(out); if (inc) r.rapor = raporYaz(r); if (!o.test) { if (toplanti) c.toplanti = (c.toplanti || 0) + 1; else if (sohbet) c.sohbet = (c.sohbet || 0) + 1; else c.sayi++; c.toplam++; c.son = new Date().toISOString(); kaydet(); } res(r); }
+      try { const r = sonucOku(out); if (inc) r.rapor = raporYaz(r); if (!o.test) { c.toplam++; c.son = new Date().toISOString(); kaydet(); } res(r); }
       catch (e) { if (!out.trim() && err.trim()) e.message = 'Claude Code çalışmadı (' + code + '): ' + err.trim().split(/\r?\n/).pop().slice(0, 200); rej(e); }
     });
     p.stdin.end(String(o.istem || ''), 'utf8');
@@ -109,7 +141,7 @@ function status() {
   const c = sayac(), exe = bul();
   if (exe && SURUM === null) { SURUM = ''; execFile(exe, ['--version'], { encoding: 'utf8', windowsHide: true, timeout: 15000, env: temizEnv() }, (e, o) => { SURUM = e ? '' : String(o).trim(); }); }
   const surum = SURUM || null;
-  return { kurulu: !!exe, yol: exe, surum, acik: !!c.acik, gunluk: c.gunluk, model: c.model, maxTur: c.maxTur, sureDk: c.sureDk, kaynak: kaynak(), raporlar: path.join(DOCS || os.homedir(), 'Orin', 'Ada Raporları'), bugun: c.sayi, gunlukSohbet: c.gunlukSohbet, sohbetBugun: c.sohbet || 0, gunlukToplanti: c.gunlukToplanti || 300, toplantiBugun: c.toplanti || 0, toplam: c.toplam, son: c.son || null, test: c.test || null };
+  return { sira: siraDurum(), kayitHata: KAYIT_HATA || null, kurulu: !!exe, yol: exe, surum, acik: !!c.acik, gunluk: c.gunluk, model: c.model, maxTur: c.maxTur, sureDk: c.sureDk, kaynak: kaynak(), raporlar: path.join(DOCS || os.homedir(), 'Orin', 'Ada Raporları'), bugun: c.sayi, gunlukSohbet: c.gunlukSohbet, sohbetBugun: c.sohbet || 0, gunlukToplanti: c.gunlukToplanti || 300, toplantiBugun: c.toplanti || 0, toplam: c.toplam, son: c.son || null, test: c.test || null };
 }
 function setAyar(a) {
   const c = cfg(); a = a || {};
@@ -144,4 +176,4 @@ function calistirIzle(o) {
   return calistir(o).then(r => { bitir(r); return r; }, e => { bitir(null, e); throw e; });
 }
 function isler() { islerYukle(); return ISLER.slice().reverse(); }
-module.exports = { isler, calistirIzle, kaynak, koruKurallari, kuralYolu, kaynakGecerli, raporYaz, init, status, setAyar, test, calistir, bul, temizEnv, argsOf, sonucOku, MODELLER };
+module.exports = { _sirayaAl: sirayaAl, siraDurum, isler, calistirIzle, kaynak, koruKurallari, kuralYolu, kaynakGecerli, raporYaz, init, status, setAyar, test, calistir, bul, temizEnv, argsOf, sonucOku, MODELLER };

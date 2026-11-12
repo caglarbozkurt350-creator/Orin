@@ -21,7 +21,16 @@ function tm(id){return tmAll().filter(function(c){return c.id==id})[0]||null}
 function tmSet(id,o){var T=TMS();T.m[id]=Object.assign(T.m[id]||{},o);save()}
 function TM_SEL(){return (S.teamSel&&tm(S.teamSel))?S.teamSel:'echo'}
 function tmChat(id){var T=TMS();return T.sohbet[id]||(T.sohbet[id]=[])}
-function tmPush(id,m){var a=tmChat(id);m.ts=m.ts||Date.now();a.push(m);if(a.length>300)a.splice(0,a.length-300);TMSCR=true;save()}
+function tmPushTemel(id,m){var a=tmChat(id);m.ts=m.ts||Date.now();a.push(m);if(a.length>300)a.splice(0,a.length-300);TMSCR=true;save()}
+// 0.7.20 (Ada): sohbete eklenen her mesaj tek bir kanca listesinden geçer. Sıra açık numarayla belirlenir (küçük numara önce çalışır),
+// dosyaların index.html'deki yükleme sırasına bağlı değildir. Kanca: function(id,m,next){… return next(id,m)} — next'i çağırmazsa mesaj eklenmez.
+// next(id2,m2) ile kanca kendinden SONRAKİ kancalardan geçen ayrı bir mesaj da ekleyebilir. Sıralar: 10 finans-katki · 20 toplanti-eylem ·
+// 30 toplanti-oner · 40 is-istegi · 50 ada-program-incele · 60 ada-fikir-cevap · 70 ik-ihtiyac · 90 bulut-yayin (eklendikten sonra telefona gönderir)
+var TMPUSH_KANCA=[];
+function tmPushKanca(sira,ad,fn){TMPUSH_KANCA=TMPUSH_KANCA.filter(function(k){return k.ad!=ad});TMPUSH_KANCA.push({sira:sira,ad:ad,fn:fn});TMPUSH_KANCA.sort(function(a,b){return a.sira-b.sira})}
+function tmPush(id,m){var L=TMPUSH_KANCA.slice();function adim(i){return function(id2,m2){var k=L[i];return k?k.fn(id2,m2,adim(i+1)):tmPushTemel(id2,m2)}}return adim(0)(id,m)}
+// Komut mesajları (iş isteği, "programı incele", Ada fikir cevabı) yapay zekâya ayrıca gitmez: tek kontrol noktası (zekaCevapla + abnCevapla)
+function komutMu(id){var a=tmChat(id),s=a[a.length-1];if(s&&(s.komut||s.fikirCevap)){delete s.bek;return true}return false}
 function tmSkills(id){var c=TMS().m[id];return (c&&c.bec)||(BEC0[id]||[]).map(function(x){return{ad:x[0],sv:x[1],not:x[2]}})}
 function tmMem(id){var c=TMS().m[id];return (c&&c.haf)||[]}
 function tmDesc(c){return c.aciklama||DESC0[c.id]||c.gorev}

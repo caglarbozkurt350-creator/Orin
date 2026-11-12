@@ -175,9 +175,9 @@ var _tpOa=openArea;openArea=function(a){var t=a=='team'&&tpAktif();if(t&&S.tpSon
 var _tpTp2=teamPage;teamPage=function(){var h=_tpTp2(),t=tpAktif();if(pg!='toplanti'&&t)h='<div class="tpser" data-id="'+esc(t.id)+'" onclick="tpGit(this.dataset.id)"><span class="dt ok"></span> Toplantı sürüyor: <b>'+esc(t.konu)+'</b> <span style="margin-left:auto">Odaya dön <i class="ti ti-arrow-right"></i></span></div>'+h;return h};
 // Normal sohbette çalışanın kendi üslubuyla toplantı önerisi (+Ad) → "Toplantı aç" düğmesi
 TP_KURAL='\nKonu senin alanının dışına çıkıp başka bir çalışanı da ilgilendiriyorsa, kendi üslubunla toplantı öner ve adını +Ad diye yaz (ör. “İsterseniz bu konuda görüşlerini almak için +Marco’yu toplantıya davet edelim.”). Her seferinde karakterine uygun, farklı bir cümle kur; yalnız gerçekten gerekiyorsa.';
-var _tpPush2=tmPush;tmPush=function(id,m){if(m&&m.r=='o'&&typeof m.t=='string'&&tm(id)){var e=eylemAyikla(id,m.t);m.t=e.metin;
+tmPushKanca(20,'toplanti-eylem',function(id,m,_tpPush2){if(m&&m.r=='o'&&typeof m.t=='string'&&tm(id)){var e=eylemAyikla(id,m.t);m.t=e.metin;
 var dv=tpEtiketler(m.t,'+').filter(function(k){return k!='cagla'&&k!=id});if(dv.length&&!(m.qr||[]).some(function(q){return /^Toplantı aç:/.test(q)}))m.qr=(m.qr||[]).concat(['Toplantı aç: '+dv.map(tpAdi).join(', ')]);
-var r=_tpPush2(id,m);e.log.forEach(function(x){_tpPush2(id,{r:'sys',t:'✓ '+x})});return r}return _tpPush2(id,m)};
+var r=_tpPush2(id,m);e.log.forEach(function(x){_tpPush2(id,{r:'sys',t:'✓ '+x})});return r}return _tpPush2(id,m)});
 // Toplantıdaki eksikler Ada'nın listesine (bir kez)
 function tpEksiklerAda(){if(S.k716||typeof isEkle!='function')return;S.k716=1;[['k716-takvim','Google Takvim bağlantısı','Çalışanlar (Remy, Orin) Google Takvim’e etkinlik ekleyebilsin; hatırlatıcılar Çağlar’a kalmasın. (Toplantı kararı)'],
 ['k716-kalici','Çalışanlar kalıcı not tutabilsin','Takip ve kararlar sohbet dışında kalıcı kaydedilebilsin (toplantı kararları hafızaya giriyor; genel not defteri eksik). (Toplantı kararı)'],

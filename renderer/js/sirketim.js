@@ -58,10 +58,10 @@ function fnKatkiAyikla(id,metin){var L=[],t=String(metin||'').replace(/^[ \t]*KA
 return{metin:t,liste:L}}
 function fnKatkiEkle(kim,o){var k={id:'kt'+uid(),kim:kim,tur:o.tur,aciklama:o.aciklama,tutar:o.tutar,durum:'oneri',tarih:fnBugun(),ts:Date.now()};fnS().katki.push(k);save();return k}
 function fnKatkiKarar(id,ok){var k=fnS().katki.filter(function(x){return x.id==id})[0];if(!k||k.durum!='oneri')return;k.durum=ok?'onay':'red';k.karar=Date.now();if(ok)k.tarih=fnBugun();if(tm(k.kim))tmPush(k.kim,{r:'sys',t:'Çağlar katkını '+(ok?'onayladı, şirket gelirine eklendi':'onaylamadı')+': '+k.aciklama+' · '+fnTL(k.tutar)});save();render()}
-var _fnPush=tmPush;tmPush=function(id,m){if(m&&m.r=='o'&&typeof m.t=='string'&&tm(id)){var log=[];
+tmPushKanca(10,'finans-katki',function(id,m,_fnPush){if(m&&m.r=='o'&&typeof m.t=='string'&&tm(id)){var log=[];
 if(/KATKI\s*:/i.test(m.t)){var a=fnKatkiAyikla(id,m.t);m.t=a.metin;a.liste.forEach(function(o){var k=fnKatkiEkle(id,o);log.push('Katkı önerisi: '+k.aciklama+' · '+fnTL(k.tutar)+' — Çağlar’ın onayında (Şirketim)')})}
 if(id=='otto'&&/PİYASA\s*:/i.test(m.t)){var p=fnPiyasaAyikla(m.t);m.t=p.metin;if(p.veri){fnS().piyasa.otto={ts:Date.now(),gun:fnBugun(),veri:p.veri};save();log.push('Piyasa verileri güncellendi (Şirketim › Aylık gelir ve gider)')}}
-var r=_fnPush(id,m);log.forEach(function(x){_fnPush(id,{r:'sys',t:x})});return r}return _fnPush(id,m)};
+var r=_fnPush(id,m);log.forEach(function(x){_fnPush(id,{r:'sys',t:x})});return r}return _fnPush(id,m)});
 var _fnIsle=tpIsle;tpIsle=function(t,k,m){var a=fnKatkiAyikla(k,m),r=_fnIsle(t,k,a.metin);a.liste.forEach(function(o){var kt=fnKatkiEkle(k,o);t.mes.push({r:'sys',t:'Katkı önerisi ('+tpAdi(k)+'): '+kt.aciklama+' · '+fnTL(kt.tutar)+' — onayın Şirketim’de',ts:Date.now()})});if(a.liste.length)save();return r};
 // Piyasa: TCMB + Otto'nun günlük takibi
 function fnPiyasaAyikla(t){var veri=null,m=String(t).replace(/^[ \t]*PİYASA\s*:\s*(\{[^\n]*\})[ \t]*$/gim,function(a,j){try{var o=JSON.parse(j);if(o&&typeof o=='object')veri=o}catch(e){}return ''}).replace(/\n{3,}/g,'\n\n').trim();return{metin:m,veri:veri}}

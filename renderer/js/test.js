@@ -244,3 +244,25 @@ t('Ayar sayfasında yüzde çubukları',function(){nav('set','zeka','');var h=do
 API=bAPI;ZK.st=bST;S.team=bk=='null'?undefined:JSON.parse(bk);nav('home','gun',TODAY);return R};
 var __at12=window.__asyncTest;window.__asyncTest=function(){return __at12().then(function(a){return a.concat(window.__payTest())})};
 var __sg13=window.__smokeGo;window.__smokeGo=function(r){if(r[0]=='set'&&r[1]=='zeka'){ZK.st=ZK.st||{anahtar:true,ipucu:'…test',butce:5,harcama:{usd:0.42,giris:0,cikis:0,onbellek:0,istek:12,kisi:{orin:{usd:0.3,token:9000,istek:5},echo:{usd:0.12,token:20000,istek:7}},gun:{9:0.1,10:0.12,11:0.2}},aylar:{'2026-11':0.42}};var a=__sg13(r);return new Promise(function(res){setTimeout(function(){res(a)},600)})}return __sg13(r)};
+
+// Orvane 0.7.20 (Ada'nın listesi): mesaj kanca sırası, komut kontrolü, bozuk telefon olayı, yalnız değişiklikte kayıt, gelen kutusu Hatalı
+window.__adaListeTest=function(){var R=[];function t(n,c,m){try{var ok=typeof c=='function'?c():c;R.push({n:n,ok:!!ok,m:ok?'':String(m||'beklenmeyen sonuç')})}catch(e){R.push({n:n,ok:false,m:e.message})}}
+var bAPI=API,bSave=window.save,bBu=bulutUygula,bSt=BL.st,bb=JSON.stringify(S.bulut||null),bk=JSON.stringify(S.team||null),bYayin=BL.yayin;
+t('Mesaj kancaları açık sırayla çalışır',function(){var ad=TMPUSH_KANCA.map(function(k){return k.ad}).join(',');return ad=='finans-katki,toplanti-eylem,toplanti-oner,is-istegi,ada-program-incele,ada-fikir-cevap,ik-ihtiyac,bulut-yayin'},TMPUSH_KANCA.map(function(k){return k.sira+':'+k.ad}).join(','));
+t('Komut mesajı yapay zekâya gitmez (tek kontrol)',function(){tmPushTemel('otto',{id:'kmt1',r:'ben',t:'komut',komut:1,bek:1});var s=tmChat('otto').slice(-1)[0];return komutMu('otto')&&!s.bek&&!komutMu('echo-yok')});
+var once=[];tmPushKanca(5,'test-once',function(id,m,next){if(m&&m.testK)once.push('a');return next(id,m)});tmPushKanca(95,'test-sonra',function(id,m,next){if(m&&m.testK)once.push('b');return next(id,m)});
+tmPush('otto',{r:'sys',t:'kanca deneme',testK:1});TMPUSH_KANCA=TMPUSH_KANCA.filter(function(k){return !/^test-/.test(k.ad)});
+t('Kanca sırası numaraya göre (yükleme sırasından bağımsız)',once.join('')=='ab',once.join(''));
+var sayac=0,s0=BLS().olaySira||0,tamamArg=null;window.save=function(){sayac++};
+bulutUygula=function(e){if(e.tur=='bozuk')throw new Error('bozuk veri');return bBu(e)};
+var rows=[{kaynak:'telefon',tur:'bozuk',sira:s0+1,id:'tb1',ts:new Date().toISOString(),veri:{}},{kaynak:'telefon',tur:'mesaj',sira:s0+2,id:'tb2',ts:new Date().toISOString(),veri:{kim:'otto',t:'bozuktan sonraki',mod:'not'}}];
+API=Object.assign({},bAPI,{bulut:{pull:function(){var r=rows;rows=[];return Promise.resolve({ok:true,v:r})},push:function(){return Promise.resolve({ok:true,v:1})},status:function(){return Promise.resolve({ok:true,v:BL.st})}}});BL.st={eposta:'test@x'};
+var cevrimici=navigator.onLine;
+return (cevrimici?bulutTick(true):Promise.resolve()).then(function(){if(!cevrimici)return;
+t('Bozuk telefon olayı sırayı tıkamaz (atlanır, sonraki işlenir)',BLS().olaySira==s0+2&&tmChat('otto').some(function(m){return m.id=='tb2'})&&/atlandı/.test(BLS().hata||''),JSON.stringify({sira:BLS().olaySira,s0:s0,h:BLS().hata}));
+return bulutTick(true).then(function(){sayac=0;return bulutTick(true)}).then(function(){t('Değişiklik yokken eşitleme turu durumu yeniden yazmaz',sayac==0,'kayıt sayısı '+sayac)})})
+.then(function(){window.save=bSave;bulutUygula=bBu;
+API=Object.assign({},bAPI,{gelen:function(){return Promise.resolve({ok:true,v:[{tur:'xyz',kim:'ada',_dosya:'a.json'},{tur:'mesaj',kim:'yok-kimse',metin:'x',_dosya:'b.json'}]})},gelenTamam:function(a){tamamArg=a;return Promise.resolve({ok:true,v:0})}});
+return gelenIsle()}).then(function(n){t('İşlenemeyen gelen öğesi Hatalı klasörüne gider',n==0&&tamamArg&&tamamArg.hatali.indexOf('a.json')>=0&&tamamArg.hatali.indexOf('b.json')>=0,JSON.stringify(tamamArg))})
+.catch(function(e){t('Ada listesi testi',false,e.stack)}).then(function(){API=bAPI;window.save=bSave;bulutUygula=bBu;BL.st=bSt;BL.yayin=bYayin;S.bulut=bb=='null'?undefined:JSON.parse(bb);S.team=bk=='null'?undefined:JSON.parse(bk);save();return R})};
+var __atAdaListe=window.__asyncTest;window.__asyncTest=function(){return __atAdaListe().then(function(a){return window.__adaListeTest().then(function(b){return a.concat(b)})})};

@@ -41,7 +41,7 @@ const STATE_FILE = () => { const d = dataDir(); return d ? path.join(d, 'durum.j
 const BLOCK_MSG = () => DWARN && DWARN.kind === 'missing' ? 'Seçili veri klasörü bulunamadı: ' + DWARN.dir : 'Veri klasörü bilgisi (konum.json) okunamadı';
 const IMG_EXT = /\.(jpe?g|png|webp|gif|bmp)$/i;
 
-if (!SMOKE && !SEED && !app.requestSingleInstanceLock()) app.quit();
+if (!SMOKE && !SEED && !app.requestSingleInstanceLock()) app.exit(0); // 0.7.20 (Ada): ikinci kopya hemen çıkar, veri klasörüne dokunmaz
 app.setAppUserModelId('com.caglar.orin'); // Windows bildirimleri için
 const exp = require('./export');
 let updater = null; try { updater = require('electron-updater').autoUpdater; } catch (e) {}
@@ -185,6 +185,14 @@ function mainTests() {
     t('Gizli klasör: Claude Code bayrakları (yalnız okuma izni, diğer klasöre yasak, yazma aracı yok)', ga2.includes('--add-dir') && ga2.includes('Read(//c/Users/PC/Documents/Orin/Belgelerim/Finans/**)') && ga2.includes('Read(//c/Users/PC/Documents/Orin/Belgelerim/Sağlık/**)') && ga2[ga2.indexOf('--tools') + 1] === 'Read,Glob,Grep', gj2);
     t('İş emri durumu güncellenir', gl.emirGuncelle(e1.dosya, { durum: 'inceleme', dal: 'is-emri/ada-x' }).durum === 'inceleme' && gl.emirler().some(x => x.id === 'test1' && x.dal === 'is-emri/ada-x'));
   } catch (e) { t('Ana süreç testleri', false, e.stack); }
+  // 0.7.20 (Ada): atomik yazım ve bozuk dosya yedeği
+  try {
+    const zk = require('./zeka')._test, d = path.join(DATA(), 'ada-k'); fs.mkdirSync(d, { recursive: true });
+    const f = path.join(d, 'h.json'); zk.yazJ(f, { a: 1 });
+    t('Harcama dosyası atomik yazılır (geçici dosya kalmaz)', zk.okuJ(f, null).a === 1 && !fs.existsSync(f + '.tmp'));
+    fs.writeFileSync(f, '{bozuk'); const v = zk.okuJ(f, 'yok');
+    t('Bozuk harcama dosyası sessizce silinmez, yedeği alınır', v === 'yok' && fs.readdirSync(d).some(x => /^h\.json\.bozuk-\d+$/.test(x)), fs.readdirSync(d).join(','));
+  } catch (e) { t('Atomik yazım testleri', false, e.stack); }
   try { fs.unlinkSync(LOC()); } catch (e) {}
   KONUM_OK = bkK; DWARN = bkW;
   return R;
@@ -361,11 +369,19 @@ ipcMain.handle('gelen:al', wrap(() => {
     const p = path.join(d, f);
     try { if (Date.now() - fs.statSync(p).mtimeMs < 2000) continue; } catch (e) { continue; } // hâlâ yazılıyor olabilir
     try { const j = JSON.parse(fs.readFileSync(p, 'utf8').replace(/^\uFEFF/, '')); (Array.isArray(j) ? j : [j]).forEach(x => { if (x && typeof x === 'object') out.push(Object.assign({}, x, { _dosya: f })); }); }
-    catch (e) { out.push({ tur: 'hata', dosya: f, hata: e.message }); try { fs.mkdirSync(path.join(d, 'Hatalı'), { recursive: true }); fs.renameSync(p, path.join(d, 'Hatalı', f)); } catch (er) {} }
+    catch (e) {
+      // 0.7.20 (Ada): yeni dosya yarım yazılmış olabilir → ilk 30 sn bozuk sayılmaz, sonraki turda yeniden okunur
+      try { if (Date.now() - fs.statSync(p).mtimeMs < 30000) continue; } catch (er) { continue; }
+      out.push({ tur: 'hata', dosya: f, hata: e.message }); try { fs.mkdirSync(path.join(d, 'Hatalı'), { recursive: true }); fs.renameSync(p, path.join(d, 'Hatalı', f)); } catch (er) {} }
   }
   return out;
 }));
-ipcMain.handle('gelen:tamam', wrap(dosyalar => { const d = GELEN(), isl = path.join(d, 'İşlenen'); let n = 0; fs.mkdirSync(isl, { recursive: true }); [...new Set(dosyalar || [])].forEach(f => { if (!/^[^\\/:*?"<>|]+\.json$/i.test(f)) return; try { fs.renameSync(path.join(d, f), path.join(isl, f)); n++; } catch (e) {} }); return n; }));
+// 0.7.20 (Ada): {tamam:[...], hatali:[...]} — işlenemeyen öğe içeren dosya İşlenen'e değil Hatalı'ya gider (eski biçim: dizi = tamam)
+ipcMain.handle('gelen:tamam', wrap(a => {
+  const d = GELEN(), o = Array.isArray(a) ? { tamam: a, hatali: [] } : (a || {}), hatali = new Set(o.hatali || []); let n = 0;
+  const tasi = (liste, klasor) => { const hedef = path.join(d, klasor); fs.mkdirSync(hedef, { recursive: true }); [...new Set(liste)].forEach(f => { if (!/^[^\\/:*?"<>|]+\.json$/i.test(f)) return; try { fs.renameSync(path.join(d, f), path.join(hedef, f)); n++; } catch (e) {} }); };
+  tasi((o.tamam || []).filter(f => !hatali.has(f)), 'İşlenen'); if (hatali.size) tasi([...hatali], 'Hatalı'); return n;
+}));
 // Ada'nın soracağı geliştirme fikirleri: GitHub main'deki güncel liste, yoksa uygulamayla gelen
 ipcMain.handle('fikir:liste', wrap(async () => { if (!SMOKE) { try { const r = await fetch('https://raw.githubusercontent.com/caglarbozkurt350-creator/Orin/main/fikirler.json?t=' + Date.now(), { cache: 'no-store', signal: AbortSignal.timeout(6000) }); if (r.ok) { const j = await r.json(); if (Array.isArray(j.fikirler)) return { kaynak: 'github', fikirler: j.fikirler }; } } catch (e) {} } return { kaynak: 'yerel', fikirler: readJSON(path.join(__dirname, 'fikirler.json'), { fikirler: [] }).fikirler }; }));
 // Claude aboneliği (Claude Code CLI, headless): ağır işler abonelikte

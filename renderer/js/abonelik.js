@@ -12,7 +12,7 @@ var _abnZh=zekaHazir;function abnApiVar(){return _abnZh()}
 function abnSohbetHazir(){var s=ABN.st;return abnAcik()&&(s.sohbetBugun||0)<(s.gunlukSohbet||0)&&Date.now()>=ABN.bekle&&tmOnline()}
 zekaHazir=function(){return abnSohbetHazir()||_abnZh()};
 var ABN_MODEL={'claude-sonnet-5-5':'sonnet','claude-haiku-5-5':'haiku','claude-opus-5-5':'opus'};
-function abnCevapla(id){var c=tm(id);if(!c||ZK.yaz[id])return Promise.resolve();var msgs=zekaGecmis(id);if(!msgs.length||msgs[msgs.length-1].role!='user')return Promise.resolve();
+function abnCevapla(id){if(komutMu(id))return Promise.resolve();var c=tm(id);if(!c||ZK.yaz[id])return Promise.resolve();var msgs=zekaGecmis(id);if(!msgs.length||msgs[msgs.length-1].role!='user')return Promise.resolve();
 ZK.yaz[id]=1;TMSCR=true;if(area=='team')render();
 var son=msgs.slice(-12).map(function(m){return (m.role=='user'?'Çağlar':c.ad)+': '+(typeof m.content=='string'?m.content:JSON.stringify(m.content))}).join('\n\n');
 return ABN.cagir({kim:id,tur:'sohbet',sistemTam:true,araclar:'',maxTur:1,model:ABN_MODEL[tmModel(c)]||'haiku',zamanAsimiMs:120000,
@@ -106,13 +106,21 @@ ABN.st.sohbetBugun=60;t('Sohbet sınırı dolunca abonelik kullanılmaz',!abnSoh
 
 // Gelen kutusu (0.7.5): Claude Code'un bıraktığı mesajlar ve gelişim talepleri çalışanlara iletilir.
 // {tur:'mesaj', kim, metin} → çalışanın sohbetine · {tur:'gelisim', kim, gtur:'hafiza'|'beceri', ad, metin} → Nika → Orin onayı
-var GELEN_MESGUL=false,GELEN_TUR={}; // 0.7.14: ek türler (talimat, gorev, is_sonuc) GELEN_TUR[tur]=function(x){...} ile eklenir
-function gelenIsle(){if(!API||!API.gelen||GELEN_MESGUL)return Promise.resolve(0);GELEN_MESGUL=true;return API.gelen().then(function(r){if(!r.ok||!r.v.length)return 0;var n=0,ozet={},dosyalar=[],hata=r.v.filter(function(x){return x&&x.tur=='hata'});
+var GELEN_MESGUL=false,GELEN_DUR=false,GELEN_TUR={}; // 0.7.14: ek türler (talimat, gorev, is_sonuc) GELEN_TUR[tur]=function(x){...} ile eklenir
+function gelenIsle(){if(!API||!API.gelen||GELEN_MESGUL||GELEN_DUR)return Promise.resolve(0);GELEN_MESGUL=true;return API.gelen().then(function(r){if(!r.ok||!r.v.length)return 0;var n=0,ozet={},dosyalar=[],hata=r.v.filter(function(x){return x&&x.tur=='hata'});
 r.v.forEach(function(x){if(x&&x._dosya&&dosyalar.indexOf(x._dosya)<0)dosyalar.push(x._dosya)});if(hata.length){ABN.gelenHata=hata;toast('Gelen kutusunda okunamayan dosya: '+hata.map(function(x){return x.dosya}).join(', ')+' (Gelen\\Hatalı)')}
-r.v.forEach(function(x){if(!x||!tm(x.kim))return;if(GELEN_TUR[x.tur]){try{if(GELEN_TUR[x.tur](x)!==false)n++}catch(e){ZK.hata='Gelen kutusu: '+e.message}}else if(x.tur=='mesaj'){var a=abnOgrenAyikla(x.metin);tmPush(x.kim,{r:'o',t:a.metin,model:x.model||'Claude Code'});abnOgrenEkle({kim:x.kim},a.liste);n++}
-else if(x.tur=='gelisim'&&(x.gtur=='hafiza'||x.gtur=='beceri')){tmGelNew(x.kim,x.gtur,String(x.ad||'').slice(0,60),String(x.metin||'').slice(0,400),'claude');ozet[x.kim]=(ozet[x.kim]||0)+1;n++}});
+// 0.7.20 (Ada): işlenemeyen öğe (çalışan yok, tür bilinmiyor, hata) dosyasıyla birlikte Gelen\Hatalı'ya gider ve bildirilir; sessizce kaybolmaz
+var hatali=[],hataNot=[];function bozuk(x,neden){if(x&&x._dosya&&hatali.indexOf(x._dosya)<0)hatali.push(x._dosya);hataNot.push((x&&x._dosya||'?')+': '+neden)}
+r.v.forEach(function(x){if(!x||x.tur=='hata')return;if(!tm(x.kim)){bozuk(x,'çalışan bulunamadı ('+x.kim+')');return}try{if(GELEN_TUR[x.tur]){if(GELEN_TUR[x.tur](x)!==false)n++}else if(x.tur=='mesaj'){var a=abnOgrenAyikla(x.metin);tmPush(x.kim,{r:'o',t:a.metin,model:x.model||'Claude Code'});abnOgrenEkle({kim:x.kim},a.liste);n++}
+else if(x.tur=='gelisim'&&(x.gtur=='hafiza'||x.gtur=='beceri')){tmGelNew(x.kim,x.gtur,String(x.ad||'').slice(0,60),String(x.metin||'').slice(0,400),'claude');ozet[x.kim]=(ozet[x.kim]||0)+1;n++}
+else bozuk(x,'bilinmeyen tür ('+x.tur+')')}catch(e){ZK.hata='Gelen kutusu: '+e.message;bozuk(x,e.message)}});
+if(hatali.length){ABN.gelenIslenemeyen=hataNot;toast('Gelen kutusunda işlenemeyen öğe: '+hataNot.join('; ').slice(0,160)+' (Gelen\\Hatalı)')}
 Object.keys(ozet).forEach(function(k){tmPush(k,{r:'sys',t:'Claude Code '+ozet[k]+' öğrenme maddesi gönderdi; Nika’nın ve Orin’in onayına gitti.'})});
-if(n){save();if(area=='team')render();toast('Gelen kutusu: '+n+' öğe çalışanlara iletildi')}return (dosyalar.length&&API.gelenTamam?API.gelenTamam(dosyalar):Promise.resolve()).then(function(){return n})}).then(function(n){GELEN_MESGUL=false;return n},function(e){GELEN_MESGUL=false;return 0})}
+if(n){if(area=='team')render();toast('Gelen kutusu: '+n+' öğe çalışanlara iletildi')}
+// 0.7.20 (Ada): dosyalar ancak durum diske YAZILDIKTAN sonra taşınır. Kayıt başarısızsa taşınmaz ve bu oturumda gelen kutusu durur
+// (yeniden açılınca kaydedilmemiş öğeler tekrar işlenir; çift kayıt olmaz)
+return (n?saveNow():Promise.resolve({ok:true})).then(function(s){if(s&&s.ok===false){GELEN_DUR=true;ZK.hata='Gelen kutusu durdu: durum kaydedilemedi';return n}
+return (dosyalar.length&&API.gelenTamam?API.gelenTamam({tamam:dosyalar,hatali:hatali}):Promise.resolve()).then(function(){return n})})}).then(function(n){GELEN_MESGUL=false;return n},function(e){GELEN_MESGUL=false;return 0})}
 if(!INFO.smoke){setTimeout(gelenIsle,5000);setInterval(function(){if(!document.hidden)gelenIsle()},2*60000)}
 ABN.apiVar=function(){return _abnZh()};
 window.__gelenTest=function(){var R=[],T=TMS(),bk={gel:T.gel.slice(),ch:JSON.stringify(T.sohbet)};function t(n,ok,m){R.push({n:n,ok:!!ok,m:ok?'':String(m||'beklenmeyen sonuç')})}

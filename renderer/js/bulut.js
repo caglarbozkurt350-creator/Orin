@@ -30,16 +30,21 @@ return{v:1,ts:Date.now(),olaySira:BLS().olaySira,bugun:TODAY,ekip:{m:T.m,gorev:T
 // ---------- Eşitleme ----------
 function bulutDurum(){if(!API||!API.bulut)return Promise.resolve(null);return call(API.bulut.status()).then(function(s){BL.st=s;return s},function(){return null})}
 function bulutTick(zorla){if(BL.busy){BL.tekrar=1;return Promise.resolve()}if(!API||!API.bulut||(INFO.smoke&&!zorla))return Promise.resolve();if(!BL.st||!BL.st.eposta||!navigator.onLine)return Promise.resolve();
-BL.busy=true;var gelen=0;
-return call(API.bulut.pull(BLS().olaySira)).then(function(rows){(rows||[]).forEach(function(r){if(r.kaynak=='telefon'){bulutUygula({id:r.id,tur:r.tur,veri:r.veri,ts:Date.parse(r.ts)});gelen++}BLS().olaySira=Math.max(BLS().olaySira,+r.sira||0)});
-if(gelen){save();toast(gelen+' işlem telefondan geldi');if(area=='team'||area=='home')render()}
+BL.busy=true;var gelen=0,b0=BLS(),sira0=b0.olaySira,hata0=b0.hata||'';
+// 0.7.20 (Ada): her olay ayrı korunur — bozuk bir olay sırayı tıkamaz, atlanır ve hataya yazılır
+return call(API.bulut.pull(BLS().olaySira)).then(function(rows){var bozuk=[];(rows||[]).forEach(function(r){if(r.kaynak=='telefon'){try{bulutUygula({id:r.id,tur:r.tur,veri:r.veri,ts:Date.parse(r.ts)});gelen++}catch(e){bozuk.push((r.tur||'?')+' #'+(r.sira||'?')+': '+(e&&e.message||e))}}BLS().olaySira=Math.max(BLS().olaySira,+r.sira||0)});
+if(bozuk.length){BL.olayHata='Telefondan gelen '+bozuk.length+' işlem uygulanamadı ve atlandı ('+bozuk.join('; ').slice(0,200)+')';if(window.console)console.warn('[bulut] '+BL.olayHata)}
+if(gelen){toast(gelen+' işlem telefondan geldi');if(area=='team'||area=='home')render()}
 var oz=bulutOzet(),k=JSON.stringify(Object.assign({},oz,{ts:0}));if(!zorla&&k==BL.yayin)return;return call(API.bulut.push(oz)).then(function(){BL.yayin=k})})
-.then(function(){BLS().son=Date.now();BLS().hata='';save()},function(e){BLS().hata=e.message;if(/giriş|Oturum/i.test(e.message))bulutDurum()})
-.then(function(){BL.busy=false;if(BL.tekrar){BL.tekrar=0;setTimeout(bulutTick,300)}if(area=='set'&&pg=='telefon')render()})}
+.then(function(){BLS().son=Date.now();BLS().hata=BL.olayHata||'';BL.olayHata=''},function(e){BLS().hata=e.message;if(/giriş|Oturum/i.test(e.message))bulutDurum()})
+// 0.7.20 (Ada): durum dosyası yalnız gerçek değişiklikte yazılır (olay geldi, sıra ilerledi ya da hata değişti); "son eşitleme" zamanı bellekte kalır
+.then(function(){var b=BLS();if(gelen||b.olaySira!=sira0||(b.hata||'')!=hata0)save();BL.busy=false;if(BL.tekrar){BL.tekrar=0;setTimeout(bulutTick,300)}if(area=='set'&&pg=='telefon')bulutDurumYaz((b.hata||'')!=hata0)})}
+// Ayarlar › Telefon açıkken her turda sayfa baştan çizilmez (yazı kutuları silinmesin); yalnız durum satırı güncellenir
+function bulutDurumYaz(tam){var e=document.getElementById('blSon');if(tam||!e){render();return}var b=BLS();e.textContent=b.son?new Date(b.son).toLocaleString('tr-TR'):'—'}
 function bulutSimdi(){if(!BL.st||!BL.st.eposta){toast('Önce giriş yap');return}bulutTick(true).then(function(){toast(BLS().hata?'Eşitlenemedi: '+BLS().hata:'Telefonla eşitlendi')})}
 // 0.7.13: telefon mesajları 10 sn'de bir alınır (yalnız küçük bir okuma; özet değişmediyse gönderilmez); cevap yazılınca hemen gönderilir
 bulutDurum().then(function(){bulutTick()});setInterval(function(){bulutTick()},10000);
-var _blPush=tmPush,_blZam=null;tmPush=function(id,m){var r=_blPush(id,m);if(m&&(m.r=='o'||m.r=='sys')&&!INFO.smoke){clearTimeout(_blZam);_blZam=setTimeout(function(){bulutTick()},800)}return r};window.addEventListener('online',function(){bulutTick()});
+var _blZam=null;tmPushKanca(90,'bulut-yayin',function(id,m,_blPush){var r=_blPush(id,m);if(m&&(m.r=='o'||m.r=='sys')&&!INFO.smoke){clearTimeout(_blZam);_blZam=setTimeout(function(){bulutTick()},800)}return r});window.addEventListener('online',function(){bulutTick()});
 
 // ---------- Ayarlar › Telefon eşitleme ----------
 function bulutAdres(){var u=document.getElementById('bu').value.trim(),a=document.getElementById('ba').value.trim();if(!/^https:\/\/.+/.test(u)||!a){toast('Proje adresini ve publishable anahtarı yaz');return}if(/secret|service_role/i.test(a)){toast('Gizli anahtar değil, publishable anahtarı yaz');return}
@@ -50,7 +55,7 @@ function bulutCikis(){confirmBox('Telefon eşitlemesinden çıkılsın mı? Kay�
 P.telefon=function(){var s=BL.st||{},b=BLS();if(!BL.st&&!BL.denendi&&API&&API.bulut){BL.denendi=1;setTimeout(function(){BL.denendi=0},30000);bulutDurum().then(function(){if(pg=='telefon'&&BL.st)render()})}
 return '<p class="h">Telefon eşitleme</p><p class="s">Orvane Mobil ile görevler, sohbetler, onaylar ve iş günü kayıtları eşitlenir. Telefondan girilen kayıtları bu bilgisayar Sheets’e yazar.</p>'+
 '<div class="card"><div class="ch"><i class="ti ti-device-mobile"></i>Durum</div><div class="kr"><span>Giriş</span><span class="hn">'+(s.eposta?esc(s.eposta):'yapılmadı')+'</span></div>'+
-'<div class="kr"><span>Son eşitleme</span><span class="hn">'+(b.son?new Date(b.son).toLocaleString('tr-TR'):'—')+'</span></div>'+(b.hata?'<div class="kr"><span style="color:#f1c88a">'+esc(b.hata)+'</span></div>':'')+
+'<div class="kr"><span>Son eşitleme</span><span class="hn" id="blSon">'+(b.son?new Date(b.son).toLocaleString('tr-TR'):'—')+'</span></div>'+(b.hata?'<div class="kr"><span style="color:#f1c88a">'+esc(b.hata)+'</span></div>':'')+
 (s.eposta?'<div style="display:flex;gap:8px;margin-top:10px"><button class="bt p" onclick="bulutSimdi()"><i class="ti ti-refresh"></i> Şimdi eşitle</button><button class="bt" onclick="bulutCikis()">Çıkış</button></div>':'')+'</div>'+
 (s.varsayilan?'':'<div class="card"><div class="ch"><i class="ti ti-link"></i>Bağlantı adresi</div><div class="hn" style="margin-bottom:8px">Supabase proje adresi ve “publishable” anahtarı. Telefonda da aynısı kullanılır.</div>'+
 '<div style="display:flex;flex-direction:column;gap:8px"><input id="bu" placeholder="https://xxxx.supabase.co" value="'+esc(s.url||'')+'" style="width:100%;box-sizing:border-box" class="ti2"><input id="ba" placeholder="sb_publishable_…" value="'+esc(s.anahtar||'')+'" style="width:100%;box-sizing:border-box" class="ti2"></div><button class="bt" onclick="bulutAdres()">Kaydet</button></div>')+

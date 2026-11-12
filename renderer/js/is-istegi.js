@@ -61,7 +61,7 @@ function isOncDegis(id){var it=isBul(id);if(!it)return;it.onc=IS_ONC_SIRA[(IS_ON
 function isCikar(id){var it=isBul(id);if(!it)return;it.durum='red';if(/^f-/.test(id)&&typeof adaS=='function')adaS().cevap[id.slice(2)]={c:'hayir',ts:Date.now()};save();render()}
 // "hata: …" / "güncelleme: …" (her sohbetten) → Ada'nın listesi · "iş iste: …" / "claude: …" → o çalışanın iş isteği (Çağlar onayına)
 var IS_KOMUT=/^\s*(hata|güncelleme|guncelleme|öneri|oneri|iş iste|is iste|claude)\s*:\s*([\s\S]+)$/i;
-var _isPush=tmPush;tmPush=function(id,m){
+tmPushKanca(40,'is-istegi',function(id,m,_isPush){
 if(m&&!m.id)m.id=uid();
 if(m&&m.r=='ben'&&m.tur!='not'&&!m.komut&&!m.fikirCevap){var k=String(m.t||'').match(IS_KOMUT);if(k&&tm(id)){var t=k[1].toLocaleLowerCase('tr'),metin=k[2].trim();m.komut=1;delete m.bek;var r=_isPush(id,m);
 setTimeout(function(){tmChat(id).forEach(function(x){if(x.komut)delete x.bek});
@@ -71,7 +71,7 @@ _isPush('ada',{r:'o',t:'Not aldım: “'+it.baslik+'” güncelleme listeme ekle
 save();isRr()},30);return r}}
 // Çalışanın cevabındaki "İŞ İSTEĞİ: {...}" satırı → iş isteği (satır sohbette gizlenir)
 if(m&&m.r=='o'&&typeof m.t=='string'&&/İŞ İSTEĞİ\s*:/i.test(m.t)&&tm(id)){var a=isIstekAyikla(m.t);m.t=a.metin;var res=_isPush(id,m);a.liste.forEach(function(o){isIste(id,{baslik:o.baslik||o.metin,metin:o.metin||o.baslik,sonuc:o.onaylanirsa||o.onaylanmazsa?{evet:String(o.onaylanirsa||'').slice(0,220),hayir:String(o.onaylanmazsa||'').slice(0,220)}:null,kaynak:m.model&&/abonelik/.test(m.model)?'gorev':'sohbet'})});return res}
-return _isPush(id,m)};
+return _isPush(id,m)});
 function isJsonNesne(s){var i=s.indexOf('{');if(i<0)return null;var d=0,q=false,e=false;for(var j=i;j<s.length;j++){var ch=s[j];if(q){if(e)e=false;else if(ch=='\\')e=true;else if(ch=='"')q=false;continue}if(ch=='"')q=true;else if(ch=='{')d++;else if(ch=='}'){d--;if(!d){try{return{o:JSON.parse(s.slice(i,j+1)),son:j+1}}catch(er){return null}}}}return null}
 function isIstekAyikla(t){var liste=[],out=String(t),rx=/İŞ İSTEĞİ\s*:/i,g=0,mm;while((mm=out.match(rx))&&g++<3){var bas=mm.index,j=isJsonNesne(out.slice(bas));if(!j){out=out.slice(0,bas)+out.slice(bas+mm[0].length);continue}
 if(j.o&&(j.o.metin||j.o.baslik))liste.push(j.o);out=(out.slice(0,bas)+out.slice(bas+j.son)).replace(/\n{3,}/g,'\n\n')}return{metin:out.trim(),liste:liste.slice(0,2)}}
@@ -79,7 +79,7 @@ if(j.o&&(j.o.metin||j.o.baslik))liste.push(j.o);out=(out.slice(0,bas)+out.slice(
 var _isSend=tmSend;tmSend=function(id,txt,tur){var e=document.getElementById('tmi'),t=String(txt!=null?txt:(e?e.value:'')).trim(),md=tur||(tmOnline()?(TMMODE[id]||'mesaj'):'not');
 if(t&&md!='not'&&IS_KOMUT.test(t)){if(txt==null){TMD[id]='';if(e)e.value=''}tmPush(id,{r:'ben',t:t,tur:'mesaj'});render();return null}return _isSend(id,txt,tur)};
 // Komut mesajlarını yapay zekâ ayrıca cevaplamasın
-var _isZc=zekaCevapla;zekaCevapla=function(id){var a=tmChat(id),s=a[a.length-1];if(s&&s.komut){delete s.bek;return Promise.resolve()}return _isZc(id)};
+// 0.7.20: kontrol team.js komutMu() içinde; zekaCevapla ve abnCevapla başında çağrılır
 // Çalışanlara kural: Claude'dan iş isteyebilir
 var IS_KURAL='\nClaude’dan iş isteme: Senin yapamadığın, Claude Code’un (Orvane’nin geliştirici yapay zekâsı) yapabileceği bir iş gerekiyorsa (program hatası düzeltme, özellik ekleme, araç/dosya hazırlama) ve gerçekten gerekliyse, cevabının sonunda (ÖĞRENİLENLER satırından önce) ayrı bir satıra şunu yaz: İŞ İSTEĞİ: {"baslik":"kısa başlık","metin":"ne yapılsın ve neden","onaylanirsa":"en fazla 20 kelime","onaylanmazsa":"en fazla 20 kelime"} — Çağlar onaylarsa yapılır. Gereksiz isteme; yalnız JSON istenen işlerde bunu yazma.';
 var _isZs=zekaSistem;zekaSistem=function(c){return _isZs(c)+IS_KURAL};

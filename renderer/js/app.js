@@ -20,7 +20,8 @@ var t=pk(TODAY);calY=t.getFullYear();calM=t.getMonth()}
 var _sv=null;
 function save(){clearTimeout(_sv);_sv=setTimeout(saveNow,250)}
 function saveNow(){var st={v:1,gecmis:1,Q:Q,DR:DR,S:S,E:E,D:D,OT:OT,PR:PR,UP:UP,UM:UM,PS:PS,PT:PT,PL:PL,PA:PA,CL:CL,V:V,WS:WS,RG:RG,res:res,sbOn:sbOn,railOn:railOn,zoom:zoom};
-try{if(API&&saveNow.sync&&API.saveSync){var rs=API.saveSync(st);if(rs&&rs.ok===false&&window.saveBlocked)saveBlocked(rs)}else if(API)API.save(st).then(function(r){if(r&&r.ok===false&&window.saveBlocked)saveBlocked(r)},function(e){if(window.saveBlocked)saveBlocked({ok:false,err:'Kaydedilemedi: '+(e&&e.message||e)})});else localStorage.setItem('orin',JSON.stringify(st))}catch(e){toast('Kaydedilemedi: '+e.message)}}
+// 0.7.20: saveNow kaydın sonucunu Promise olarak döndürür ({ok:true|false}); kayıt bitmeden geri alınamaz iş yapılmasın (ör. gelen kutusu taşıma)
+try{if(API&&saveNow.sync&&API.saveSync){var rs=API.saveSync(st);if(rs&&rs.ok===false&&window.saveBlocked)saveBlocked(rs);return Promise.resolve(rs||{ok:true})}else if(API)return API.save(st).then(function(r){if(r&&r.ok===false&&window.saveBlocked)saveBlocked(r);return r||{ok:true}},function(e){var r={ok:false,err:'Kaydedilemedi: '+(e&&e.message||e)};if(window.saveBlocked)saveBlocked(r);return r});else{localStorage.setItem('orin',JSON.stringify(st));return Promise.resolve({ok:true})}}catch(e){toast('Kaydedilemedi: '+e.message);return Promise.resolve({ok:false,err:e.message})}}
 // Geçmiş raporları (Mayıs–Ağustos 2026) bir kez içe aktarır; mevcut kayıtların üzerine yazmaz
 function importGecmis(){WS=WS0.map(function(x){return x.slice()});if(!window.GECMIS)return;var G=GECMIS;RG=G.ranges.map(function(x){return x.slice()});
 G.projeler.forEach(function(p){if(!pexists(p[0])){var m=pmodel(p[0]);if(!PR[m]){PR[m]=[];UM[m]=true}PR[m].push([p[0],p[1]]);UP[p[0]]=true}PS[p[0]]=p[2]});

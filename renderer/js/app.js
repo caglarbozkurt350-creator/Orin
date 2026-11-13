@@ -179,7 +179,9 @@ if(ty=='p')return id+' · '+pname(id)+' · '+pmodel(id);
 if(ty=='g')return id+':\n'+(PR[id]||[]).map(function(p){return p[0]+' · '+p[1]}).join('\n');
 var e=(E[sel]||[])[id];return e?lab(sel)+' · '+e.k+' · '+e.i+' · '+e.d+' dk':''}
 function cp(t){if(navigator.clipboard)navigator.clipboard.writeText(t).then(function(){toast('Panoya kopyalandı')},function(){toast('Panoya kopyalanamadı')});else toast('Panoya kopyalanamadı')}
-function edE(i){EDIT=i;render();var e=E[sel][i];document.getElementById('kd').value=e.k=='?'?'':e.k;document.getElementById('is').value=e.i;document.getElementById('dk').value=e.d;if(document.getElementById('pn2'))document.getElementById('pn2').value=e.pn||'';if(document.getElementById('ds2'))document.getElementById('ds2').value=e.ds||'';document.getElementById('er').innerHTML='<span style="color:#f6d28a">Kayıt düzenleniyor · </span><a onclick="EDIT=null;render()" style="cursor:pointer;text-decoration:underline">Vazgeç</a>'}
+function edE(i){closeCx();EDIT=i;render();var e=E[sel][i];document.getElementById('kd').value=e.k=='?'?'':e.k;document.getElementById('is').value=e.i;document.getElementById('dk').value=e.d;if(document.getElementById('pn2'))document.getElementById('pn2').value=e.pn||'';if(document.getElementById('ds2'))document.getElementById('ds2').value=e.ds||'';var dkI=document.getElementById('dk');dkI.focus();dkI.select()}
+// Veri hatası: fazlayı düşürebilecek son kaydı düzenlemeye açar, dakikayı önerilen değerle doldurur (kaydetmek kullanıcının onayıyla)
+function fixOver(){var k=sel,c=cap(k),ent=E[k]||[],x=tot(k)-c;if(!c||x<=0||!ent.length)return;var i=ent.length-1;for(var j=ent.length-1;j>=0;j--)if(ent[j].d>x){i=j;break}edE(i);var v=Math.max(0,ent[i].d-x);document.getElementById('dk').value=v;document.getElementById('dk').select();toast(v>0?'Dakika '+dk(v)+' olarak önerildi · Güncelle’ye bas':'Bu kayıt fazlayı karşılamıyor · dakikayı düzelt')}
 function cap(k){var L=lim(k),o=OT[k]||0;return L?L+o:(o||null)}
 function dupE(i){var k=sel,e=E[k][i],c=cap(k);if(c&&S.cak&&tot(k)+e.d>c){toast('Gün süresi aşılır, çoğaltılamadı');return}var n={k:e.k,i:e.i,d:e.d,pn:e.pn,st:S.onay?0:1};E[k].splice(i+1,0,n);entryAdded(k,n);UN=[];RE=[];render();save();toast('Kayıt çoğaltıldı')}
 function delProj(id){Object.keys(PR).forEach(function(m){PR[m]=PR[m].filter(function(p){return p[0]!=id});if(!PR[m].length&&UM[m]){delete PR[m];delete UM[m]}});Object.keys(E).forEach(function(k){E[k]=E[k].filter(function(e){if(e.k==id){entryRemoved(e);return false}return true});if(!E[k].length)delete E[k]});PT=PT.filter(function(x){return x[0]!=id});delete UP[id];delete PS[id];projRemoved(id);UN=[];RE=[];save();toast('Proje silindi');nav('home','gun',sel)}
@@ -222,7 +224,7 @@ function closeM(){mo='';document.getElementById('dd').style.display='none';['Dos
 function mact(n,i){closeM();MA[n][i][1]()}
 document.addEventListener('click',function(e){if(!e.target.closest('.mi')&&!e.target.closest('.dd'))closeM();if(!e.target.closest('.cx'))closeCx()});
 document.addEventListener('keydown',function(e){var k=e.key,c=e.ctrlKey||e.metaKey,fl=e.target&&(e.target.tagName=='INPUT'||e.target.tagName=='TEXTAREA');
-if(k=='Escape'){closeFind();closeCx();cfNo();closeM();return}
+if(k=='Escape'){closeFind();closeCx();cfNo();closeM();if(EDIT!==null&&area=='home'&&pg=='gun'){EDIT=null;render()}return}
 if(k=='F11'){e.preventDefault();winCmd('fullscreen','Tarayıcıda F11 kullan');return}
 if(e.altKey&&!c){if(k=='ArrowLeft')back();else if(k=='ArrowRight')fwd();return}
 if(!c)return;

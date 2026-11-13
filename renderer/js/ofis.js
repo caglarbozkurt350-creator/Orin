@@ -27,6 +27,10 @@ return API.ofisYaz(o).then(function(r){if(!r||!r.ok)OF.son=null;return r},functi
 function ofisZamanla(){clearTimeout(OF.z);OF.z=setTimeout(ofisYaz,3000)}
 (function(){var _s=window.save;window.save=function(){var r=_s.apply(this,arguments);ofisZamanla();return r}})();
 setTimeout(function(){ofisYaz()},4000);
+// Ofis oyunundan karar: toplantı odası laptopunda Kabul/Reddet → BelgelerOrinGelenoyun-karar-*.json
+// {tur:'karar', kim, id (iş isteği), sonuc:'kabul'|'red', kaynak:'ofis-oyunu'} → isOnay (Orvane'deki Onayla/Reddet ile aynı akış)
+GELEN_TUR.karar=function(x){var it=typeof isBul=='function'?isBul(x.id):null;if(!it||it.durum!='onay')return false;var ok=x.sonuc=='kabul';
+tmPush(it.kim,{r:'sys',t:'Çağlar ofis oyununda (toplantı odası laptopu) iş isteğini '+(ok?'kabul etti':'reddetti')+': '+it.baslik});isOnay(it.id,ok?1:0);return true};
 // Test (smoke): gizlilik, kişisel finans ayrımı, dosyaya yazım
 window.__ofisTest=function(){var R=[],T=TMS();function t(n,ok,m){R.push({n:n,ok:!!ok,m:ok?'':String(m||'beklenmeyen sonuç')})}
 var bk={gor:T.gorev.slice(),gz:S.gizlilik?JSON.stringify(S.gizlilik):null,fn:S.finans?JSON.stringify(S.finans):null,of:S.ofis?JSON.stringify(S.ofis):null};
@@ -39,6 +43,14 @@ t('Ofis özeti: çalışan durumu ve aktif görev',sg&&sg.durum=='calisiyor'&&/d
 t('Ofis özeti: gizli çalışanın görev içeriği yazılmaz',ir&&ir.aktifGorev===null&&ir.acikGorev>=1&&!/GİZLİ/.test(js),JSON.stringify(ir));
 t('Ofis özeti: son tamamlanan (en yeni önde, gizli başlıksız)',o.sonTamamlanan[0].id=='oft3'&&o.sonTamamlanan[1].id=='oft4'&&o.sonTamamlanan[1].baslik===null,JSON.stringify(o.sonTamamlanan.slice(0,2)));
 t('Ofis özeti: kişisel gelir/gider yazılmaz',o.finans.gelir>=500&&o.finans.gelir<12345&&!/12345|777|benim/.test(js),JSON.stringify(o.finans));
+var bkIs=JSON.stringify(S.isler||[]);S.isler=S.isler||[];S.isler.push({id:'isOFT',kim:'ada',baslik:'Ofis karar testi',metin:'deneme',durum:'onay',toplanti:'tpOFT',tur:'is',ts:now});
+var o2=ofisOzet();t('Ofis özeti: toplantı kararı listede',o2.kararlar.some(function(k){return k.id=='isOFT'&&k.kim=='ada'}),JSON.stringify(o2.kararlar));
+var r1=GELEN_TUR.karar({tur:'karar',kim:'ada',id:'isOFT',sonuc:'red'}),itx=isBul('isOFT');
+t('Oyundan gelen karar (red) uygulanır',r1===true&&itx&&itx.durum=='red',JSON.stringify(itx&&itx.durum));
+t('Aynı karar ikinci kez uygulanmaz',GELEN_TUR.karar({tur:'karar',kim:'ada',id:'isOFT',sonuc:'kabul'})===false&&isBul('isOFT').durum=='red');
+t('Bilinmeyen karar yok sayılır',GELEN_TUR.karar({tur:'karar',kim:'ada',id:'yokYok',sonuc:'kabul'})===false);
+t('Karar sonrası özetten düşer',!ofisOzet().kararlar.some(function(k){return k.id=='isOFT'}));
+S.isler=JSON.parse(bkIs);
 OF.son=null;return ofisYaz(true).then(function(r){t('Ofis özeti dosyaya yazılır',r&&r.ok&&/ofis-ozet\.json$/.test(r.v),JSON.stringify(r));return API.ofisOku()}).then(function(r){
 t('Ofis özeti dosyadan geri okunur',r&&r.ok&&r.v&&r.v.surum==1&&r.v.guncelleme&&r.v.calisanlar.length==o.calisanlar.length,JSON.stringify(r).slice(0,200))})})
 .catch(function(e){t('Ofis özeti testi',false,e.stack)}).then(function(){T.gorev=bk.gor;if(bk.gz)S.gizlilik=JSON.parse(bk.gz);else delete S.gizlilik;if(bk.fn)S.finans=JSON.parse(bk.fn);else delete S.finans;if(bk.of)S.ofis=JSON.parse(bk.of);else delete S.ofis;OF.son=null;save();return R})};

@@ -9,6 +9,11 @@ if (SMOKE) app.setPath('userData', path.join(app.getPath('temp'), 'orin-smoke-' 
 else app.setPath('userData', path.join(app.getPath('appData'), 'Orin')); // ad Orvane oldu ama ayar, token ve konum.json eski klasörde kalır
 const DATA = () => app.getPath('userData');
 const LOC = () => path.join(DATA(), 'konum.json'); // seçilen veri klasörü (yalnız yol)
+// 0.7.23: konum.json'un ikinci kopyası başka klasörde (LocalAppData). 14.11.2026'da bir açılış konum.json'u göremeyip
+// veriyi varsayılan klasöre yazdı; artık konum.json yokken yedek bir seçim gösteriyorsa kayıt durdurulur ve uyarı çıkar.
+const KYED = () => SMOKE ? path.join(DATA(), 'konum-yedek.json') : path.join(process.env.LOCALAPPDATA || path.dirname(DATA()), 'Orin', 'konum.json');
+let _kyed; function konumYedekYaz(d) { if (_kyed === d) return; try { if (d) { fs.mkdirSync(path.dirname(KYED()), { recursive: true }); fs.writeFileSync(KYED(), JSON.stringify({ dir: d })); } else fs.unlinkSync(KYED()); } catch (e) {} _kyed = d; }
+function konumYedek() { try { return JSON.parse(fs.readFileSync(KYED(), 'utf8')).dir || null; } catch (e) { return null; } }
 let DWARN = null; // veri klasörü uyarısı (renderer'a gösterilir)
 // 0.7.1: konum.json varken veri ASLA varsayılan klasöre yazılmaz. Okuma kısa aralıklarla yeniden denenir,
 // son başarılı okunan yol bellekte tutulur; hiç okunamazsa veya klasör yoksa kayıt reddedilir (dataDir() null).
@@ -16,8 +21,8 @@ let KONUM_OK; // undefined: henüz okunmadı · null: konum.json yok (varsayıla
 function bekle(ms) { try { Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms); } catch (e) {} }
 function konum() {
   for (let i = 0; i < 5; i++) {
-    if (!fs.existsSync(LOC())) { if (KONUM_OK) return KONUM_OK; KONUM_OK = null; return null; } // bilinen seçim varken dosya kaybolursa seçime sadık kal
-    try { const d = JSON.parse(fs.readFileSync(LOC(), 'utf8').replace(/^\uFEFF/, '')).dir || null; KONUM_OK = d; return d; } catch (e) { bekle(80); }
+    if (!fs.existsSync(LOC())) { if (KONUM_OK) return KONUM_OK; if (konumYedek()) return '!okunamadı'; KONUM_OK = null; return null; } // bilinen seçim varken dosya kaybolursa seçime sadık kal
+    try { const d = JSON.parse(fs.readFileSync(LOC(), 'utf8').replace(/^\uFEFF/, '')).dir || null; KONUM_OK = d; konumYedekYaz(d); return d; } catch (e) { bekle(80); }
   }
   return KONUM_OK || '!okunamadı';
 }
@@ -135,7 +140,9 @@ function mainTests() {
     fs.unlinkSync(LOC());
     t('Bilinen seçim varken konum.json kaybolursa seçime sadık kalır', dataDir() === cus, dataDir());
     KONUM_OK = undefined;
-    t('konum.json yoksa varsayılan kullanılır', dataDir() === DATA());
+    t('konum.json kaybolur, yedek seçim gösteriyorsa kayıt durur (varsayılana yazılmaz)', dataDir() === null && DWARN && DWARN.kind === 'unreadable' && save({ v: 1, test: 4 }).ok === false && !fs.existsSync(def), JSON.stringify(DWARN));
+    konumYedekYaz(null); KONUM_OK = undefined;
+    t('konum.json ve yedeği yoksa varsayılan kullanılır', dataDir() === DATA());
     fs.writeFileSync(LOC(), JSON.stringify({ dir: cus })); KONUM_OK = undefined;
     const y = yedekAl('guncelleme-oncesi-9.9.9');
     t('Güncelleme öncesi yedek alınır', y.ok && /Yedekler/.test(y.file) && /durum-guncelleme-oncesi-9\.9\.9-/.test(path.basename(y.file)) && fs.existsSync(y.file), JSON.stringify(y));
@@ -223,7 +230,7 @@ ipcMain.handle('data:move', (e, { dir, mode }) => {
       fs.copyFileSync(src, dst);
       fs.renameSync(src, src.replace(/\.json$/, '.yedek-' + new Date().toISOString().slice(0, 10) + '.json'));
     }
-    if (path.resolve(dir) === path.resolve(DATA())) { try { fs.unlinkSync(LOC()); } catch (er) {} KONUM_OK = null; } else { fs.writeFileSync(LOC(), JSON.stringify({ dir })); KONUM_OK = dir; }
+    if (path.resolve(dir) === path.resolve(DATA())) { try { fs.unlinkSync(LOC()); } catch (er) {} KONUM_OK = null; konumYedekYaz(null); } else { fs.writeFileSync(LOC(), JSON.stringify({ dir })); KONUM_OK = dir; }
     DWARN = null;
     return { ok: true, info: dataInfo() };
   } catch (err) { return { ok: false, err: err.message }; }

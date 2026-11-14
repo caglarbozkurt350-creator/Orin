@@ -55,7 +55,10 @@ function readJSON(f, def) { try { return JSON.parse(fs.readFileSync(f, 'utf8'));
 function writeJSON(f, v) {
   fs.mkdirSync(path.dirname(f), { recursive: true });
   const tmp = f + '.tmp';
-  fs.writeFileSync(tmp, JSON.stringify(v, null, 1), 'utf8');
+  // 0.7.23: 14.11.2026'da sistem çökünce durum.json tamamen sıfır bayt kaldı (içerik diske inmeden yeniden adlandırılmıştı).
+  // Geçici dosya diske zorla yazılır (fsync), sonra asıl dosyanın yerine geçer.
+  const fd = fs.openSync(tmp, 'w');
+  try { fs.writeSync(fd, JSON.stringify(v, null, 1), null, 'utf8'); fs.fsyncSync(fd); } finally { fs.closeSync(fd); }
   for (let i = 0; ; i++) { try { fs.renameSync(tmp, f); return; } catch (e) { if (i >= 3 || !/EPERM|EBUSY|EACCES/.test(e.code || '')) throw e; bekle(120); } }
 }
 function safeName(t) { return (String(t || '').trim() || 'Adsız not').replace(/[\\/:*?"<>|]/g, '-').replace(/[. ]+$/, '').slice(0, 120) || 'Adsız not'; }

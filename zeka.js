@@ -24,7 +24,7 @@ function okuJ(f, d) {
   try { return JSON.parse(t); } catch (e) { try { fs.copyFileSync(f, f + '.bozuk-' + Date.now()); } catch (er) {} return d; }
 }
 // Atomik yazım: geçici dosya + yeniden adlandırma (yarıda kalan yazım dosyayı bozmaz)
-function yazJ(f, v) { const t = f + '.tmp'; fs.writeFileSync(t, JSON.stringify(v, null, 1)); fs.renameSync(t, f); }
+function yazJ(f, v) { const t = f + '.tmp', fd = fs.openSync(t, 'w'); try { fs.writeSync(fd, JSON.stringify(v, null, 1)); fs.fsyncSync(fd); } finally { fs.closeSync(fd); } fs.renameSync(t, f); } // 0.7.23: çökmede sıfır bayt kalmasın (fsync)
 function ayAnahtari() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); }
 // Anahtar ve harcama defteri bellekte tutulur (status() her çağrıda diski okuyup şifre çözmesin); yazınca güncellenir
 let _anh, _def = null;

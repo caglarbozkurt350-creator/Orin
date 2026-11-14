@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { ScrollView, Text, TextInput, View } from 'react-native';
 import { Dugme, Ekran, Ikon, Nokta, s } from '@/bilesen/ortak';
 import { guncelle, useDurum } from '@/lib/depo';
-import { bekleyenGelisim, useGorunum } from '@/lib/ekip';
+import { cagladaBekleyen, useGorunum } from '@/lib/ekip';
 import { cikis, esitle, girisYap, hataMetni, kayitOl, oturum, VARSAYILAN } from '@/lib/senk';
 import { R } from '@/lib/tema';
 import { SURUM } from '@/veri/surum';
@@ -21,7 +21,7 @@ export default function Ayarlar() {
   const calis = async (f: () => Promise<any>, ok: string) => { setBekle(true); setMesaj(''); try { await f(); setMesaj(ok); await yenile(); } catch (e) { setMesaj(hataMetni(e)); } finally { setBekle(false); } };
   const bekleyen = d.olaylar.filter((e) => !e.gitti).length;
   return (
-    <Ekran baslik={<Text style={s.baslik}>Ayarlar</Text>} altMenu rozet={{ '/onaylar': bekleyenGelisim(o, 'nika').length + bekleyenGelisim(o, 'orin').length }}>
+    <Ekran baslik={<Text style={s.baslik}>Ayarlar</Text>} altMenu rozet={{ '/onaylar': cagladaBekleyen(o).length }}>
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
         <View style={s.kart}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}><Ikon ad="ekip" boy={18} /><Text style={{ color: '#fff', fontSize: 15, fontWeight: '600', flex: 1 }}>Masaüstüyle eşitleme</Text><Nokta d={kim && !d.senk.hata ? 'ok' : d.senk.hata ? 'bz' : 'id'} /></View>

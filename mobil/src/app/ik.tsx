@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { AltPencere, GorevFormu } from '@/bilesen/formlar';
 import { Dugme, Ekran, Foto, Kart, s } from '@/bilesen/ortak';
-import { acikGorevler, bekleyenGelisim, Calisan, calisanlar, useGorunum, zincir } from '@/lib/ekip';
+import { acikGorevler, cagladaBekleyen, Calisan, calisanlar, useGorunum, zincir } from '@/lib/ekip';
 import { R } from '@/lib/tema';
 
 export default function InsanKaynaklari() {
@@ -21,9 +21,9 @@ export default function InsanKaynaklari() {
   return (
     <Ekran geri baslik={<Text style={{ color: R.yazi, fontSize: 17, fontWeight: '600' }}>İnsan Kaynakları</Text>} sag={<Foto c={hepsi.find((c) => c.id === 'nika')} boy={34} />}>
       <ScrollView contentContainerStyle={{ padding: 16, gap: 6, paddingBottom: 30 }}>
-        {bekleyenGelisim(o, 'nika').length + bekleyenGelisim(o, 'orin').length > 0 && (
+        {cagladaBekleyen(o).length > 0 && (
           <Pressable onPress={() => router.replace('/onaylar' as any)} style={{ backgroundColor: 'rgba(255,179,91,0.1)', borderWidth: 1, borderColor: 'rgba(255,179,91,0.4)', borderRadius: 14, padding: 12, marginBottom: 6 }}>
-            <Text style={{ color: R.turuncu, fontSize: 13.5, fontWeight: '600' }}>{bekleyenGelisim(o, 'nika').length + bekleyenGelisim(o, 'orin').length} gelişim talebi onay bekliyor · Onaylar’a git ›</Text>
+            <Text style={{ color: R.turuncu, fontSize: 13.5, fontWeight: '600' }}>{cagladaBekleyen(o).length} gelişim talebi senin onayını bekliyor · Onaylar’a git ›</Text>
           </Pressable>
         )}
         <Text style={s.soluk}>Departman müdürü Nika · {hepsi.length} çalışan kartı · karta dokun, ayrıntıyı gör</Text>

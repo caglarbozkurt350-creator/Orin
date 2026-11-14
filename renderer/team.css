@@ -229,3 +229,28 @@ html.light .skk,html.light .fnoz>div,html.light .fnpk{background:#fff;border-col
 .skceo{display:flex;flex-direction:column;gap:5px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:13.5px;color:#c9c9ce}.skceo1{display:flex;justify-content:space-between;gap:10px}.skceo1 b{color:#fff;font-weight:600}
 .skceon{font-size:12.5px;color:#8ee6a9}.skceob{display:flex;gap:8px;align-items:center}.skceob .bt{min-height:30px;padding:4px 12px}.skceob a{font-size:12.5px;color:#9ec5ff;text-decoration:none}
 html.light .skceo1 b{color:#222}
+
+/* 0.7.23 · Onaylar sayfası, sol çubuk rozeti, çalışan sayfası onay hatırlatması */
+#r_onay{position:relative}.rbn.kirm{display:flex;top:4px;right:2px;min-width:18px;height:18px;padding:0 5px;box-sizing:border-box;border-radius:999px;background:#e5484d;color:#fff;font-size:11px;font-weight:700;align-items:center;justify-content:center}
+.cnt.onrr{background:#e5484d;color:#fff;font-weight:700}
+.ony{display:flex;flex-direction:column;gap:14px;max-width:980px;width:100%;box-sizing:border-box}
+.onh0{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px}.onh0 h1{margin:0 0 3px;font-size:21px;font-weight:600;color:#fff}.onh0 p{margin:0;font-size:13px;color:#9a9aa0}
+.onh0 .seg{padding:3px}.onh0 .seg span{padding:6px 14px;font-size:13px}
+.ong{display:flex;align-items:center;gap:10px;margin-top:6px}.ong h2{margin:0;font-size:14px;font-weight:600;color:#c9c9ce}.onl{flex:1;height:1px;background:rgba(255,255,255,.06)}.ong .bt{min-height:34px;padding:6px 14px;font-size:13px}
+.onk{background:#232327;border:1px solid rgba(255,255,255,.05);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.onk.onkk{flex-direction:row;flex-wrap:wrap;align-items:center;gap:12px}.onkg{flex:1 1 360px;min-width:0}
+.onb{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.onb b{font-size:14px;font-weight:600;color:#fff}.onj{color:#9a9aa0;font-size:13px}.onk .onkg .onj{margin-top:3px}.ons{margin-left:auto;color:#9a9aa0;font-size:12px}
+.ont{font-size:15px;font-weight:600;color:#fff}.onm{margin:0;color:#b4b4ba;line-height:1.5;font-size:13.5px}
+.onp{border-radius:999px;padding:2px 9px;font-size:12px;font-weight:600;white-space:nowrap;background:#1d2f4f;color:#9cc2ff}.onp.gh{background:#3a2a4f;color:#d6b8ff}.onp.is{background:#4a3a14;color:#f6d28a}.onp.kt{background:#2e2e33;color:#c9c9ce}
+.onr{display:flex;flex-wrap:wrap;gap:8px}.onc{background:#2e2e33;color:#c9c9ce;border-radius:999px;padding:3px 10px;font-size:12.5px}.onc.ok{background:#1d3b2b;color:#8fe0b3}.onc.red{background:#3f1f1f;color:#f4a3a3}.onc.bk{background:#4a3a14;color:#f6d28a}
+.ona{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap}.ona .bt{min-height:38px;padding:7px 16px;font-size:13.5px}
+.ona .bt.g{background:transparent;color:#c9c9ce}.ona .bt.r{color:#f4a3a3}
+.onk .snc{margin:0}
+.onh{flex:1 1 100%;border:1px solid rgba(246,210,138,.28);background:rgba(74,58,20,.45);border-radius:12px;overflow:hidden;margin-top:12px}
+.onh1{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:6px 12px;color:#f6d28a}.onh1 svg{flex:none}.onh1 b{font-weight:600}.onhs{color:#d8c9a6;flex:1 1 220px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.onhb{border:none;background:transparent;color:#f6d28a;font:600 13px inherit;font-family:inherit;padding:4px 8px;min-height:28px;display:flex;align-items:center;gap:4px;cursor:pointer}.onhb svg{transition:transform .12s;transform:rotate(180deg)}.onh.ac .onhb svg{transform:none}
+.onh1 a{color:#f6d28a;font-size:13px;font-weight:600;text-decoration:none;padding:4px 8px}
+.onhl{display:none;flex-direction:column;border-top:1px solid rgba(246,210,138,.16);max-height:36vh;overflow:auto}.onh.ac .onhl{display:flex}
+.onhr{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:8px 14px}.onhr+.onhr{border-top:1px solid rgba(255,255,255,.05)}.onht{flex:1 1 280px;min-width:0;color:#ececec;font-size:13.5px}.onht b{font-weight:600}.onok{color:#8fe0b3}
+.onhr .bt{min-height:32px;padding:4px 14px;font-size:13px}.onhr .bt.g{background:transparent;color:#c9c9ce}.onhr .bt.r{color:#f4a3a3}
+.eh{flex-wrap:wrap}

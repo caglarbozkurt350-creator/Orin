@@ -13,9 +13,9 @@ T.gorev.push({id:v.id,kim:v.kim,metin:v.metin,onc:v.onc||'normal',son:v.son||'',
 psh(v.kim,{id:e.id+'s',r:'sys',t:'Çağlar doğrudan görev verdi'+(v.onc=='acil'?' (acil)':'')+': '+v.metin+(v.son?' · son tarih '+v.son:''),ts:e.ts});
 if(v.bilgi&&v.kim!='orin')psh('orin',{id:e.id+'b',r:'sys',t:bilgiNotu(c.ad),ts:e.ts})}
 else if(e.tur=='gorev_durum'){var g=T.gorev.filter(function(x){return x.id==v.id})[0];if(g){g.durum=v.durum;g.bts=v.durum=='bitti'?e.ts:null}}
-else if(e.tur=='gelisim'){if(T.gel.some(function(x){return x.id==v.id}))return;var o={id:v.id,kim:v.kim,tur:v.gtur,ad:v.ad||'',metin:v.metin||'',asama:v.kimden=='nika'?'ceo':'ik',kimden:v.kimden||'cagla',ts:e.ts};if(v.kimden=='nika')o.ik={ts:e.ts,ok:1};T.gel.push(o)}
+else if(e.tur=='gelisim'){if(T.gel.some(function(x){return x.id==v.id}))return;var o={id:v.id,kim:v.kim,tur:v.gtur,ad:v.ad||'',metin:v.metin||'',asama:'ik',kimden:v.kimden||'cagla',ts:e.ts};if(v.kimden=='nika'){o.ik={ts:e.ts,ok:1};o.asama=tmGelSonraki(o)}T.gel.push(o)}
 else if(e.tur=='gelisim_karar'){var x=T.gel.filter(function(y){return y.id==v.id})[0];if(!x||x.asama!=v.asama)return;
-if(v.asama=='ik'){x.ik={ts:e.ts,ok:v.ok?1:0};x.asama=v.ok?'ceo':'red'}else{x.ceo={ts:e.ts,ok:v.ok?1:0};x.asama=v.ok?'tamam':'red';if(v.ok)tmGelApply(x)}}
+if(v.asama=='ik'){x.ik={ts:e.ts,ok:v.ok?1:0};x.asama=v.ok?tmGelSonraki(x):'red'}else if(v.asama=='orin'){x.orin={ts:e.ts,ok:v.ok?1:0,kim:'cagla'};x.asama=v.ok?'ceo':'red'}else{x.ceo={ts:e.ts,ok:v.ok?1:0};x.asama=v.ok?'tamam':'red';if(v.ok)tmGelApply(x)}}
 else if(e.tur=='kayit'){var k=v.k;if(!k||!v.kod||!v.dk)return;var en={k:String(v.kod),i:String(v.is||''),d:+v.dk,st:1,u:uid(),src:'telefon',pid:e.id};
 if((E[k]||[]).some(function(z){return z.pid==e.id}))return;(E[k]=E[k]||[]).push(en);entryAdded(k,en)}}
 

@@ -71,7 +71,7 @@ export default function CalisanSayfasi() {
           {sek === 'haf' && <>
             <Dugme yazi="Hafızaya ekle" ikon="beyin" onPress={() => setForm('hafiza')} />
             <Text style={s.soluk}>{c.ad}’nın kalıcı olarak hatırladıkları. Yeni bilgi Nika ve Orin’in onayıyla eklenir.</Text>
-            {o.ekip.gel.filter((g) => g.kim === c.id && g.tur === 'hafiza' && (g.asama === 'ik' || g.asama === 'ceo')).map((g) => <GelisimSatiri key={g.id} g={g} />)}
+            {o.ekip.gel.filter((g) => g.kim === c.id && g.tur === 'hafiza' && (g.asama === 'ik' || g.asama === 'orin' || g.asama === 'ceo')).map((g) => <GelisimSatiri key={g.id} g={g} />)}
             {hafiza(c.id, o).length ? hafiza(c.id, o).slice().reverse().map((m) => (
               <View key={m.id} style={[s.kart, { flexDirection: 'row', gap: 10 }]}><Ikon ad="yildiz" boy={18} renk={c.renk} /><View style={{ flex: 1 }}><Text style={{ color: '#e4e4e8', fontSize: 14.5 }}>{m.metin}</Text><Text style={{ color: R.solukk, fontSize: 12, marginTop: 3 }}>{m.kaynak}</Text></View></View>
             )) : <Bos yazi="Hafıza henüz boş." ikon="beyin" />}

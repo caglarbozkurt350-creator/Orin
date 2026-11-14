@@ -4,7 +4,7 @@ import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 
 import { Bos } from '@/bilesen/formlar';
 import { Dugme, Ekran, Ikon, Rozet, s } from '@/bilesen/ortak';
 import { olayEkle, useDurum } from '@/lib/depo';
-import { bekleyenGelisim, gunAnahtari, useGorunum } from '@/lib/ekip';
+import { cagladaBekleyen, gunAnahtari, useGorunum } from '@/lib/ekip';
 import { etiketOku } from '@/lib/etiket';
 import { esitleSonra } from '@/lib/senk';
 import { R, saydam } from '@/lib/tema';
@@ -43,7 +43,7 @@ export default function IsGunu() {
   };
   const doldur = () => { if (!L) return setHata('Bu gün için iş süresi yok'); const kalan = H - T; if (kalan <= 0) return setHata('Gün zaten dolu'); kaydet(kalan); };
   return (
-    <Ekran baslik={<Text style={s.baslik}>İş günü</Text>} altMenu rozet={{ '/onaylar': bekleyenGelisim(o, 'nika').length + bekleyenGelisim(o, 'orin').length }}>
+    <Ekran baslik={<Text style={s.baslik}>İş günü</Text>} altMenu rozet={{ '/onaylar': cagladaBekleyen(o).length }}>
       <ScrollView contentContainerStyle={{ padding: 16, gap: 10, paddingBottom: 30 }} keyboardShouldPersistTaps="handled">
         <View>
           <Text style={{ color: R.yazi, fontSize: 20, fontWeight: '700' }}>{tarih.getDate()} {AY[tarih.getMonth()]} {GN[tarih.getDay()]}</Text>

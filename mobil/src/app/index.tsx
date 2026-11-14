@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { Ekran, Foto, Ikon, Nokta, s } from '@/bilesen/ortak';
 import { useDurum } from '@/lib/depo';
-import { bekleyenGelisim, Calisan, calisanlar, durumNoktasi, useGorunum } from '@/lib/ekip';
+import { cagladaBekleyen, Calisan, calisanlar, durumNoktasi, useGorunum } from '@/lib/ekip';
 import { R } from '@/lib/tema';
 
 function saat(ts: number) { const d = new Date(ts), b = new Date(); return d.toDateString() === b.toDateString() ? d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : d.getDate() + '.' + (d.getMonth() + 1); }
@@ -13,7 +13,7 @@ export default function Ekip() {
   const o = useGorunum(), senk = useDurum((d) => d.senk), [q, setQ] = useState('');
   const hepsi = useMemo(() => calisanlar(o), [o]);
   const sz = q.trim().toLocaleLowerCase('tr'), gor = hepsi.filter((c) => !sz || (c.ad + ' ' + c.gorev).toLocaleLowerCase('tr').includes(sz));
-  const onayIk = bekleyenGelisim(o, 'nika').length, onayCeo = bekleyenGelisim(o, 'orin').length, onay = onayIk + onayCeo;
+  const onay = cagladaBekleyen(o).length;
   const cevrim = !senk.hata;
   const satir = (c: Calisan) => {
     const a = o.ekip.sohbet[c.id] || [], son = a[a.length - 1];
@@ -42,7 +42,7 @@ export default function Ekip() {
         <Pressable onPress={() => (onay > 0 ? router.replace('/onaylar' as any) : router.push('/ik' as any))} accessibilityRole="button" style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 10, borderRadius: 16, backgroundColor: '#222225', borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)', marginBottom: 6 }}>
           <View style={{ width: 40, height: 40, borderRadius: 13, backgroundColor: R.ikBas, alignItems: 'center', justifyContent: 'center' }}><Ikon ad="kart" boy={20} renk="#fff" kalin={1.9} /></View>
           <View style={{ flex: 1 }}><Text style={{ color: R.yazi, fontSize: 15, fontWeight: '600' }}>İnsan Kaynakları</Text><Text style={{ color: R.soluk, fontSize: 12.5 }}>Çalışan kartları · Nika</Text></View>
-          {onay > 0 ? <Pressable onPress={() => router.replace('/onaylar' as any)} accessibilityLabel={onay + ' onay bekliyor'} hitSlop={8} style={{ backgroundColor: R.turuncu, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3 }}><Text style={{ color: '#1b1b1d', fontSize: 12, fontWeight: '600' }}>{onay} onay · {onayIk && onayCeo ? 'İK + CEO' : onayIk ? 'İK' : 'CEO'}</Text></Pressable>
+          {onay > 0 ? <Pressable onPress={() => router.replace('/onaylar' as any)} accessibilityLabel={onay + ' onay bekliyor'} hitSlop={8} style={{ backgroundColor: R.turuncu, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3 }}><Text style={{ color: '#1b1b1d', fontSize: 12, fontWeight: '600' }}>{onay} onay bekliyor</Text></Pressable>
             : <View style={{ backgroundColor: '#34343a', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 1 }}><Text style={{ color: R.yazi2, fontSize: 11.5 }}>{hepsi.length}</Text></View>}
         </Pressable>
         {!o.ts && (

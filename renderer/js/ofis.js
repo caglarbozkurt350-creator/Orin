@@ -19,7 +19,7 @@ var kar=IS.filter(function(x){return x.durum=='onay'&&x.toplanti}).map(function(
 return{id:x.id,kim:x.kim,baslik:gz?'Gizli konu':ofKisa(x.baslik,90),ozet:gz?null:ofKisa(x.metin,300),toplanti:t?ofKisa(t.konu,60):''}});
 var fin={ay:'',gelir:0,gider:0,net:0};try{var r=fnAyToplam(fnBuAy());fin={ay:r.ay,gelir:Math.round(r.sirketGelir),gider:Math.round(r.isletme),net:Math.round(r.sirketNet)}}catch(e){}
 return{surum:OF.SURUM,mesai:JSON.parse(JSON.stringify(o.mesai)),calisanlar:cal,sonTamamlanan:son,
-bekleyenOnay:{isIstegi:IS.filter(function(x){return x.durum=='onay'}).length,gelisim:(T.gel||[]).filter(function(x){return x.asama=='ik'||x.asama=='ceo'}).length},
+bekleyenOnay:{isIstegi:IS.filter(function(x){return x.durum=='onay'}).length,gelisim:(T.gel||[]).filter(function(x){return x.asama=='ik'||x.asama=='orin'||x.asama=='ceo'}).length},
 kararlar:kar,finans:fin}}
 function ofisYaz(zorla){if(!API||!API.ofisYaz)return Promise.resolve(null);var o;try{o=ofisOzet()}catch(e){return Promise.resolve(null)}
 var j=JSON.stringify(o);if(!zorla&&j==OF.son)return Promise.resolve(null);OF.son=j;o.guncelleme=new Date().toISOString();

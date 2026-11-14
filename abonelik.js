@@ -7,7 +7,7 @@ const os = require('os');
 const { spawn, execFile, execFileSync } = require('child_process');
 let SURUM = null; // claude --version önbelleği (arka planda bir kez okunur)
 
-let DIR = null, DOCS = null, CFG = null, EXE;
+let DIR = null, DOCS = null, CFG = null, EXE = null, WHERE_TS = 0;
 const VARS = { acik: false, gunluk: 5, gunlukSohbet: 60, gunlukToplanti: 300, model: 'sonnet', maxTur: 12, sureDk: 15, gun: '', sayi: 0, sohbet: 0, toplanti: 0, toplam: 0 };
 const MODELLER = ['sonnet', 'haiku', 'opus'];
 const ARACLAR = 'Read,Glob,Grep,WebSearch,WebFetch';
@@ -41,7 +41,7 @@ function sayac() { const c = cfg(); if (c.gun !== bugun()) { c.gun = bugun(); c.
 
 // claude.exe: önce resmi npm kurulumu, sonra yerel kurulum, en son PATH
 function bul() {
-  if (EXE !== undefined && (!EXE || fs.existsSync(EXE))) return EXE;
+  if (EXE && fs.existsSync(EXE)) return EXE; // yalnız bulunan yol önbelleğe alınır; bulunamazsa sonraki çağrıda yeniden aranır
   const e = process.env, aday = [
     e.ORVANE_CLAUDE,
     e.APPDATA && path.join(e.APPDATA, 'npm', 'node_modules', '@anthropic-ai', 'claude-code', 'bin', 'claude.exe'),
@@ -49,7 +49,7 @@ function bul() {
     e.LOCALAPPDATA && path.join(e.LOCALAPPDATA, 'Programs', 'claude', 'claude.exe')
   ].filter(Boolean);
   EXE = aday.find(f => { try { return fs.statSync(f).isFile(); } catch (er) { return false; } }) || null;
-  if (!EXE) { try { const w = execFileSync('where', ['claude.exe'], { encoding: 'utf8', windowsHide: true, timeout: 5000 }).split(/\r?\n/)[0].trim(); if (w && fs.existsSync(w)) EXE = w; } catch (er) {} }
+  if (!EXE && Date.now() - WHERE_TS > 10000) { WHERE_TS = Date.now(); try { const w = execFileSync('where', ['claude.exe'], { encoding: 'utf8', windowsHide: true, timeout: 5000 }).split(/\r?\n/)[0].trim(); if (w && fs.existsSync(w)) EXE = w; } catch (er) {} }
   return EXE;
 }
 // Alt süreç ortamı: yalnız sistem değişkenleri (ANTHROPIC_*, CLAUDE_* geçmez)

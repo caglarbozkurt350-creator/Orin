@@ -14,7 +14,7 @@ function ikLeg(a){return '<div class="hn" style="display:flex;gap:10px;flex-wrap
 
 // 1) Gelişim: onaylanan gelişim (beceri + hafıza) sayısı, eşitlikte bekleyen talepler
 function ikGelisimVeri(){var g=TMS().gel;return tmAll().map(function(c){var m=g.filter(function(x){return x.kim==c.id});
-return{id:c.id,ad:c.ad,renk:c.renk,onay:m.filter(function(x){return x.asama=='tamam'}).length,bek:m.filter(function(x){return x.asama=='ik'||x.asama=='ceo'}).length,haf:tmMem(c.id).length}})
+return{id:c.id,ad:c.ad,renk:c.renk,onay:m.filter(function(x){return x.asama=='tamam'}).length,bek:m.filter(function(x){return x.asama=='ik'||x.asama=='orin'||x.asama=='ceo'}).length,haf:tmMem(c.id).length}})
 .sort(function(a,b){return b.onay-a.onay||b.bek-a.bek||b.haf-a.haf||a.ad.localeCompare(b.ad,'tr')})}
 GRF.ikGelisim=function(){var d=ikGelisimVeri();if(!d.some(function(x){return x.onay||x.bek}))return{t:'Çalışan gelişimi',s:'en çoktan en aza',none:'Henüz gelişim talebi yok'};
 var mx=Math.max.apply(null,d.map(function(x){return x.onay+x.bek}))||1;

@@ -5,7 +5,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { AltPencere, Bos, GorevFormu, GorevSinir } from '@/bilesen/formlar';
 import { Ekran, Foto, Ikon, Rozet, s } from '@/bilesen/ortak';
 import { olayEkle } from '@/lib/depo';
-import { bekleyenGelisim, Calisan, calisanlar, useGorunum } from '@/lib/ekip';
+import { cagladaBekleyen, Calisan, calisanlar, useGorunum } from '@/lib/ekip';
 import { esitleSonra } from '@/lib/senk';
 import { R } from '@/lib/tema';
 
@@ -14,7 +14,7 @@ export default function Gorevler() {
   const [kim, setKim] = useState<Calisan | null>(null), [sec, setSec] = useState(false);
   const g = o.ekip.gorev.slice().sort((a, b) => Number(a.durum === 'bitti') - Number(b.durum === 'bitti') || b.ts - a.ts);
   return (
-    <Ekran baslik={<Text style={s.baslik}>Görevler</Text>} altMenu rozet={{ '/onaylar': bekleyenGelisim(o, 'nika').length + bekleyenGelisim(o, 'orin').length }}
+    <Ekran baslik={<Text style={s.baslik}>Görevler</Text>} altMenu rozet={{ '/onaylar': cagladaBekleyen(o).length }}
       sag={<Pressable onPress={() => setSec(true)} accessibilityLabel="Doğrudan görev ver" style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: R.ana, alignItems: 'center', justifyContent: 'center' }}><Ikon ad="arti" renk="#fff" kalin={2.2} /></Pressable>}>
       <ScrollView contentContainerStyle={{ padding: 16, gap: 10, paddingBottom: 30 }}>
         {g.length ? g.map((x) => {

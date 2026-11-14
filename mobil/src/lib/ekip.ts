@@ -27,6 +27,9 @@ export function bosOzet(): Ozet {
 export function yonelme(ad: string) { const s = ad.toLocaleLowerCase('tr').replace(/y$/, 'i'), v = (s.match(/[aıoueiöü]/g) || ['a']).pop() as string, k = /[aıou]/.test(v), son = /[aıoueiöü]$/.test(s); return ad + '’' + (son ? 'y' : '') + (k ? 'a' : 'e'); }
 export const bilgiNotu = (ad: string) => 'Bilgi notu: Çağlar, ' + yonelme(ad) + ' doğrudan görev verdi.';
 
+// Zincir (masaüstüyle aynı): Nika (ik) → Orin (orin) → Çağlar (ceo, son onay) → tamam / red. Orin kendi talebini onaylayamaz: Nika'dan sonra doğrudan Çağlar'a gider.
+export const sonrakiAsama = (g: { kim: string }): 'orin' | 'ceo' => (g.kim === 'orin' ? 'ceo' : 'orin');
+
 // ---------- Olayları uygula (masaüstündeki tmApplyEvent ile aynı) ----------
 export function uygula(o: Ozet, e: Olay) {
   const v = e.veri || {}, E = o.ekip;
@@ -41,10 +44,11 @@ export function uygula(o: Ozet, e: Olay) {
     }
   } else if (e.tur === 'gorev_durum') { const g = E.gorev.find((x) => x.id === v.id); if (g) { g.durum = v.durum; g.bts = v.durum === 'bitti' ? e.ts : null; } }
   else if (e.tur === 'gelisim') {
-    if (!E.gel.some((g) => g.id === v.id)) { const g: Gelisim = { id: v.id, kim: v.kim, tur: v.gtur, ad: v.ad || '', metin: v.metin || '', asama: v.kimden === 'nika' ? 'ceo' : 'ik', kimden: v.kimden || 'cagla', ts: e.ts }; if (v.kimden === 'nika') g.ik = { ts: e.ts, ok: 1 }; E.gel.push(g); }
+    if (!E.gel.some((g) => g.id === v.id)) { const g: Gelisim = { id: v.id, kim: v.kim, tur: v.gtur, ad: v.ad || '', metin: v.metin || '', asama: 'ik', kimden: v.kimden || 'cagla', ts: e.ts }; if (v.kimden === 'nika') { g.ik = { ts: e.ts, ok: 1 }; g.asama = sonrakiAsama(g); } E.gel.push(g); }
   } else if (e.tur === 'gelisim_karar') {
     const g = E.gel.find((x) => x.id === v.id); if (!g || g.asama !== v.asama) return;
-    if (v.asama === 'ik') { g.ik = { ts: e.ts, ok: v.ok ? 1 : 0 }; g.asama = v.ok ? 'ceo' : 'red'; }
+    if (v.asama === 'ik') { g.ik = { ts: e.ts, ok: v.ok ? 1 : 0 }; g.asama = v.ok ? sonrakiAsama(g) : 'red'; }
+    else if (v.asama === 'orin') { g.orin = { ts: e.ts, ok: v.ok ? 1 : 0, kim: 'cagla' }; g.asama = v.ok ? 'ceo' : 'red'; }
     else { g.ceo = { ts: e.ts, ok: v.ok ? 1 : 0 }; g.asama = v.ok ? 'tamam' : 'red'; if (v.ok) gelisimUygula(o, g, e.ts); }
   } else if (e.tur === 'mesaj_sil') { const a = E.sohbet[v.kim]; if (a) { const vardi = a.some((m) => m.id === v.id); E.sohbet[v.kim] = a.filter((m) => !(m.id === v.id || (!vardi && v.ts && m.ts === v.ts))); } }
   else if (e.tur === 'sohbet_temizle') { const a = E.sohbet[v.kim]; if (a) E.sohbet[v.kim] = a.filter((m) => m.ts > e.ts);
@@ -84,9 +88,13 @@ export function durumNoktasi(c: Calisan, o: Ozet): 'ok' | 'bz' | 'id' {
   if (c.grup === 'yonetim' || c.id === 'echo') return 'ok';
   const a = acikGorevler(o, c.id); if (a.some((g) => g.onc === 'acil')) return 'bz'; return a.length ? 'ok' : 'id';
 }
+/** Çağlar'ın son onayını bekleyenler (Nika ve Orin'den geçenler + eski 'ceo' kayıtları): rozet ve "Senin onayın" bunları sayar */
+export function cagladaBekleyen(o: Ozet) { return o.ekip.gel.filter((x) => x.asama === 'ceo'); }
+/** Henüz Nika'da (ik) ya da Orin'de (orin) olanlar: Çağlar'a gelmediler */
+export function incelemedeBekleyen(o: Ozet) { return o.ekip.gel.filter((x) => x.asama === 'ik' || x.asama === 'orin'); }
 export function bekleyenGelisim(o: Ozet, id: string) {
-  const g = o.ekip.gel; if (id === 'nika') return g.filter((x) => x.asama === 'ik'); if (id === 'orin') return g.filter((x) => x.asama === 'ceo');
-  return g.filter((x) => x.kim === id && (x.asama === 'ik' || x.asama === 'ceo'));
+  const g = o.ekip.gel; if (id === 'nika') return g.filter((x) => x.asama === 'ik'); if (id === 'orin') return g.filter((x) => x.asama === 'ceo' || x.asama === 'orin');
+  return g.filter((x) => x.kim === id && (x.asama === 'ik' || x.asama === 'orin' || x.asama === 'ceo'));
 }
 export function zincir(c: Calisan, hepsi: Calisan[]) {
   const r: string[] = []; let x: Calisan | undefined = c, g = 0;

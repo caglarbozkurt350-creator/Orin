@@ -45,7 +45,8 @@ function tmPending(id){return TMS().not.filter(function(n){return n.durum=='bekl
 function tmGelFor(c){var g=TMS().gel;if(c.id=='nika')return g.filter(function(x){return x.asama=='ik'});if(c.id=='orin')return g.filter(function(x){return x.asama=='ceo'});return g.filter(function(x){return x.kim==c.id&&(x.asama=='ik'||x.asama=='ceo')})}
 function av(c,s,ring){if(!c)return '';if(c.foto)return '<img class="avp" src="../'+esc(c.foto)+'" alt="" style="width:'+s+'px;height:'+s+'px'+(ring===false?'':';box-shadow:0 0 0 2px '+c.renk+'66')+'">';
 return '<span class="av" style="width:'+s+'px;height:'+s+'px;font-size:'+Math.round(s*.42)+'px;background:linear-gradient(135deg,'+c.renk+','+c.renk+'88)">'+esc((c.ad||'?')[0])+'</span>'}
-function tmTime(ts){var d=new Date(ts),t=d.toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});return key(d)==TODAY?t:short(key(d))+' '+t}
+function tmTime(ts){if(ts==null||isNaN(new Date(ts).getTime()))return ''; // 0.7.23: geçersiz tarih sayfayı çökertmesin
+ var d=new Date(ts),t=d.toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});return key(d)==TODAY?t:short(key(d))+' '+t}
 
 // ---------- Kenar çubuğu ----------
 function teamSb(){var A=tmAll(),on=tmOnline();function it(c){var st=on?tmStat(c):'id';return '<div class="si tm'+(pg=='calisan'&&arg==c.id?' on':'')+'" data-nav="1" data-q="'+esc((c.ad+' '+c.gorev).toLocaleLowerCase('tr'))+'" onclick="nav(\'team\',\'calisan\',\''+jq(c.id)+'\')">'+av(c,30)+'<div style="min-width:0;flex:1"><div style="display:flex;align-items:center;gap:6px">'+esc(c.ad)+'<span class="dt '+st+'"></span></div><div class="rl">'+esc(c.gorev)+'</div></div></div>'}

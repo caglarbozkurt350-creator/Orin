@@ -1,6 +1,6 @@
 // Orvane 0.7.8 · Şirket yönetimi: İK onayını İK Müdürü Nika kendisi verir (gerekçeli, Claude aboneliğinde).
 // 0.7.23: zincir Nika (asama 'ik') → Orin (asama 'orin', orinOto) → Çağlar (asama 'ceo', son onay). Orin de Nika gibi gerekçeli onaylar/reddeder;
-// yalnız ikisinden geçen talepler Çağlar'a gelir. Orin kendi (kim=='orin') talebini onaylayamaz: Nika'dan sonra doğrudan Çağlar'a gider. Reddedilenler Çağlar'a gelmez, 'Son kararlar'da 'Reddi boz' ile geri alınır.
+// yalnız ikisinden geçen talepler Çağlar'a gelir. Orin kendi (kim=='orin') talebini de kendisi inceler (Nika'dan sonra Orin, sonra Çağlar). Reddedilenler Çağlar'a gelmez, 'Son kararlar'da 'Reddi boz' ile geri alınır.
 var YON={calisiyor:false,zam:null,cagir:function(o){return ABN.cagir(o)}};
 function yonAyar(){S.yonetim=S.yonetim||{nikaOto:true,orinOneri:true,orinOto:true};return S.yonetim}
 function orinOtoAcik(){return yonAyar().orinOto!==false}
@@ -36,7 +36,7 @@ return YON.cagir({kim:'orin',tur:'sohbet',sistemTam:true,araclar:'',maxTur:1,mod
 sistem:zekaSistem(o)+'\nCEO olarak İK’nin (Nika) onayladığı gelişim taleplerini kendin onaylıyor ya da reddediyorsun; onayladıkların Çağlar’ın son onayına gider. Şirket öncelikleri: veri güvenliği, düşük maliyet (abonelik öncelikli), sade görünüm, önceki sürümü koruma, çalışanların alanında en iyi olması. Her talep için ayrıca: onaylanırsa ne olur (somut fayda, en fazla 20 kelime) ve onaylanmazsa hangi sorun kalır (somut risk/eksik, en fazla 20 kelime). Yalnız JSON dizi yaz: [{"id":"talep id","ok":true|false,"neden":"en fazla 15 kelime","onaylanirsa":"...","onaylanmazsa":"..."}]',
 istem:'CEO (Orin) onayı bekleyen talepler:\n'+JSON.stringify(yonListe(L),null,1)})
 .then(function(r){if(!r.ok)throw new Error(r.err);var on=0,red=0;
-yonJson(r.v.metin).forEach(function(k){var g=L.filter(function(x){return x.id==k.id})[0];if(!g||g.asama!='orin'||typeof k.ok!='boolean'||g.kim=='orin')return;var ts=Date.now();
+yonJson(r.v.metin).forEach(function(k){var g=L.filter(function(x){return x.id==k.id})[0];if(!g||g.asama!='orin'||typeof k.ok!='boolean')return;var ts=Date.now();
 g.orin={ts:ts,ok:k.ok?1:0,neden:String(k.neden||'').slice(0,160),kim:'orin',oto:1};g.oneri={ok:k.ok?1:0,neden:g.orin.neden,ts:ts};
 if(k.onaylanirsa||k.onaylanmazsa)g.sonuc={evet:String(k.onaylanirsa||'').slice(0,220),hayir:String(k.onaylanmazsa||'').slice(0,220)};
 g.asama=k.ok?'ceo':'red';if(k.ok)on++;else red++});
@@ -65,7 +65,7 @@ function sonucKutu(s){return '<div class="snc"><div class="ev"><b>Onaylanırsa:<
 function yonKart(){var a=yonAyar(),D=TMS().gel.filter(function(g){return g.ik&&g.ik.oto}).sort(function(x,y){return y.ik.ts-x.ik.ts}).slice(0,8);
 return '<div class="card" style="margin-top:14px"><div class="ch"><i class="ti ti-shield-check"></i>İK onayı Nika’da <span class="hn" style="margin-left:6px">Sonra Orin, son onay Çağlar’da</span>'+(TMS().gel.some(function(g){return g.asama=='ik'})?'<button class="bt" style="margin-left:auto;min-height:30px;padding:4px 12px" onclick="nikaIncele().then(function(){render()})"'+(YON.calisiyor?' disabled':'')+'>'+(YON.calisiyor?'İnceleniyor…':'Şimdi incele')+'</button>':'')+'</div>'+
 '<div class="kr"><span>İK onayını Nika versin<div class="hn">Talepleri ölçütlere göre gerekçeli onaylar ya da reddeder (abonelikte)</div></span><span class="tg2'+(a.nikaOto?' on':'')+'" onclick="yonDegis(\'nikaOto\')"></span></div>'+
-'<div class="kr"><span>Orin de kendisi onaylasın<div class="hn">Nika’dan geçenleri Orin inceler; yalnız ikisinden geçenler sana gelir (Orin kendi talebini onaylayamaz)</div></span><span class="tg2'+(orinOtoAcik()?' on':'')+'" onclick="yonDegis(\'orinOto\')"></span></div>'+
+'<div class="kr"><span>Orin de kendisi onaylasın<div class="hn">Nika’dan geçenleri Orin inceler; yalnız ikisinden geçenler sana gelir (Orin kendi becerisini ve hafızasını da kendisi inceler)</div></span><span class="tg2'+(orinOtoAcik()?' on':'')+'" onclick="yonDegis(\'orinOto\')"></span></div>'+
 (D.length?'<div class="hn" style="margin:8px 0 4px">Nika’nın son kararları</div>'+D.map(function(g){var c=tm(g.kim)||{ad:g.kim};return '<div class="kr"><div>'+esc(c.ad)+' · '+esc(tmGelLabel(g))+'<div class="hn" style="color:'+(g.ik.ok?'#8fe0b3':'#f4a3a3')+'">'+(g.ik.ok?'Onay':'Red')+' — '+esc(g.ik.neden||'')+'</div></div>'+(g.asama=='red'&&!g.ceo&&!g.orin?'<button class="bt" style="min-height:30px;padding:4px 10px" data-id="'+esc(g.id)+'" onclick="yonBoz(this.dataset.id)">Reddi boz, Orin’e gönder</button>':'')+'</div>'}).join(''):'')+'</div>'}
 function yonDegis(k){var a=yonAyar();a[k]=k=='orinOto'?!orinOtoAcik():!a[k];if(k=='orinOto'&&!a[k])TMS().gel.forEach(function(g){if(g.asama=='orin')g.asama='ceo'}); // Orin kapalıyken bekleyenler Çağlar'a geçer
 save();render();if(a[k])yonPlanla(500)}

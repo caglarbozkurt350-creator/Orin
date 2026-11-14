@@ -136,8 +136,8 @@ return{t:a.length?'Bu ay düzeltilmesi gereken günler: '+a.join(', ')+'. İş G
 // ---------- Gelişim: önce İK Müdürü (Nika), sonra CEO (Orin) ----------
 var GT={beceri:'Yeni beceri',seviye:'Seviye yükseltme',hafiza:'Hafızaya ekleme'};
 // 0.7.23: zincir Nika (ik) → Orin (orin) → Çağlar (ceo, son onay) → tamam / red. Eski kayıtlarda 'ceo' hep Çağlar'ın onayı demekti; olduğu gibi kalır.
-// Orin kendi becerisini/hafızasını onaylayamaz (kim=='orin') ve Orin otomatik incelemesi kapalıysa Nika'dan sonra doğrudan Çağlar'a gider.
-function tmGelSonraki(g){var oto=typeof yonAyar=='function'?yonAyar().orinOto!==false:true;return (g.kim=='orin'||!oto)?'ceo':'orin'}
+// Nika'dan sonra Orin inceler (kendi becerisi/hafızası dahil); Orin otomatik incelemesi kapalıysa doğrudan Çağlar'a gider.
+function tmGelSonraki(g){var oto=typeof yonAyar=='function'?yonAyar().orinOto!==false:true;return oto?'orin':'ceo'}
 function tmGelNew(kim,tur,ad,metin,kimden){var o={id:uid(),kim:kim,tur:tur,ad:ad||'',metin:metin||'',asama:'ik',kimden:kimden||'cagla',ts:Date.now()};if(kimden=='nika'){o.ik={ts:Date.now(),ok:1};o.asama=tmGelSonraki(o)}TMS().gel.push(o);save();return o}
 function tmGelIk(id,ok){var g=TMS().gel.filter(function(x){return x.id==id})[0];if(!g||g.asama!='ik')return;g.ik={ts:Date.now(),ok:ok?1:0};g.asama=ok?tmGelSonraki(g):'red';save();toast(ok?(g.asama=='orin'?'Nika onayladı · Orin’in onayına gitti':'Nika onayladı · senin onayına gitti'):'Talep reddedildi');render();if(ok&&g.asama=='orin'&&typeof orinOto=='function')orinOto()}
 function tmGelCeo(id,ok){var g=TMS().gel.filter(function(x){return x.id==id})[0];if(!g||g.asama!='ceo')return;g.ceo={ts:Date.now(),ok:ok?1:0};g.asama=ok?'tamam':'red';if(ok)tmGelApply(g);save();toast(ok?'Onaylandı · '+(tm(g.kim)||{}).ad+' gelişti':'Talep reddedildi');render()}

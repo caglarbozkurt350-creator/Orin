@@ -254,3 +254,31 @@ html.light .skceo1 b{color:#222}
 .onhr{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:8px 14px}.onhr+.onhr{border-top:1px solid rgba(255,255,255,.05)}.onht{flex:1 1 280px;min-width:0;color:#ececec;font-size:13.5px}.onht b{font-weight:600}.onok{color:#8fe0b3}
 .onhr .bt{min-height:32px;padding:4px 14px;font-size:13px}.onhr .bt.g{background:transparent;color:#c9c9ce}.onhr .bt.r{color:#f4a3a3}
 .eh{flex-wrap:wrap}
+/* 0.7.23 · Şirketim › Haftalık rapor */
+.hfr{display:flex;flex-direction:column;gap:16px;max-width:1240px;width:100%;box-sizing:border-box}
+.hfh0{display:flex;flex-wrap:wrap;align-items:center;gap:12px}.hfh0 h1{margin:0 0 3px;font-size:21px;font-weight:600;color:#fff}.hfh0 p{margin:0;font-size:13px;color:#9a9aa0}
+.hfh0 .bt{min-height:38px;padding:7px 16px;font-size:13.5px}
+.hfw{display:inline-flex;align-items:center;background:#202024;border:1px solid rgba(255,255,255,.08);border-radius:999px;padding:3px}
+.hfw1{width:36px;height:34px;border:none;background:transparent;color:#c9c9ce;border-radius:999px;font-size:16px;cursor:pointer;font-family:inherit}.hfw1:hover:not(:disabled){background:#2e2e33;color:#fff}.hfw1:disabled{opacity:.3;cursor:default}
+.hfwa{padding:0 12px;font-weight:600;color:#fff;font-size:14px;white-space:nowrap}
+.hfbg{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+.hfb{background:#232327;border:1px solid rgba(255,255,255,.05);border-radius:14px;padding:12px 14px;min-width:0}
+.hfba{color:#9a9aa0;font-size:12px}.hfba.s{font-size:11.5px}.hfbd{font-size:24px;font-weight:600;color:#fff;margin:2px 0}
+.hfd{background:#232327;border:1px solid rgba(255,255,255,.05);border-radius:16px;padding:14px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:14px}
+.hfd h2{margin:0 0 4px;font-size:14.5px;font-weight:600;color:#fff}.hfdm{margin:0;color:#b4b4ba;line-height:1.5}.hfdy{white-space:pre-line;color:#ececec}.hfdh{color:#f4a3a3;margin-top:6px}
+.hfd .bt{min-height:38px;padding:7px 18px;font-size:13.5px}
+.hfkg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.hfk{background:#232327;border:1px solid rgba(255,255,255,.05);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.hfk1{display:flex;align-items:center;gap:10px}.hfk1 a{font-size:12.5px;text-decoration:none;color:#8ab4ff}.hfk1 a:hover{color:#b8d0ff}
+.hfkn{font-size:14.5px;font-weight:600;color:#fff}.hfs{color:#9a9aa0;font-size:12px}
+.hfg{display:flex;align-items:flex-end;gap:6px;height:56px;padding:0 2px}
+.hfgg{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px}.hfgb{width:100%;opacity:.85;border-radius:4px 4px 2px 2px;min-height:3px}.hfgb.bos{opacity:.25}.hfge{font-size:10.5px;color:#8e8e95}
+.hf4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;text-align:center}.hf4 b{display:block;font-size:16px;font-weight:600;color:#fff}.hf4 span{font-size:11px;color:#9a9aa0}
+.hfn{color:#b4b4ba;font-size:12.5px;line-height:1.45;border-top:1px solid rgba(255,255,255,.05);padding-top:8px}
+@media (max-width:1100px){.hfbg{grid-template-columns:repeat(3,minmax(0,1fr))}.hfkg{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:700px){.hfbg{grid-template-columns:repeat(2,minmax(0,1fr))}.hfkg{grid-template-columns:1fr}}
+html.light .hfb,html.light .hfd,html.light .hfk{background:#fff;border-color:#dcdce2}
+html.light .hfh0 h1,html.light .hfd h2,html.light .hfkn,html.light .hfbd,html.light .hf4 b,html.light .hfwa{color:#222}
+html.light .hfw{background:#f1f1f5;border-color:#dcdce2}html.light .hfw1{color:#555}html.light .hfw1:hover:not(:disabled){background:#e4e4ea;color:#111}
+html.light .hfdm,html.light .hfn{color:#555}html.light .hfdy{color:#222}
+html.light .hfk1 a{color:#2b5fd9}

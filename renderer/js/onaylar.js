@@ -33,10 +33,9 @@ function onayChip(t,k){return '<span class="onc '+(k||'')+'">'+esc(t)+'</span>'}
 function onayKarar(g){var h='';
 // Nika
 if(g.ik)h+=onayChip('Nika: '+(g.ik.ok?'Onayladı':'Reddetti')+(g.ik.neden?' · '+g.ik.neden:''),g.ik.ok?'ok':'red');else if(g.asama=='ik')h+=onayChip('Nika: inceliyor','bk');
-// Orin: kendi kararı, kendi talebiyse atlandı, eski kayıtlarda yalnız önerisi
+// Orin: kendi kararı (kendi talebini de kendisi inceler), eski kayıtlarda yalnız önerisi
 if(g.orin)h+=onayChip((g.orin.kim=='cagla'?'Çağlar':'Orin')+': '+(g.orin.ok?'Onayladı':'Reddetti')+(g.orin.neden?' · '+g.orin.neden:''),g.orin.ok?'ok':'red');
 else if(g.asama=='orin')h+=onayChip('Orin: inceliyor','bk');
-else if(g.kim=='orin'&&g.asama!='ik')h+=onayChip('Orin: kendi talebi, senin onayına geçti','');
 else if(g.oneri)h+=onayChip('Orin önerisi: '+(g.oneri.ok?'Onayla':'Reddet')+(g.oneri.neden?' · '+g.oneri.neden:''),'');
 if(g.ceo)h+=onayChip('Çağlar: '+(g.ceo.ok?'Onayladı':'Reddetti'),g.ceo.ok?'ok':'red');
 return h?'<div class="onr">'+h+'</div>':''}
@@ -98,7 +97,7 @@ if(ids.length)h+='<div class="g">Çalışana göre</div>'+ids.map(function(id){v
 return h}
 
 // ---------- Çalışan sayfası: yapışkan başlığın altında hatırlatma ----------
-function onayHatOzet(x){if(x.tur=='gel'){var g=x.r;return '<b>'+esc(GT[g.tur]+(g.ad?': '+g.ad:''))+'</b> · '+(g.kim=='orin'?'<span class="onok">Nika onayladı</span>':'<span class="onok">Nika ve Orin onayladı</span>')+', senin onayın bekleniyor'}
+function onayHatOzet(x){if(x.tur=='gel'){var g=x.r;return '<b>'+esc(GT[g.tur]+(g.ad?': '+g.ad:''))+'</b> · '+'<span class="onok">Nika ve Orin onayladı</span>'+', senin onayın bekleniyor'}
 if(x.tur=='is')return '<b>'+esc(x.r.baslik)+'</b> · '+esc(IS_TUR[x.r.tur]||'İş isteği')+' · onayını bekliyor';
 if(x.tur=='kayit')return '<b>'+esc(short(x.k))+'</b> · '+esc(x.r.k)+' · '+esc(x.r.d)+' dk';
 return '<b>'+esc(x.r.soru)+'</b> · toplantı kararı'}
@@ -136,7 +135,7 @@ return{id:x.id,ok:!/KABA/.test(x.metin),neden:/KABA/.test(x.metin)?'Üslup uygun
 return nikaIncele().then(function(n){
 t('Zincir: Nika önce, sonra Orin inceler',cg.length==2&&cg[0].kim=='nika'&&cg[1].kim=='orin',cg.map(function(x){return x.kim}).join());
 t('Nika+Orin onayı geçen talep Çağlar’a gelir (ceo)',a.asama=='ceo'&&a.ik.ok&&a.orin&&a.orin.ok&&a.orin.oto==1&&a.orin.kim=='orin',JSON.stringify(a));
-t('Orin kendi becerisini onaylayamaz: Nika’dan sonra doğrudan Çağlar’a',d.asama=='ceo'&&!d.orin&&d.ik.ok&&cg[1].istem.indexOf(d.id)<0,JSON.stringify(d));
+t('Orin kendi becerisini de inceler: Nika’dan sonra Orin onaylar, sonra Çağlar’a',d.asama=='ceo'&&d.orin&&d.orin.ok&&d.orin.kim=='orin'&&d.ik.ok&&cg[1].istem.indexOf(d.id)>=0,JSON.stringify(d));
 t('Nika reddi Çağlar’a gelmez (red, Orin görmez)',b.asama=='red'&&!b.orin&&cg[1].istem.indexOf(b.id)<0,JSON.stringify(b));
 t('Orin reddi Çağlar’a gelmez (red, orin.ok=0)',c.asama=='red'&&c.orin&&c.orin.ok===0&&/uygunsuz/.test(c.orin.neden),JSON.stringify(c));
 var V2=onayVeri(),ids=function(L){return L.filter(function(x){return x.tur=='gel'}).map(function(x){return x.id}).sort().join()};
@@ -152,7 +151,7 @@ t('Onaylar sayfası açılır: başlık, sekmeler, tür düğmeleri',pg=='onayla
 t('Kenar çubuğunda üç sekme: Senin onayın · Nika’da · Son kararlar',/Senin onayın/.test(sb)&&/Nika’da/.test(sb)&&/Son kararlar/.test(sb));
 t('Dört tür de listelenir (gelişim, iş, kayıt, toplantı)',/Gelişim \(beceri, hafıza\) · 3/.test(h)&&/Claude’a iş istekleri · 1/.test(h)&&/Kayıt onayları · 1/.test(h)&&/Toplantı kararları · 1/.test(h),h.replace(/<[^>]+>/g,' ').slice(0,300));
 t('Sol çubuk düğmesi: kırmızı rozet toplam bekleyen sayısı',(function(){var nn=document.getElementById('r_onay_n');return say==6&&nn&&nn.textContent=='6'&&/kirm/.test(nn.className)&&document.getElementById('r_onay').className=='rb on'&&document.getElementById('r_team').className=='rb'})(),say+' / '+(document.getElementById('r_onay_n')||{}).textContent);
-t('Kartta Nika, Orin kararı ve Onaylanırsa / Onaylanmazsa kutuları',/Nika: Onayladı · Rolüyle uyumlu/.test(h)&&/Orin: Onayladı · Ekibin kalitesini artırır/.test(h)&&/class="ev"/.test(h)&&/class="ha"/.test(h)&&/Orin: kendi talebi/.test(h));
+t('Kartta Nika, Orin kararı ve Onaylanırsa / Onaylanmazsa kutuları',/Nika: Onayladı · Rolüyle uyumlu/.test(h)&&/Orin: Onayladı · Ekibin kalitesini artırır/.test(h)&&/class="ev"/.test(h)&&/class="ha"/.test(h));
 ONY.tab='son';render();var hs=document.getElementById('ct').innerHTML;
 t('Son kararlar: Nika ve Orin reddi ve Reddi boz düğmeleri',/Reddedildi \(Nika\)/.test(hs)&&/Reddedildi \(Orin\)/.test(hs)&&(hs.match(/yonBoz\('/g)||[]).length==2&&/Orin: Reddetti · Üslup uygunsuz/.test(hs),hs.replace(/<[^>]+>/g,' ').slice(0,260));
 var z=tmGelNew('echo','hafiza','','Bekleyen bilgi','claude');ONY.tab='nika';render();var hn=document.getElementById('ct').innerHTML;

@@ -8,7 +8,7 @@ import { R } from '@/lib/tema';
 export function GelisimSatiri({ g, eylem, ust }: { ust?: React.ReactNode; g: Gelisim; eylem?: React.ReactNode }) {
   const ik = g.ik ? (g.ik.ok ? ['Nika onayladı ✓', R.yesil] : ['Nika reddetti', R.kirmizi]) : [g.asama === 'ik' ? 'Nika’da' : 'Nika', g.asama === 'ik' ? R.turuncu : R.solukk];
   // Orin: kendi kararı; kendi talebiyse atlanır; eski kayıtlarda (Orin incelemesinden geçmeden Çağlar'a gelenler) nötr
-  const orin = g.orin ? (g.orin.ok ? [(g.orin.kim === 'cagla' ? 'Çağlar bozdu, ' : '') + 'Orin onayladı ✓', R.yesil] : ['Orin reddetti', R.kirmizi]) : g.asama === 'orin' ? ['Orin’de', R.turuncu] : g.kim === 'orin' && g.asama !== 'ik' ? ['Orin (kendi talebi)', R.solukk] : ['Orin', R.solukk];
+  const orin = g.orin ? (g.orin.ok ? [(g.orin.kim === 'cagla' ? 'Çağlar bozdu, ' : '') + 'Orin onayladı ✓', R.yesil] : ['Orin reddetti', R.kirmizi]) : g.asama === 'orin' ? ['Orin’de', R.turuncu] : ['Orin', R.solukk];
   const cag = g.ceo ? (g.ceo.ok ? ['Çağlar onayladı ✓', R.yesil] : ['Çağlar reddetti', R.kirmizi]) : ['Senin onayın', g.asama === 'ceo' ? '#a9b4ff' : R.solukk];
   const nedenler: [string, string, string][] = [];
   if (g.ik?.neden) nedenler.push(['Nika', g.ik.neden, g.ik.ok ? R.yesil : R.kirmizi]);

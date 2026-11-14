@@ -28,7 +28,7 @@ export function yonelme(ad: string) { const s = ad.toLocaleLowerCase('tr').repla
 export const bilgiNotu = (ad: string) => 'Bilgi notu: Çağlar, ' + yonelme(ad) + ' doğrudan görev verdi.';
 
 // Zincir (masaüstüyle aynı): Nika (ik) → Orin (orin) → Çağlar (ceo, son onay) → tamam / red. Orin kendi talebini onaylayamaz: Nika'dan sonra doğrudan Çağlar'a gider.
-export const sonrakiAsama = (g: { kim: string }): 'orin' | 'ceo' => (g.kim === 'orin' ? 'ceo' : 'orin');
+export const sonrakiAsama = (_g: { kim: string }): 'orin' | 'ceo' => 'orin';
 
 // ---------- Olayları uygula (masaüstündeki tmApplyEvent ile aynı) ----------
 export function uygula(o: Ozet, e: Olay) {

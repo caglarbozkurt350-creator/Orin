@@ -4,7 +4,7 @@
 // - Aylık gelir ve gider: gelir = Çağlar'ın geliri + şirket katkıları (çalışanların birikim/kazanç katkısı, Çağlar onaylar)
 //   gider = Çağlar'ın gideri + şirket işletme (Claude aboneliği, API token = TCMB dolar kuruyla TL)
 // - Piyasa: TCMB günlük resmî kurlar (otomatik) + Finans Uzmanı Otto'nun günlük takibi (altın, gümüş, borsa; abonelikte internetten)
-var SIRKET_PG=['sirket','ik','toplanti','arkaplan'];
+var SIRKET_PG=['sirket','ik','toplanti','arkaplan','haftalik'];
 function skAcik(){return area=='team'&&SIRKET_PG.indexOf(pg)>=0}
 var AYK=['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'],AYU=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 var FN={aralik:6,tablo:false,tcmb:function(z){return API&&API.piyasa?API.piyasa.tcmb(z):Promise.resolve({ok:false,err:'yok'})}};
@@ -131,6 +131,7 @@ return '<div class="skbas">ŞİRKETİM</div>'+it('sirket','bina','Genel bakış'
 it('ik','ik','İnsan Kaynakları',(function(){var G=TMS().gel.filter(function(x){return x.asama=='ceo'});if(!G.length)return 'Kartlar · hiyerarşi · Nika';var g=G[0],c=tm(g.kim)||{ad:g.kim};return G.length+' onayın bekliyor: '+esc(c.ad)+(g.ad?' · '+esc(g.ad):'')})(),b.ceo?'<span class="cnt sko" title="CEO onayın bekleyen">'+b.ceo+'</span>':'<span class="cnt">'+tmAll().length+'</span>',b.ceo?'#ffb454':'')+
 it('toplanti','toplanti','Toplantı Odası',t?esc(t.konu)+' sürüyor':P?P+' planlı':'Çalışanlarla ortak oda',t?'<span class="dt ok" title="Toplantı sürüyor"></span>':'',t?'#8ee6a9':'')+
 it('arkaplan','arkaplan','Arka plan işleri','Claude Code işleri',cal?'<span class="cnt">'+cal+'</span>':'')+
+it('haftalik','grafik','Haftalık rapor','Tüm çalışanların haftası')+
 (t?'<div class="tpser skser" data-id="'+esc(t.id)+'" onclick="tpGit(this.dataset.id)"><span class="dt ok"></span><span style="flex:1;min-width:0">Toplantı sürüyor: <b>'+esc(t.konu)+'</b><br><span style="text-decoration:underline">Odaya dön</span></span></div>':'')}
 var _skSb=teamSb;teamSb=function(){if(skAcik())return sirketSb();var h=_skSb();['ik','toplanti','arkaplan'].forEach(function(k){h=skCikar(h,k)});return h};
 var _skTp=teamPage;teamPage=function(){if(pg=='sirket')return sirketGenel();return _skTp()};

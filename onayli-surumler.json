@@ -2,9 +2,9 @@
  "aciklama": "Çağlar'ın denediği ve onayladığı sürüm. Ayarlar › Sorun giderme › 'Önceki onaylı sürüme dön' bunu gösterir. Kural: GitHub'da en yeni 2 sürüm + buradaki ilk (en yeni) onaylı sürüm kalır; yayın akışı gerisini siler. Yeni sürüm onaylanınca başa ekle, eskisini listeden çıkar.",
  "surumler": [
   {
-   "v": "0.7.2",
-   "tarih": "2026-11-11",
-   "not": "Abonelik, Ada fikirleri, İK grafikleri"
+   "v": "0.7.23",
+   "tarih": "2026-11-16",
+   "not": "Onaylar, haftalık rapor, kayıt güvenliği (her gün kullanılan sürüm; 0.7.2 GitHub'dan silindi)"
   }
  ]
 }

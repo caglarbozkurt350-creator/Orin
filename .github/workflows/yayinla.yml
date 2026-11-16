@@ -61,8 +61,8 @@ jobs:
             echo "Siliniyor: $TAG"
             gh api -X DELETE "repos/$R/releases/$ID"
           done < liste.txt
-          # silinen sürümlerin etiketleri (kalanlara ait olmayanlar)
-          while read -r ID TAG; do
-            case " $KALAN " in *" $TAG "*) ;; *) gh api -X DELETE "repos/$R/git/refs/tags/$TAG" 2>/dev/null || true ;; esac
-          done < liste.txt
+          # sürümü kalmayan v* etiketleri (elle silinen sürümlerinkiler dahil)
+          gh api --paginate "repos/$R/tags?per_page=100" --jq '.[].name' | grep '^v' | while read -r TAG; do
+            case " $KALAN " in *" $TAG "*) ;; *) echo "Etiket siliniyor: $TAG"; gh api -X DELETE "repos/$R/git/refs/tags/$TAG" 2>/dev/null || true ;; esac
+          done
           echo "Kalan sürümler:$KALAN"

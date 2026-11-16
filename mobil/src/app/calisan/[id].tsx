@@ -8,7 +8,7 @@ import { AltPencere, Bos, GelisimFormu, GorevFormu, GorevSinir } from '@/bilesen
 import { GelisimSatiri } from '@/bilesen/gelisim';
 import { Dugme, Ekran, Foto, Ikon, Nokta, Rozet, s } from '@/bilesen/ortak';
 import { olayEkle, useDurum } from '@/lib/depo';
-import { aciklama, beceriler, Calisan, calisanlar, durumNoktasi, echoCevap, GT, hafiza, LVL, useGorunum } from '@/lib/ekip';
+import { aciklama, beceriler, Calisan, calisanlar, durumNoktasi, durumYazi, echoCevap, GT, hafiza, LVL, useGorunum } from '@/lib/ekip';
 import { esitleSonra, hizliBekle } from '@/lib/senk';
 import { R, saydam } from '@/lib/tema';
 
@@ -29,7 +29,7 @@ export default function CalisanSayfasi() {
         <Foto c={c} boy={40} />
         <View style={{ flex: 1, minWidth: 0 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><Text style={{ color: R.yazi, fontSize: 16, fontWeight: '600' }}>{c.ad}</Text><View style={{ backgroundColor: saydam(c.renk, 0.18), borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2, flexShrink: 1 }}><Text numberOfLines={1} style={{ color: c.renk, fontSize: 11, fontWeight: '600' }}>{c.gorev}</Text></View></View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}><Nokta d={cevrim ? durumNoktasi(c, o) : 'id'} boy={7} /><Text numberOfLines={1} style={{ color: R.soluk, fontSize: 12, flex: 1 }}>{cevrim ? 'Çevrimiçi' : 'Çevrimdışı'} · {aciklama(c)}</Text></View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}><Nokta d={cevrim ? durumNoktasi(c, o) : 'id'} boy={7} /><Text numberOfLines={1} style={{ color: R.soluk, fontSize: 12, flex: 1 }}>{cevrim ? durumYazi(c, o) : 'Çevrimdışı'} · {aciklama(c)}</Text></View>
         </View>
       </View>}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 8, paddingHorizontal: 16, paddingVertical: 8 }}>

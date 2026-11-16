@@ -195,6 +195,18 @@
    "grafikler": [],
    "ses": null,
    "aciklama": "yazışma ve mesaj taslakları"
+  },
+  {
+   "id": "nerya",
+   "ad": "Nerya",
+   "grup": "ekip",
+   "gorev": "Satın Alma Uzmanı",
+   "bagli": "Orla",
+   "renk": "#e0457b",
+   "foto": "assets/calisanlar/foto/16_Nerya.jpeg",
+   "grafikler": [],
+   "ses": null,
+   "aciklama": "alışveriş araştırır, satın alma önerisi hazırlar"
   }
  ]
 }

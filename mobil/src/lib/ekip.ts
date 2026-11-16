@@ -15,7 +15,7 @@ const BEC0: Record<string, [string, number, string][]> = {
   otto: [['Gelir-gider kaydı', 1, ''], ['Ödeme hatırlatma', 1, '']], iris: [['Sağlık takibi', 1, ''], ['Alışkanlık önerileri', 1, '']], marco: [['Haftalık menü', 1, ''], ['Market listesi', 1, '']],
   luca: [['Proje arama', 1, ''], ['Çizim arama', 1, '']], vera: [['Standart kontrolü', 1, ''], ['Kalite raporu', 1, '']], ada: [['Kod yazma', 1, ''], ['Hata ayıklama', 1, '']],
   remy: [['Takvim düzeni', 1, ''], ['Hatırlatma', 1, '']], sage: [['Araştırma', 1, ''], ['Özetleme', 1, '']], mia: [['Ev işleri planı', 1, ''], ['Aile takvimi', 1, '']],
-  kai: [['Teknik bakım', 1, ''], ['Arıza teşhisi', 1, '']], cleo: [['Mesaj taslağı', 1, ''], ['Resmi yazışma', 1, '']],
+  kai: [['Teknik bakım', 1, ''], ['Arıza teşhisi', 1, '']], cleo: [['Mesaj taslağı', 1, ''], ['Resmi yazışma', 1, '']], nerya: [['Alışveriş araştırması', 1, ''], ['Satın alma önerisi', 1, '']],
 };
 const DESC0: Record<string, string> = { orin: 'şirketi yönetir, görevleri dağıtır, gelişimleri onaylar', orla: 'ekibi koordine eder, işleri sıraya koyar', nika: 'çalışan kartlarını hazırlar, beceri ve hafızaları geliştirir', echo: 'iş günü kayıtlarını toplar ve raporlar', otto: 'gelir-gider kaydını tutar, yaklaşan ödemeleri hatırlatır' };
 
@@ -84,10 +84,13 @@ export function beceriler(id: string, o: Ozet): Beceri[] { const m = o.ekip.m[id
 export function hafiza(id: string, o: Ozet): Hafiza[] { const m = o.ekip.m[id]; return (m && m.haf) || []; }
 export function aciklama(c: Calisan) { return c.aciklama || DESC0[c.id] || c.gorev; }
 export function acikGorevler(o: Ozet, id?: string) { return o.ekip.gorev.filter((g) => g.durum !== 'bitti' && (!id || g.kim === id)); }
+/** 0.7.24: turuncu = görev yapıyor, yeşil = sunucuda hazır (VPS yokken kimse yeşil olmaz), gri = çevrimdışı */
+export const SUNUCU_BAGLI = false;
 export function durumNoktasi(c: Calisan, o: Ozet): 'ok' | 'bz' | 'id' {
-  if (c.grup === 'yonetim' || c.id === 'echo') return 'ok';
-  const a = acikGorevler(o, c.id); if (a.some((g) => g.onc === 'acil')) return 'bz'; return a.length ? 'ok' : 'id';
+  if (acikGorevler(o, c.id).some((g) => g.durum === 'calisiyor')) return 'bz';
+  return SUNUCU_BAGLI ? 'ok' : 'id';
 }
+export function durumYazi(c: Calisan, o: Ozet) { const d = durumNoktasi(c, o); return d === 'bz' ? 'Çalışıyor' : d === 'ok' ? 'Çevrimiçi' : 'Çevrimdışı'; }
 /** Çağlar'ın son onayını bekleyenler (Nika ve Orin'den geçenler + eski 'ceo' kayıtları): rozet ve "Senin onayın" bunları sayar */
 export function cagladaBekleyen(o: Ozet) { return o.ekip.gel.filter((x) => x.asama === 'ceo'); }
 /** Henüz Nika'da (ik) ya da Orin'de (orin) olanlar: Çağlar'a gelmediler */

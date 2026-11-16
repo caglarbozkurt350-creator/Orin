@@ -15,6 +15,7 @@ export const GORSEL: Record<string, number> = {
   'foto/13_Mia.png': require('../../assets/calisanlar/foto/13_Mia.png'),
   'foto/14_Kai.png': require('../../assets/calisanlar/foto/14_Kai.png'),
   'foto/15_Cleo.png': require('../../assets/calisanlar/foto/15_Cleo.png'),
+  'foto/16_Nerya.jpeg': require('../../assets/calisanlar/foto/16_Nerya.jpeg'),
   'kartlar/01_Orin.png': require('../../assets/calisanlar/kartlar/01_Orin.png'),
   'kartlar/02_Orla.png': require('../../assets/calisanlar/kartlar/02_Orla.png'),
   'kartlar/03_Nika.png': require('../../assets/calisanlar/kartlar/03_Nika.png'),

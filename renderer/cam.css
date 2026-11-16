@@ -1,0 +1,52 @@
+/* Orvane 0.7.24 · Cam arayüz. html.cam açıkken (koyu temada) çalışır; html.cam-hafif bulanıklığı kapatır. */
+#camBg{position:fixed;left:0;top:0;right:0;bottom:0;z-index:0;display:none;background-size:cover;background-position:center}
+html.cam:not(.light) #camBg{display:block}
+html.cam:not(.light) .w{background:transparent}
+html.cam:not(.light) .mb{position:relative;margin:8px 150px 0 8px;height:50px;padding:0 14px 0 8px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(22px) saturate(1.5);-webkit-backdrop-filter:blur(22px) saturate(1.5);box-shadow:0 8px 28px rgba(8,10,40,.28),inset 0 1px 0 rgba(255,255,255,.2)}
+html.cam:not(.light) .nb{height:38px;width:40px}html.cam:not(.light) .nb:hover,html.cam:not(.light) .mi:hover,html.cam:not(.light) .mi.on,html.cam:not(.light) .sy:hover{background:rgba(255,255,255,.14)}
+html.cam:not(.light) .ttl{font-size:17px}
+html.cam:not(.light) .bd{padding:8px;gap:8px}
+html.cam:not(.light) .rail{width:68px;padding:10px 7px;margin:0;border-radius:30px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(24px) saturate(1.5);-webkit-backdrop-filter:blur(24px) saturate(1.5);box-shadow:0 10px 32px rgba(8,10,40,.3),inset 0 1px 0 rgba(255,255,255,.2);gap:8px;transition:width .22s ease;overflow:hidden;align-items:stretch}
+html.cam:not(.light) .rb{width:auto;height:50px;border-radius:22px;justify-content:center;gap:12px;color:#d6d8f0;white-space:nowrap;overflow:hidden}
+html.cam:not(.light) .rb.on{background:rgba(255,255,255,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
+html.cam:not(.light) .rb:hover{background:rgba(255,255,255,.13)}
+html.cam:not(.light) .rb::after{content:attr(data-l);display:none;font-size:14.5px;font-weight:500;color:#f0f1ff}
+html.cam:not(.light) .lg{width:auto}
+html.cam-gen:not(.light) .rail{width:196px}
+html.cam-gen:not(.light) .rb{justify-content:flex-start;padding-left:15px}
+html.cam-gen:not(.light) .rb::after{display:block}
+html.cam-gen:not(.light) .lg{justify-content:flex-start;padding-left:6px}
+html.cam:not(.light) #r_gen{margin-bottom:2px;color:#b9bce0}
+html.cam:not(.light) .pn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);border-radius:28px;backdrop-filter:blur(26px) saturate(1.4);-webkit-backdrop-filter:blur(26px) saturate(1.4);box-shadow:0 14px 40px rgba(8,10,40,.3),inset 0 1px 0 rgba(255,255,255,.16)}
+html.cam:not(.light) .sb{background:rgba(255,255,255,.06);border-right:1px solid rgba(255,255,255,.14)}
+html.cam:not(.light) .top{border-bottom:1px solid rgba(255,255,255,.14)}
+html.cam:not(.light) .si:hover{background:rgba(255,255,255,.1)}html.cam:not(.light) .si.on{background:rgba(255,255,255,.18)}
+html.cam:not(.light) .card,html.cam:not(.light) .kpi div,html.cam:not(.light) .pc,html.cam:not(.light) .bx,html.cam:not(.light) .kc,html.cam:not(.light) .blk,html.cam:not(.light) .kp5>div,html.cam:not(.light) .hfk,html.cam:not(.light) .hfw,html.cam:not(.light) .hfb,html.cam:not(.light) .onk,html.cam:not(.light) .tpgb,html.cam:not(.light) .skk{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);box-shadow:0 6px 22px rgba(8,10,40,.18),inset 0 1px 0 rgba(255,255,255,.14)}
+html.cam:not(.light) .pc.on{border-color:rgba(160,175,255,.9)}
+html.cam:not(.light) .bt{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.25)}html.cam:not(.light) .bt.p,html.cam:not(.light) .bt.on{background:rgba(110,125,255,.85);border-color:rgba(190,200,255,.6)}
+html.cam:not(.light) .chip,html.cam:not(.light) .tsr,html.cam:not(.light) .seg,html.cam:not(.light) .ti2,html.cam:not(.light) .in,html.cam:not(.light) select,html.cam:not(.light) #fi{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2)}
+html.cam:not(.light) .dd,html.cam:not(.light) .cx,html.cam:not(.light) .dl{background:rgba(34,36,70,.78);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(26px) saturate(1.5);-webkit-backdrop-filter:blur(26px) saturate(1.5)}
+html.cam:not(.light) .ddi:hover,html.cam:not(.light) .cxi:hover{background:rgba(255,255,255,.14)}
+html.cam:not(.light) .ov{background:rgba(10,12,40,.45)}
+html.cam:not(.light) .ts{background:rgba(40,42,80,.8);backdrop-filter:blur(18px)}
+html.cam:not(.light) .ta{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2)}
+html.cam:not(.light) .n,html.cam:not(.light) .kr{border-top-color:rgba(255,255,255,.12)}
+html.cam:not(.light) .bar{background:rgba(255,255,255,.12)}
+@media (display-mode: fullscreen){html.cam:not(.light) .pn{border-radius:28px;border:1px solid rgba(255,255,255,.18)}}
+/* Hafif mod: bulanıklık yok, yarı saydam dolgu kalır (zayıf bilgisayar/telefon) */
+html.cam-hafif .mb,html.cam-hafif .rail,html.cam-hafif .pn,html.cam-hafif .card,html.cam-hafif .kpi div,html.cam-hafif .pc,html.cam-hafif .bx,html.cam-hafif .dd,html.cam-hafif .cx,html.cam-hafif .dl,html.cam-hafif .ts,html.cam-hafif .kc,html.cam-hafif .blk,html.cam-hafif .kp5>div,html.cam-hafif .hfk,html.cam-hafif .hfw,html.cam-hafif .hfb,html.cam-hafif .onk,html.cam-hafif .tpgb,html.cam-hafif .skk{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+html.cam-hafif:not(.light) .pn{background:rgba(30,34,80,.55)}html.cam-hafif:not(.light) .card,html.cam-hafif:not(.light) .kpi div{background:rgba(40,44,95,.6)}
+.camset .duv{height:64px;border-radius:14px;border:2px solid transparent;cursor:pointer;background-size:cover;background-position:center;display:flex;align-items:flex-end;padding:6px 8px;font-size:11.5px;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.6);box-sizing:border-box}
+.camset .duv.on{border-color:#fff}
+/* Açılış efekti D: cam panel yükselir, ORVANE, "Ekip hazırlanıyor", ilerleme çubuğu */
+#acilis{position:fixed;left:0;top:0;right:0;bottom:0;z-index:99;display:flex;align-items:center;justify-content:center;background:radial-gradient(900px 600px at 20% 15%,#4b6bff 0%,transparent 60%),radial-gradient(800px 600px at 85% 90%,#9b4dff 0%,transparent 60%),linear-gradient(135deg,#141a3d,#2a1559);transition:opacity .45s ease}
+#acilis.git{opacity:0;pointer-events:none}
+#acilis .ap{width:min(380px,82vw);padding:34px 30px 28px;border-radius:30px;text-align:center;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(26px) saturate(1.5);-webkit-backdrop-filter:blur(26px) saturate(1.5);box-shadow:0 24px 70px rgba(8,10,50,.45),inset 0 1px 0 rgba(255,255,255,.3);animation:apYuk .8s cubic-bezier(.2,.8,.2,1) both}
+#acilis.hafif .ap{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(60,64,140,.7)}
+#acilis .ad{font-size:30px;font-weight:600;letter-spacing:.36em;padding-left:.36em}
+#acilis .as{margin-top:8px;font-size:14px;color:#d8dcff}
+#acilis .ab{margin-top:22px;height:5px;border-radius:99px;background:rgba(255,255,255,.18);overflow:hidden}
+#acilis .ab i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#8fa2ff,#d49bff);animation:apBar 1.5s ease-out .2s forwards}
+@keyframes apYuk{from{opacity:0;transform:translateY(46px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes apBar{to{width:100%}}
+@media (prefers-reduced-motion:reduce){#acilis .ap,#acilis .ab i{animation-duration:.01s;animation-delay:0s}}

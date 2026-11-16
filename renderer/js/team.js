@@ -10,7 +10,7 @@ echo:[['İş günü kaydı',3,'Günlük kayıtları tutar, Günü doldur kuralı
 otto:[['Gelir-gider kaydı',1,''],['Ödeme hatırlatma',1,'']],iris:[['Sağlık takibi',1,''],['Alışkanlık önerileri',1,'']],marco:[['Haftalık menü',1,''],['Market listesi',1,'']],
 luca:[['Proje arama',1,''],['Çizim arama',1,'']],vera:[['Standart kontrolü',1,''],['Kalite raporu',1,'']],ada:[['Kod yazma',1,''],['Hata ayıklama',1,'']],
 remy:[['Takvim düzeni',1,''],['Hatırlatma',1,'']],sage:[['Araştırma',1,''],['Özetleme',1,'']],mia:[['Ev işleri planı',1,''],['Aile takvimi',1,'']],
-kai:[['Teknik bakım',1,''],['Arıza teşhisi',1,'']],cleo:[['Mesaj taslağı',1,''],['Resmi yazışma',1,'']]};
+kai:[['Teknik bakım',1,''],['Arıza teşhisi',1,'']],cleo:[['Mesaj taslağı',1,''],['Resmi yazışma',1,'']],nerya:[['Alışveriş araştırması',1,''],['Satın alma önerisi',1,'']]};
 var DESC0={orin:'şirketi yönetir, görevleri dağıtır, gelişimleri onaylar',orla:'ekibi koordine eder, işleri sıraya koyar',nika:'çalışan kartlarını hazırlar, beceri ve hafızaları geliştirir',echo:'iş günü kayıtlarını toplar ve raporlar',otto:'gelir-gider kaydını tutar, yaklaşan ödemeleri hatırlatır'};
 
 // ---------- Veri ----------
@@ -39,7 +39,11 @@ function tmByName(n){return tmAll().filter(function(c){return c.ad==n})[0]||null
 function wkStart(){var d=pk(TODAY),w=(d.getDay()+6)%7;d.setDate(d.getDate()-w);d.setHours(0,0,0,0);return d}
 function tmOpen(id){return TMS().gorev.filter(function(g){return g.durum!='bitti'&&(!id||g.kim==id)})}
 function tmDoneWeek(id){var w=+wkStart();return TMS().gorev.filter(function(g){return g.durum=='bitti'&&g.bts>=w&&(!id||g.kim==id)})}
-function tmStat(c){if(c.grup=='yonetim'||c.id=='echo')return 'ok';var o=tmOpen(c.id);if(o.some(function(g){return g.onc=='acil'}))return 'bz';return o.length?'ok':'id'}
+// 0.7.24: tek durum kaynağı. Turuncu = görev yapıyor/konuşuyor, yeşil = sunucuda hazır (VPS yokken kimse yeşil olmaz), gri = çevrimdışı
+function tmSunucu(){return !!window.__sunucuBagli}
+function tmCalisiyor(id){if(typeof ZK!='undefined'&&ZK.yaz&&ZK.yaz[id])return true;return tmOpen(id).some(function(g){return g.durum=='calisiyor'})}
+function tmStat(c){if(!tmOnline())return 'id';if(tmCalisiyor(c.id))return 'bz';return tmSunucu()?'ok':'id'}
+function tmDurumYazi(c){var s=tmStat(c);return s=='bz'?'Çalışıyor':s=='ok'?'Çevrimiçi':'Çevrimdışı'}
 function tmOnline(){if(window.__off)return false;return navigator.onLine!==false}
 function tmPending(id){return TMS().not.filter(function(n){return n.durum=='bekliyor'&&(!id||n.kim==id)})}
 function tmGelFor(c){var g=TMS().gel;if(c.id=='nika')return g.filter(function(x){return x.asama=='ik'});if(c.id=='orin')return g.filter(function(x){return x.asama=='ceo'||x.asama=='orin'});return g.filter(function(x){return x.kim==c.id&&(x.asama=='ik'||x.asama=='orin'||x.asama=='ceo')})}
@@ -221,7 +225,7 @@ function tmDelMember(id){confirmBox(esc((tm(id)||{}).ad)+' silinsin mi? Sohbet v
 
 // ---------- Sayfa ----------
 function teamPage(){if(pg=='ik')return typeof hrPage=='function'?hrPage():'';var c=tm(arg);if(!c)return '<p class="h">Çalışan bulunamadı</p>';S.teamSel=c.id;var on=tmOnline(),T=[['genel','Genel'],['gorev','Görevler'],['bec','Beceriler'],['haf','Hafıza'],['prof','Profil']];
-var h='<div class="eh">'+av(c,52)+'<div style="flex:1;min-width:0"><div class="en">'+esc(c.ad)+' <span class="pill" style="background:'+c.renk+'2e;color:'+c.renk+'">'+esc(c.gorev)+'</span></div><div class="es"><span class="dt '+(on?tmStat(c):'id')+'"></span> '+(on?'Çevrimiçi':'Çevrimdışı')+' · '+esc(tmDesc(c))+'</div></div><div class="seg">'+T.map(function(t){return '<span class="'+(TMTAB==t[0]?'on':'')+'" onclick="TMTAB=\''+t[0]+'\';render()">'+t[1]+'</span>'}).join('')+'</div>'+(typeof onayHatirlat=='function'?onayHatirlat(c):'')+'</div>';
+var h='<div class="eh">'+av(c,52)+'<div style="flex:1;min-width:0"><div class="en">'+esc(c.ad)+' <span class="pill" style="background:'+c.renk+'2e;color:'+c.renk+'">'+esc(c.gorev)+'</span></div><div class="es"><span class="dt '+(on?tmStat(c):'id')+'"></span> '+tmDurumYazi(c)+' · '+esc(tmDesc(c))+'</div></div><div class="seg">'+T.map(function(t){return '<span class="'+(TMTAB==t[0]?'on':'')+'" onclick="TMTAB=\''+t[0]+'\';render()">'+t[1]+'</span>'}).join('')+'</div>'+(typeof onayHatirlat=='function'?onayHatirlat(c):'')+'</div>';
 if(TMTAB=='gorev')return h+tmTasks(c);if(TMTAB=='bec')return h+tmSkillsTab(c);if(TMTAB=='haf')return h+tmMemTab(c);if(TMTAB=='prof')return h+tmProfile(c);
 return h+tmCharts(c)+tmKpi(c)+tmApprovals(c)+tmMsgs(c)+tmComposer(c)}
 function teamAfter(){var e=document.getElementById('tmi');if(e){e.value=TMD[arg]||'';if(e.value)tmGrow(e)}var ct=document.getElementById('ct');if(TMSCR&&e){ct.scrollTop=ct.scrollHeight;TMSCR=false}if(TMQ)tmFilter(TMQ)}

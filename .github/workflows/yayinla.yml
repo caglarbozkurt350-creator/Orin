@@ -26,17 +26,24 @@ jobs:
       - name: Testler (biri düşerse yayın yapılmaz)
         timeout-minutes: 10
         run: npm run smoke
-      - name: Derle ve yayınla
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx electron-builder --win nsis --publish always
-      - name: Sürüm notunu yaz
+      - name: Derle
+        run: npx electron-builder --win nsis --publish never
+      - name: Yayınla (sürüm varsa dosyaları değiştirilir)
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           V=$(node -p "require('./package.json').version")
-          if [ -f "surum-notlari/$V.md" ]; then gh release edit "v$V" --title "Orvane $V" --notes-file "surum-notlari/$V.md"; else echo "surum-notlari/$V.md yok, not yazılmadı"; fi
+          F="dist/Orvane-Kurulum-$V.exe dist/Orvane-Kurulum-$V.exe.blockmap dist/latest.yml"
+          N="surum-notlari/$V.md"; [ -f "$N" ] || { echo "Orvane $V" > /tmp/not.md; N=/tmp/not.md; }
+          if gh release view "v$V" >/dev/null 2>&1; then
+            echo "v$V zaten var: dosyalar ve not yenileniyor"
+            gh release upload "v$V" $F --clobber
+            gh release edit "v$V" --title "Orvane $V" --notes-file "$N" --draft=false --latest
+          else
+            gh release create "v$V" $F --target "${{ github.sha }}" --title "Orvane $V" --notes-file "$N" --latest
+          fi
+          gh release view "v$V" --json assets --jq '[.assets[].name]|join(", ")'
       - name: Eski sürümleri temizle (son 2 + en yeni onaylı kalır)
         shell: bash
         env:

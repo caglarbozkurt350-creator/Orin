@@ -1,6 +1,7 @@
 # Orvane · tek tuşla masaüstü sürüm yayını
 # Kullanım: GitHub › Actions › "Orvane sürümünü yayınla" › Run workflow (telefondan da olur).
 # package.json'daki sürümü Windows'ta derler, GitHub Releases'e yükler; Orvane açılınca güncellemeyi önerir.
+# Önce testler çalışır; biri düşerse yayın yapılmaz.
 # Sürüm notu: surum-notlari/<sürüm>.md varsa sürüm açıklamasına yazılır.
 name: Orvane sürümünü yayınla
 on:
@@ -21,6 +22,9 @@ jobs:
           cache: npm
       - name: Paketleri kur
         run: npm ci
+      - name: Testler (biri düşerse yayın yapılmaz)
+        timeout-minutes: 10
+        run: npm run smoke
       - name: Derle ve yayınla
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

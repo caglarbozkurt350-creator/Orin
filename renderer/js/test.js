@@ -6,9 +6,10 @@ nav(r[0],r[1],r[2]);if(!document.getElementById('ct').innerHTML.trim())return{er
 window.__selfTest=function(){var R=[];function t(n,c,m){try{var ok=typeof c=='function'?c():c;R.push({n:n,ok:!!ok,m:ok?'':(m||'beklenmeyen sonuç')})}catch(e){R.push({n:n,ok:false,m:e.message})}}
 t('Haziran Cuma 485',lim('2026-6-5')==485,lim('2026-6-5'));t('Temmuz Cuma 465',lim('2026-7-10')==465,lim('2026-7-10'));t('Ağustos Cuma 390',lim('2026-8-14')==390,lim('2026-8-14'));
 t('Kasım Cuma ayardan',lim('2026-11-6')==S.w2);t('Kasım Pazartesi ayardan',lim('2026-11-9')==S.w1);t('Haziran Pzt 510',lim('2026-6-1')==510);t('Arife iş süresi yok',lim('2026-5-26')===null);
+if(window.GECMIS){// kişisel rapor verisi (kisisel.js) yoksa bu kontroller atlanır
 t('04.06 mesai',typ('2026-6-4')=='mesai',typ('2026-6-4'));t('21.05 girdi hatası',typ('2026-5-21')=='girdi',typ('2026-5-21'));t('07.05 veri hatası',typ('2026-5-7')=='hata');t('07.08 veri hatası',typ('2026-8-7')=='hata');
-t('12.06 mazeret',typ('2026-6-12')=='mazeret');t('01.05 tatilde mesai',typ('2026-5-1')=='mesai');t('17.08 tamam',typ('2026-8-17')=='tam',typ('2026-8-17'));t('11.07 cumartesi mesai',typ('2026-7-11')=='mesai');
-var M=[['Mayıs',0,8230],['Haziran',1,11175],['Temmuz',2,6050],['Ağustos',3,7860]];M.forEach(function(m){var r=RG[m[1]];if(!r){t(m[0]+' toplamı',false,'aralık yok');return}var x=rangeStats(r[0],r[1]);t(m[0]+' toplamı '+m[2],x.s==m[2],'bulunan '+x.s)});
+t('12.06 mazeret',typ('2026-6-12')=='mazeret');t('01.05 tatilde mesai',typ('2026-5-1')=='mesai');t('17.08 tamam',typ('2026-8-17')=='tam',typ('2026-8-17'));t('11.07 cumartesi mesai',typ('2026-7-11')=='mesai');}
+if(window.GECMIS){var M=[['Mayıs',0,8230],['Haziran',1,11175],['Temmuz',2,6050],['Ağustos',3,7860]];M.forEach(function(m){var r=RG[m[1]];if(!r){t(m[0]+' toplamı',false,'aralık yok');return}var x=rangeStats(r[0],r[1]);t(m[0]+' toplamı '+m[2],x.s==m[2],'bulunan '+x.s)});}
 if(RG.length>=4){t('Ağustos mesaisi 645',function(){return rangeStats(RG[3][0],RG[3][1]).ot==645});t('Mayıs mesaisi 2505',function(){return rangeStats(RG[0][0],RG[0][1]).ot==2505})}t('Pazartesi kısaltması',short('2026-11-9')=='9 Kas Pzt',short('2026-11-9'));
 t('Yarım gün seçeneği yok',!SO.some(function(x){return /yar/i.test(x[0]+x[1])}));
 t('En iyi plan 6 gün → 30 gün tatil',function(){var b=best(6);return ptot(b).c==6&&ptot(b).o==30},'');
@@ -30,7 +31,7 @@ t('Refakat sınırı',function(){var y=2031,ks=[];for(var i=1;i<=S.ref;i++){var 
 t('Hukuki uyarı hesaplanır',typeof rk().m=='string');
 var HD=['Tarih','Proje kodu','Parça no','İş tanımı','Süre (dk)','Ay (otomatik)','İş veriliş tarihi','İşe başlama tarihi','İzin türü'];
 t('Sheets eşleme tahmini',function(){var g={};MF.forEach(function(x){g[x[0]]=guess(HD,x[2])});return g.tarih==0&&g.kod==1&&g.parca==2&&g.is==3&&g.dk==4&&g.izin==8&&g.verilis==6&&g.baslama==7},JSON.stringify(MF.map(function(x){return x[0]+'='+guess(HD,x[2])})));
-t('Sheets tarih okuma',parseDate('09.11.2026')=='2026-11-9'&&parseDate('2026-11-10')=='2026-11-10');t('Soru işareti süre 0',parseMin('?')===0&&parseMin('525')==525);t('İzin türü sevk',izinType('İş yeri sevki')=='sevk'&&izinType('Yıllık')=='yillik');t('Takip başlangıcı rapor ayları dışında',function(){var o=S.sheetStart,c=CONNECTED;S.sheetStart='2026-11-9';CONNECTED=true;var a=typ('2026-9-15'),b=typ('2026-5-21');S.sheetStart=o;CONNECTED=c;return a=='bos'&&b=='girdi'},'');t('Standart dışı geçerli kod',SPECIAL.indexOf('Standart dışı')>=0);
+t('Sheets tarih okuma',parseDate('09.11.2026')=='2026-11-9'&&parseDate('2026-11-10')=='2026-11-10');t('Soru işareti süre 0',parseMin('?')===0&&parseMin('525')==525);t('İzin türü sevk',izinType('İş yeri sevki')=='sevk'&&izinType('Yıllık')=='yillik');if(window.GECMIS)t('Takip başlangıcı rapor ayları dışında',function(){var o=S.sheetStart,c=CONNECTED;S.sheetStart='2026-11-9';CONNECTED=true;var a=typ('2026-9-15'),b=typ('2026-5-21');S.sheetStart=o;CONNECTED=c;return a=='bos'&&b=='girdi'},'');t('Standart dışı geçerli kod',SPECIAL.indexOf('Standart dışı')>=0);
 nav('home','gun',TODAY);return R};
 
 // Veri klasörü taşıma testi (yalnız geçici test klasöründe çalışır)
@@ -91,8 +92,8 @@ var __at=window.__asyncTest;window.__asyncTest=function(){return (__at?__at():Pr
 
 // Aşama 4 testleri
 window.__stage4Test=function(){var R=[];function t(n,c,m){try{var ok=typeof c=='function'?c():c;R.push({n:n,ok:!!ok,m:ok?'':String(m||'')})}catch(e){R.push({n:n,ok:false,m:e.message})}}
-t('Arama listesi kayıt ve proje içerir',function(){var a=palItems();return a.length>50&&a.some(function(x){return x.s=='Proje'||/^Proje/.test(x.s)})&&a.some(function(x){return /dk$/.test(x.s)})});
-t('Arama açılır ve süzer',function(){openPal();document.getElementById('palq').value='88.35.03.89';palRun();var n=PAL.items.length;cfNo();return n>=1},'');
+if(window.GECMIS)t('Arama listesi kayıt ve proje içerir',function(){var a=palItems();return a.length>50&&a.some(function(x){return x.s=='Proje'||/^Proje/.test(x.s)})&&a.some(function(x){return /dk$/.test(x.s)})});
+if(window.GECMIS)t('Arama açılır ve süzer',function(){openPal();document.getElementById('palq').value='88.35.03.89';palRun();var n=PAL.items.length;cfNo();return n>=1},'');
 t('Tema açık/koyu',function(){var o=S.theme;togTheme();var a=document.documentElement.classList.contains('light');togTheme();var b=document.documentElement.classList.contains('light');S.theme=o;applyTheme();return a!==b});
 t('Öneriler listelenir ve gizlenir',function(){var o=JSON.stringify(S.sg||{});sugSet('sablon','istemiyorum');var h=sugView();var ok=h.indexOf('tek tıkla kayıt şablonları')<0;S.sg=JSON.parse(o);return ok});
 if(window.GECMIS)t('Dışa aktarma Mayıs toplamı 8230',function(){var x=expData(['2026-5-1','2026-5-31','Mayıs 2026']);return x.sum.s==8230&&x.rows.length>15&&x.proj.length>=2},'');
@@ -152,7 +153,7 @@ t('Gelişim: Nika önerisi Orin’in onayına gider (Orin’in kendi önerisi de
 t('Gelişim: reddedilen uygulanmaz',function(){var g=tmGelNew('mia','beceri','Reddedilecek','');tmGelIk(g.id,0);return g.asama=='red'&&!tmSkills('mia').some(function(s){return s.ad=='Reddedilecek'})});
 t('Nika sayfasında İK onay listesi',function(){tmGelNew('kai','beceri','Test becerisi','');nav('team','calisan','nika');return ct().indexOf('İK incelemesi')>0&&ct().indexOf('Test becerisi')>0});
 t('Doğrudan görev + Orin’e bilgi notu',function(){var n=tmOpen('echo').length;tmTaskNew('echo','Test görevi','acil','',true);var o=tmChat('orin');return tmOpen('echo').length==n+1&&/Bilgi notu/.test(o[o.length-1].t)});
-t('Acil görevde durum meşgul',function(){tmTaskNew('luca','Acil test','acil','',false);return tmStat(tm('luca'))=='bz'});
+t('Durum: acil görev tek başına meşgul yapmaz, çalışan görev yapar',function(){tmTaskNew('luca','Acil test','acil','',false);var g=tmOpen('luca')[0],a=tmStat(tm('luca'))!='bz',d=g.durum;g.durum='calisiyor';var b=tmStat(tm('luca'))==(tmOnline()?'bz':'id');g.durum=d;return a&&b});
 t('Görev bitince bu hafta biten sayılır',function(){var g=tmOpen('luca')[0];tmTaskTog(g.id);return tmDoneWeek('luca').length>=1&&tmStat(tm('luca'))=='id'});
 t('Çevrimdışı: Not moduna geçer, not bekler',function(){window.__off=true;nav('team','calisan','otto');var a=!!document.querySelector('.cmp.ofc')&&document.getElementById('sy').textContent.indexOf('Çevrimdışı')>=0;tmSend('otto','Not testi');var b=tmPending('otto').length==1&&ct().indexOf('Bekliyor')>0;window.__off=false;tmSendPending();return a&&b&&!tmPending().length&&tmChat('otto').some(function(m){return m.tur=='not'&&m.ilt})});
 t('Çevrimiçi mesaj Echo’dan cevap alır',function(){nav('team','calisan','echo');var n=tmChat('echo').length;tmSend('echo','Bu ayın özeti','mesaj');var a=tmChat('echo');return a.length==n+2&&a[a.length-1].r=='o'});

@@ -162,7 +162,7 @@ function mainTests() {
     // Abonelik (Claude Code CLI): API anahtarı ve oturum değişkenleri alt sürece geçmez, araçlar kısıtlı, sonuç okunur
     const ab = require('./abonelik'), eskiK = process.env.ANTHROPIC_API_KEY; process.env.ANTHROPIC_API_KEY = 'sk-test'; process.env.CLAUDE_CODE_TEST_X = '1';
     const env = ab.temizEnv(); if (eskiK === undefined) delete process.env.ANTHROPIC_API_KEY; else process.env.ANTHROPIC_API_KEY = eskiK; delete process.env.CLAUDE_CODE_TEST_X;
-    t('Abonelik: API anahtarı alt sürece geçmez', !env.ANTHROPIC_API_KEY && !env.CLAUDE_CODE_TEST_X && !!env.PATH === !!process.env.PATH);
+    t('Abonelik: API anahtarı alt sürece geçmez', !env.ANTHROPIC_API_KEY && !env.CLAUDE_CODE_TEST_X && Object.keys(env).some(k => /^path$/i.test(k)) === !!process.env.PATH);  // Windows'ta anahtar 'Path' olabilir
     const ar = ab.argsOf({}, 'x.txt');
     t('Abonelik: yalnız okuma/araştırma araçları ve MCP kapalı', ar.includes('--strict-mcp-config') && ar[ar.indexOf('--tools') + 1] === 'Read,Glob,Grep,WebSearch,WebFetch' && ar.includes('--no-session-persistence') && !ar.join(' ').includes('Bash'), ar.join(' '));
     t('Abonelik: başarılı sonuç okunur', ab.sonucOku('{"type":"result","subtype":"success","is_error":false,"result":"tamam","num_turns":1,"usage":{"input_tokens":5,"output_tokens":3}}').metin === 'tamam');

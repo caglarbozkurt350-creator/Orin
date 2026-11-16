@@ -2,6 +2,7 @@
 # Kullanım: GitHub › Actions › "Orvane sürümünü yayınla" › Run workflow (telefondan da olur).
 # package.json'daki sürümü Windows'ta derler, GitHub Releases'e yükler; Orvane açılınca güncellemeyi önerir.
 # Önce testler çalışır; biri düşerse yayın yapılmaz.
+# Yayından sonra eski sürümler silinir: en yeni 2 sürüm + onayli-surumler.json'daki en yeni onaylı sürüm kalır.
 # Sürüm notu: surum-notlari/<sürüm>.md varsa sürüm açıklamasına yazılır.
 name: Orvane sürümünü yayınla
 on:
@@ -36,3 +37,25 @@ jobs:
         run: |
           V=$(node -p "require('./package.json').version")
           if [ -f "surum-notlari/$V.md" ]; then gh release edit "v$V" --title "Orvane $V" --notes-file "surum-notlari/$V.md"; else echo "surum-notlari/$V.md yok, not yazılmadı"; fi
+      - name: Eski sürümleri temizle (son 2 + en yeni onaylı kalır)
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          R="${{ github.repository }}"
+          ONAYLI="v$(node -p "require('./onayli-surumler.json').surumler[0].v")"
+          echo "Kalacak onaylı sürüm: $ONAYLI"
+          # en yeniden eskiye; taslaklar sayılmaz
+          gh api --paginate "repos/$R/releases?per_page=100" --jq '.[] | select(.draft|not) | "\(.id) \(.tag_name)"' > liste.txt
+          SAY=0; KALAN=""
+          while read -r ID TAG; do
+            SAY=$((SAY+1))
+            if [ $SAY -le 2 ] || [ "$TAG" = "$ONAYLI" ]; then KALAN="$KALAN $TAG"; continue; fi
+            echo "Siliniyor: $TAG"
+            gh api -X DELETE "repos/$R/releases/$ID"
+          done < liste.txt
+          # silinen sürümlerin etiketleri (kalanlara ait olmayanlar)
+          while read -r ID TAG; do
+            case " $KALAN " in *" $TAG "*) ;; *) gh api -X DELETE "repos/$R/git/refs/tags/$TAG" 2>/dev/null || true ;; esac
+          done < liste.txt
+          echo "Kalan sürümler:$KALAN"

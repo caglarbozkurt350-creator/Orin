@@ -1,0 +1,34 @@
+# Orvane · tek tuşla masaüstü sürüm yayını
+# Kullanım: GitHub › Actions › "Orvane sürümünü yayınla" › Run workflow (telefondan da olur).
+# package.json'daki sürümü Windows'ta derler, GitHub Releases'e yükler; Orvane açılınca güncellemeyi önerir.
+# Sürüm notu: surum-notlari/<sürüm>.md varsa sürüm açıklamasına yazılır.
+name: Orvane sürümünü yayınla
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: yayinla
+  cancel-in-progress: false
+jobs:
+  yayinla:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Paketleri kur
+        run: npm ci
+      - name: Derle ve yayınla
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx electron-builder --win nsis --publish always
+      - name: Sürüm notunu yaz
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          V=$(node -p "require('./package.json').version")
+          if [ -f "surum-notlari/$V.md" ]; then gh release edit "v$V" --title "Orvane $V" --notes-file "surum-notlari/$V.md"; else echo "surum-notlari/$V.md yok, not yazılmadı"; fi

@@ -134,7 +134,7 @@ if(r[0]=='voice'){nav('team','calisan',r[1]);voiceOpen(r[1]);voiceKb();voiceSay(
 window.__teamTest=function(){var R=[];function t(n,c,m){try{var ok=typeof c=='function'?c():c;R.push({n:n,ok:!!ok,m:ok?'':String(m||'')})}catch(e){R.push({n:n,ok:false,m:e.message})}}
 var bk=JSON.stringify(S.team||null),ct=function(){return document.getElementById('ct').innerHTML};
 t('15 çalışan yüklendi',tmAll().length>=15,tmAll().length);
-t('Çalışanlarım 2. sırada',document.querySelectorAll('#rail .rb')[1].id=='r_team');
+t('Çalışanlarım 2. sırada',document.querySelectorAll('#rail .rb:not(#r_gen)')[1].id=='r_team');
 t('Notlar sekmesi gizli',!document.getElementById('r_plan'));
 t('Üst ortada ORVANE',document.querySelector('.ttl').textContent=='ORVANE');
 t('Logo Ayarlar’ın üstünde',document.getElementById('r_set').previousElementSibling.classList.contains('lg'));

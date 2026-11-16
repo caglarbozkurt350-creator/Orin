@@ -73,12 +73,13 @@ const SEKME: [string, string, string][] = [['/', 'Ekip', 'ekip'], ['/gorevler', 
 export function AltMenu({ rozet }: { rozet?: Record<string, number> }) {
   const yol = usePathname(), alt = useSafeAreaInsets().bottom;
   return (
-    <View style={[s.alt, { paddingBottom: Math.max(alt, 10) }]} accessibilityRole="tablist">
+    <View style={{ paddingHorizontal: 12, paddingTop: 6, paddingBottom: Math.max(alt, 10), backgroundColor: R.zemin }}>
+    <View style={s.alt} accessibilityRole="tablist">
       {SEKME.map(([h, ad, ik]) => {
         const on = yol === h;
         return (
           <Pressable key={h} onPress={() => router.replace(h as any)} style={s.sekme} accessibilityRole="tab" accessibilityState={{ selected: on }} accessibilityLabel={ad}>
-            <View style={[s.sekmeIk, on && { backgroundColor: saydam(R.ana, 0.2) }]}>
+            <View style={[s.sekmeIk, on && { backgroundColor: 'rgba(255,255,255,0.18)' }]}>
               <Ikon ad={ik} renk={on ? '#fff' : R.soluk} />
               {!!rozet?.[h] && <View style={s.rozet}><Text style={s.rozetY}>{rozet[h]}</Text></View>}
             </View>
@@ -86,6 +87,7 @@ export function AltMenu({ rozet }: { rozet?: Record<string, number> }) {
           </Pressable>
         );
       })}
+    </View>
     </View>
   );
 }
@@ -125,7 +127,8 @@ export const s = StyleSheet.create({
   ust: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingBottom: 8 },
   marka: { color: R.yazi, fontSize: 17, fontWeight: '600', letterSpacing: 17 * 0.32, paddingLeft: 17 * 0.32 },
   ikDug: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  alt: { flexDirection: 'row', paddingTop: 8, paddingHorizontal: 6, borderTopWidth: 1, borderTopColor: R.cizgi, backgroundColor: '#1d1d20' },
+  // 0.7.24: alt cam sekme çubuğu. Bulanıklık için yerel modül (expo-blur) gerekmesin diye yarı saydam dolgu + ince ışık kenarı; OTA ile gelir.
+  alt: { flexDirection: 'row', paddingVertical: 7, paddingHorizontal: 6, borderRadius: 28, backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.16)', shadowColor: '#080a28', shadowOpacity: 0.35, shadowRadius: 14, shadowOffset: { width: 0, height: 6 }, elevation: 8 },
   sekme: { flex: 1, alignItems: 'center', gap: 4, minHeight: 48 },
   sekmeIk: { width: 52, height: 30, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
   sekmeY: { fontSize: 11, fontWeight: '600' },

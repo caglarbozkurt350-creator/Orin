@@ -1,5 +1,5 @@
 // Orvane · ana süreç
-const { app, BrowserWindow, ipcMain, shell, dialog, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, dialog, Menu, powerMonitor } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -106,6 +106,7 @@ function smoke(win) {
       }
       const t = await win.webContents.executeJavaScript('window.__selfTest ? window.__selfTest() : []');
       mainTests().forEach(x => t.push(x));
+      (await pbTests()).forEach(x => t.push(x));
       t.forEach(x => { if (!x.ok) errors.push('TEST ' + x.n + ': ' + x.m); });
       fs.writeFileSync(path.join(out, 'rapor.json'), JSON.stringify({ errors, tests: t }, null, 1));
     } catch (e) { errors.push('smoke ' + e.message); fs.writeFileSync(path.join(out, 'rapor.json'), JSON.stringify({ errors }, null, 1)); }
@@ -205,6 +206,53 @@ function mainTests() {
   } catch (e) { t('Atomik yazım testleri', false, e.stack); }
   try { fs.unlinkSync(LOC()); } catch (e) {}
   KONUM_OK = bkK; DWARN = bkW;
+  return R;
+}
+
+// PocketBase oturum testleri (yalnız smoke): gerçek sunucuya dokunmaz; 127.0.0.1'de sahte bir PocketBase taklidi kurulur
+async function pbTests() {
+  const R = [], t = (n, ok, m) => R.push({ n, ok: !!ok, m: ok ? '' : String(m || 'beklenmeyen sonuç') });
+  const http = require('http'), pbm = require('./pb'), sifreli = (() => { try { return require('electron').safeStorage.isEncryptionAvailable(); } catch (e) { return false; } })();
+  let mod = 'ok', istekler = [];
+  const kayit = { id: 'u000000000caglr', collectionId: '_pb_users_auth_', collectionName: 'users', email: 'caglar@test.local', name: 'Çağlar' };
+  const sunucu = http.createServer((q, s) => {
+    let b = ''; q.on('data', c => b += c); q.on('end', () => {
+      istekler.push(q.method + ' ' + q.url + ' ' + (q.headers.authorization || '-'));
+      const js = (st, o) => { s.writeHead(st, { 'Content-Type': 'application/json' }); s.end(JSON.stringify(o)); };
+      if (q.url.startsWith('/api/health')) return js(200, { code: 200, message: 'API is healthy.' });
+      if (q.url.startsWith('/api/collections/users/auth-with-password')) { let j = {}; try { j = JSON.parse(b); } catch (e) {} return j.password === 'dogru-sifre' ? js(200, { token: 'tkn-giris', record: kayit }) : js(400, { code: 400, message: 'Failed to authenticate.', data: {} }); }
+      if (q.url.startsWith('/api/collections/users/auth-refresh')) { if (mod === 'red') return js(401, { code: 401, message: 'The request requires valid record authorization token.', data: {} }); if (mod === 'coktu') return js(503, { code: 503, message: 'down' }); return js(200, { token: 'tkn-yeni', record: kayit }); }
+      js(404, { code: 404, message: 'yok' });
+    });
+  });
+  await new Promise(r => sunucu.listen(0, '127.0.0.1', r));
+  const adres = 'http://127.0.0.1:' + sunucu.address().port, ses = pbm._test.SES;
+  const dene = async (n, fn) => { try { const m = await fn(); t(n, m === true, m); } catch (e) { t(n, false, e.message); } };
+  try {
+    await dene('PB: varsayılan adres veri.orinorvane.com', async () => { pbm._test.istemciKur(); return pbm.durum().url === 'https://veri.orinorvane.com' || pbm.durum().url; });
+    await dene('PB: geçersiz adres reddedilir', async () => { try { pbm.setCfg({ url: 'http://kotu-adres.com' }); return 'kabul edildi'; } catch (e) { return /https/.test(e.message) || e.message; } });
+    await dene('PB: yerel adres kabul edilir, girişsiz başlar', async () => { const d = pbm.setCfg({ url: adres }); return (d.url === adres && !d.girisli) || JSON.stringify(d); });
+    await dene('PB: yanlış şifre Türkçe hata verir', async () => { try { await pbm.giris({ eposta: 'caglar@test.local', sifre: 'yanlis', hatirla: true }); return 'giriş yapıldı'; } catch (e) { return e.message === 'E-posta ya da şifre yanlış' || e.message; } });
+    await dene('PB: doğru şifreyle giriş (users koleksiyonu)', async () => { const d = await pbm.giris({ eposta: 'caglar@test.local', sifre: 'dogru-sifre', hatirla: true }); return (d.girisli && d.eposta === 'caglar@test.local' && !d.cevrimdisi) || JSON.stringify(d); });
+    await dene('PB: durum bilgisinde token yok', async () => !JSON.stringify(pbm.durum()).includes('tkn-') || 'token sızdı');
+    await dene('PB: beni hatırla → şifreli dosya, şifre/token düz metin değil', async () => {
+      if (!sifreli) return true; // şifreleme olmayan test ortamı (Linux CI): dosya hiç yazılmaz, aşağıdaki test bunu doğrular
+      if (!fs.existsSync(ses())) return 'pb-oturum.bin yok'; const b = fs.readFileSync(ses()).toString('latin1'); return (!b.includes('dogru-sifre') && !b.includes('tkn-giris')) || 'düz metin bulundu';
+    });
+    await dene('PB: şifreleme yoksa oturum dosyaya yazılmaz', async () => sifreli || !fs.existsSync(ses()) || 'şifresiz dosya yazıldı');
+    await dene('PB: yeniden açılışta oturum geri gelir', async () => { pbm._test.istemciKur(); const d = pbm.durum(); return sifreli ? (d.girisli || 'oturum gelmedi') : (!d.girisli || 'şifresiz oturum geldi'); });
+    if (!pbm.durum().girisli) await pbm.giris({ eposta: 'caglar@test.local', sifre: 'dogru-sifre', hatirla: true });
+    await dene('PB: oturum yenileme token gönderir ve günceller', async () => { istekler = []; mod = 'ok'; const d = await pbm.yenile(); return (d.girisli && !d.cevrimdisi && istekler.some(x => /auth-refresh tkn-/.test(x))) || JSON.stringify({ d, istekler }); });
+    await dene('PB: sunucu çökükken (503) oturum korunur', async () => { mod = 'coktu'; const d = await pbm.yenile(); return (d.girisli && !!d.sonHata) || JSON.stringify(d); });
+    await dene('PB: 401 → oturum kapanır, dosya silinir', async () => { mod = 'red'; const d = await pbm.yenile(); return (!d.girisli && !fs.existsSync(ses())) || JSON.stringify(d); });
+    mod = 'ok'; await pbm.giris({ eposta: 'caglar@test.local', sifre: 'dogru-sifre', hatirla: true });
+    await new Promise(r => sunucu.close(r));
+    await dene('PB: internet yokken giriş ekranı açılmaz (çevrimdışı mod)', async () => { const d = await pbm.yenile(); return (d.girisli && d.cevrimdisi) || JSON.stringify(d); });
+    await dene('PB: internet yokken giriş denemesi anlaşılır hata verir', async () => { pbm.cikis(); try { await pbm.giris({ eposta: 'a@b.c', sifre: 'x' }); return 'giriş yapıldı'; } catch (e) { return e.message === 'Sunucuya ulaşılamıyor' || e.message; } });
+    await dene('PB: beni hatırla kapalı → dosya yazılmaz', async () => { const s2 = http.createServer((q, s) => { let b = ''; q.on('data', c => b += c); q.on('end', () => { s.writeHead(200, { 'Content-Type': 'application/json' }); s.end(JSON.stringify({ token: 'tkn-gecici', record: kayit })); }); }); await new Promise(r => s2.listen(0, '127.0.0.1', r)); try { pbm.setCfg({ url: 'http://127.0.0.1:' + s2.address().port }); const d = await pbm.giris({ eposta: 'caglar@test.local', sifre: 'x', hatirla: false }); return (d.girisli && !d.hatirla && !fs.existsSync(ses())) || JSON.stringify(d); } finally { await new Promise(r => s2.close(r)); } });
+    await dene('PB: adres değişince eski oturum kapanır', async () => { const d = pbm.setCfg({ url: 'https://baska.orinorvane.com' }); return !d.girisli || JSON.stringify(d); });
+    await dene('PB: çıkış oturumu ve dosyayı siler', async () => { const d = pbm.cikis(); return (!d.girisli && !fs.existsSync(ses())) || JSON.stringify(d); });
+  } finally { try { sunucu.close(); } catch (e) {} try { fs.unlinkSync(pbm._test.CFG()); } catch (e) {} pbm._test.istemciKur(); }
   return R;
 }
 // ---- IPC ----
@@ -356,6 +404,14 @@ ipcMain.handle('surum:don', wrap(async (v, e) => {
 const sheets = require('./sheets');
 ipcMain.handle('sheets:status', wrap(() => sheets.status()));
 // Telefon eşitlemesi (Supabase)
+// 0.7.25: PocketBase oturumu (POCKETBASE_BAGLANTI.md 1. aşama). Token ana süreçte kalır; renderer yalnız durum bilgisi görür.
+const pbOturum = require('./pb');
+ipcMain.handle('pb:durum', wrap(() => pbOturum.durum()));
+ipcMain.handle('pb:giris', wrap(o => pbOturum.giris(o)));
+ipcMain.handle('pb:yenile', wrap(() => pbOturum.yenile()));
+ipcMain.handle('pb:cikis', wrap(() => pbOturum.cikis()));
+ipcMain.handle('pb:config', wrap(c => pbOturum.setCfg(c)));
+pbOturum.degisti(d => BrowserWindow.getAllWindows().forEach(w => { try { w.webContents.send('pb:degisti', d); } catch (e) {} }));
 const bulut = require('./bulut');
 ipcMain.handle('bulut:status', wrap(() => bulut.status()));
 ipcMain.handle('bulut:config', wrap(c => bulut.setCfg(c)));
@@ -495,5 +551,5 @@ ipcMain.handle('sheets:pickClient', wrap(async (a, e) => {
 }));
 
 app.on('second-instance', () => { const w = BrowserWindow.getAllWindows()[0]; if (w) { if (w.isMinimized()) w.restore(); w.focus(); } });
-app.whenReady().then(() => { Menu.setApplicationMenu(null); bootLog(); createWindow(); if (app.isPackaged && updater && !SMOKE) { setTimeout(() => updater.checkForUpdates().catch(() => {}), 15000); setInterval(() => updater.checkForUpdates().catch(() => {}), 6 * 3600e3); } });
+app.whenReady().then(() => { Menu.setApplicationMenu(null); bootLog(); pbOturum.baslat({ otomatik: !SMOKE && !SEED }); if (!SMOKE && !SEED) powerMonitor.on('resume', () => setTimeout(() => pbOturum.yenile(), 5000)); createWindow(); if (app.isPackaged && updater && !SMOKE) { setTimeout(() => updater.checkForUpdates().catch(() => {}), 15000); setInterval(() => updater.checkForUpdates().catch(() => {}), 6 * 3600e3); } });
 app.on('window-all-closed', () => app.quit());

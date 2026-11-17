@@ -282,3 +282,21 @@ add();t('Güncelle kaydı düzeltir, düzenleme kapanır',function(){var e=E['20
 t('Kalem simgesi düzenlemeyi açar',function(){var p=document.querySelector('.ib2[title="Düzenle"]');p.click();return(EDIT===0&&!!document.querySelector('.edb'))||'EDIT='+EDIT});
 t('Açılır liste seçenekleri koyu zeminde açık yazı',function(){var o=document.querySelector('#ds2 option'),s=getComputedStyle(o);return(s.backgroundColor=='rgb(44, 44, 48)'&&s.color=='rgb(255, 255, 255)')||(s.backgroundColor+' / '+s.color)});
 }catch(e){R.push({n:'Kayıt düzenleme testleri',ok:false,m:e.message})}if(geri)geri();return R};
+// 0.7.25 · PocketBase giriş ekranı ve Ayarlar › Sunucu oturumu
+var __srPb=window.__smokeRoutes;window.__smokeRoutes=function(){return __srPb().concat([['set','oturum','']])};
+window.__pbTest=function(){var R=[];function t(n,c,m){try{var ok=typeof c=='function'?c():c;R.push({n:n,ok:!!ok,m:ok?'':String(m||'beklenmeyen sonuç')})}catch(e){R.push({n:n,ok:false,m:e.message})}}
+var bk=PB.st;
+t('PB: smoke açılışında giriş ekranı kendiliğinden açılmaz',function(){var o=document.getElementById('pbg');return !o||o.style.display=='none'});
+t('PB: köprü token göstermez',function(){return !!(API&&API.pb)&&Object.keys(API.pb).join(',')=='durum,giris,yenile,cikis,config,degisti'},API&&API.pb&&Object.keys(API.pb).join(','));
+window.__pbTestModu=true;PB.st={girisli:false,eposta:'',url:'https://veri.orinorvane.com',varsayilanUrl:'https://veri.orinorvane.com',sifreleme:true};
+t('PB: giriş ekranı açılır (e-posta, şifre, beni hatırla açık, sunucu)',function(){pbGirisGoster('Oturum süresi doldu, yeniden giriş yap');var o=document.getElementById('pbg'),h=document.getElementById('pbgH');return o.style.display=='flex'&&!!document.getElementById('pbgE')&&document.getElementById('pbgS').type=='password'&&h&&h.checked&&/veri\.orinorvane\.com/.test(o.innerHTML)&&/Oturum süresi doldu/.test(document.getElementById('pbgMsj').textContent)});
+t('PB: şifre göster/gizle',function(){pbSifreGoster();var a=document.getElementById('pbgS').type=='text';pbSifreGoster();return a&&document.getElementById('pbgS').type=='password'});
+t('PB: boş alanla giriş istenmez',function(){document.getElementById('pbgE').value='';pbGirisYap();return /E-posta ve şifreyi yaz/.test(document.getElementById('pbgMsj').textContent)&&!PB.bekle});
+t('PB: sunucu adresi alanı açılır, yazılan e-posta silinmez',function(){document.getElementById('pbgE').value='caglar@x.com';pbAdresAc();var ok=!!document.getElementById('pbgU')&&document.getElementById('pbgE').value=='caglar@x.com';pbAdresAc();return ok&&!document.getElementById('pbgU')});
+t('PB: giriş ekranı kapanır',function(){pbGirisKapat();var o=document.getElementById('pbg');return o.style.display=='none'&&!o.innerHTML});
+t('PB: Sunucu oturumu sayfası (girişli, çevrimdışı)',function(){PB.st={girisli:true,eposta:'caglar@test.local',url:'https://veri.orinorvane.com',varsayilanUrl:'https://veri.orinorvane.com',hatirla:true,sifreleme:true,cevrimdisi:true,sonYenileme:Date.now(),sonHata:'Sunucuya ulaşılamıyor'};nav('set','oturum','');var c=document.getElementById('ct').innerHTML;return c.indexOf('Sunucu oturumu')>=0&&c.indexOf('caglar@test.local')>=0&&c.indexOf('Çevrimdışı')>=0&&c.indexOf('Çıkış yap')>=0&&document.getElementById('sb').innerHTML.indexOf('Sunucu oturumu')>=0});
+t('PB: Sunucu oturumu sayfası (girişsiz)',function(){PB.st={girisli:false,url:'https://veri.orinorvane.com',varsayilanUrl:'https://veri.orinorvane.com',sifreleme:true};render();var c=document.getElementById('ct').innerHTML;return c.indexOf('Giriş yapılmadı')>=0&&c.indexOf('pbGirisGoster()')>=0});
+window.__pbTestModu=false;PB.st=bk;nav('home','gun',TODAY);return R};
+var __atPb=window.__asyncTest;window.__asyncTest=function(){return __atPb().then(function(a){return a.concat(window.__pbTest())})};
+// 0.7.25 · Kai ve Ada'nın görevleri yalnız abonelikle yapılır (API işi yapmaz, yalnız iş emri yazar)
+var __stAbz=window.__selfTest;window.__selfTest=function(){var R=__stAbz();try{var ok=abnZorunlu({kim:'kai'})&&abnZorunlu({kim:'ada'})&&!abnZorunlu({kim:'echo'})&&abnUygun({kim:'ada'});R.push({n:'Kai ve Ada görevi abonelik zorunlu',ok:ok,m:ok?'':'kural çalışmıyor'})}catch(e){R.push({n:'Kai ve Ada görevi abonelik zorunlu',ok:false,m:e.message})}return R};

@@ -1,7 +1,7 @@
 {
   "name": "orin",
   "productName": "Orvane",
-  "version": "0.7.24",
+  "version": "0.7.25",
   "description": "Orvane · iş raporu ve yapay zekâ çalışanları masaüstü uygulaması",
   "main": "main.js",
   "author": "Çağlar",
@@ -17,7 +17,8 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",
-    "electron-updater": "^6.8.11"
+    "electron-updater": "^6.8.11",
+    "pocketbase": "^0.29.0"
   },
   "build": {
     "appId": "com.caglar.orin",
@@ -32,6 +33,7 @@
       "export.js",
       "calisanlar.json",
       "bulut.js",
+      "pb.js",
       "zeka.js",
       "surum.js",
       "onayli-surumler.json",

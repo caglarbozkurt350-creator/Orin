@@ -58,6 +58,15 @@ contextBridge.exposeInMainWorld('api', {
   gizli: { klasorler: () => ipcRenderer.invoke('gizli:klasorler') },
   apify: { durum: () => ipcRenderer.invoke('apify:durum'), kaydet: t => ipcRenderer.invoke('apify:kaydet', t), sil: () => ipcRenderer.invoke('apify:sil'), calisanlar: L => ipcRenderer.invoke('apify:calisanlar', L), test: () => ipcRenderer.invoke('apify:test') },
   jarvis: { taslaklar: () => ipcRenderer.invoke('jarvis:taslaklar'), sor: o => ipcRenderer.invoke('jarvis:sor', o), kaydet: o => ipcRenderer.invoke('jarvis:kaydet', o) },
+  // PocketBase oturumu: renderer token görmez, yalnız durum (giriş var mı, e-posta, adres, çevrimdışı mı)
+  pb: {
+    durum: () => ipcRenderer.invoke('pb:durum'),
+    giris: o => ipcRenderer.invoke('pb:giris', o),
+    yenile: () => ipcRenderer.invoke('pb:yenile'),
+    cikis: () => ipcRenderer.invoke('pb:cikis'),
+    config: c => ipcRenderer.invoke('pb:config', c),
+    degisti: fn => ipcRenderer.on('pb:degisti', (e, d) => fn(d))
+  },
   bulut: {
     status: () => ipcRenderer.invoke('bulut:status'),
     config: c => ipcRenderer.invoke('bulut:config', c),

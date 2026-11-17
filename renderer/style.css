@@ -88,3 +88,19 @@ html.motion .pn{background:rgba(26,26,28,.82)}html.motion .sb{background:rgba(27
 @media (display-mode: fullscreen){.bd{padding:0}.pn{border-radius:0;border:none}}
 .lg{margin-top:auto;width:58px;height:58px;display:flex;align-items:center;justify-content:center;margin-bottom:4px}.lg img{width:48px;height:48px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.4))}
 html.light .lg img{filter:invert(1) hue-rotate(180deg)}
+/* 0.7.25 · PocketBase giriş ekranı (giris.js) */
+.pbg{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;background:#18181a}
+.pbg-drag{position:absolute;left:0;right:150px;top:0;height:58px;-webkit-app-region:drag}
+.pbg-kart{width:360px;max-width:calc(100vw - 40px);background:#232327;border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:26px 26px 20px;box-shadow:0 24px 60px rgba(0,0,0,.55);font-size:14px}
+.pbg-logo{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:6px}
+.pbg-logo img{width:46px;height:46px;object-fit:contain}
+.pbg-logo span{font-size:20px;font-weight:600;letter-spacing:.32em;padding-left:.32em;color:#ececf0}
+.pbg-alt{text-align:center;color:#8e8e95;font-size:13px;margin-bottom:18px}
+.pbg-msj{background:rgba(210,59,59,.12);border:1px solid rgba(210,59,59,.45);color:#f4b0b0;border-radius:12px;padding:8px 12px;margin-bottom:10px;font-size:13px}
+.pbg-sifre{position:relative}.pbg-sifre .ti2{padding-right:42px}
+.pbg-goz{position:absolute;right:12px;top:8px;color:#8e8e95;cursor:pointer;font-size:18px}.pbg-goz:hover{color:#fff}
+.pbg-hat{display:flex;align-items:center;gap:8px;color:#c9c9ce;margin:4px 2px 14px;cursor:pointer;user-select:none}
+.pbg-btn{width:100%}.pbg-btn:disabled{opacity:.6;cursor:default}
+.pbg-sun{margin-top:14px;text-align:center;color:#8e8e95;font-size:12.5px;cursor:pointer;user-select:none}.pbg-sun:hover{color:#c9c9ce}.pbg-sun b{color:#f1c88a;font-weight:500}
+.pbg-adres{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.pb-nokta{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:1px}

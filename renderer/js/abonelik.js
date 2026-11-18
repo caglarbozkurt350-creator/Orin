@@ -108,7 +108,7 @@ ABN.st.acik=false;var g5=tmTaskNew('luca','Kapalıyken','normal','',false,{});t(
 ABN.st.acik=true;ABN.st.bugun=0;nav('set','zeka');var h=document.getElementById('ct').innerHTML;t('Yapay zekâ ayarında abonelik kartı',/Claude aboneliği \(Claude Code\)/.test(h)&&/Günlük görev sınırı/.test(h)&&/Nika’nın ve Orin’in onayıyla/.test(h));
 nav('team','calisan','ada');hrOpen('ada','gorev');var f=document.getElementById('hrm')?document.getElementById('hrm').innerHTML:'';t('Görev formunda abonelik seçeneği',/Claude aboneliğinde yap/.test(f),f.slice(0,200));if(typeof hrClose=='function')hrClose(true);
 // Sohbet abonelikten: hafif istem (sistemTam), araç yok, API'ye gitmez
-ABN.st.gunlukSohbet=60;ABN.st.sohbetBugun=0;var sc=[];ABN.cagir=function(o){sc.push(o);return Promise.resolve({ok:true,v:{metin:'Merhaba Çağlar, buradayım.',tur:1,token:700,model:'claude-sonnet-5-5'}})};
+ABN.st.gunlukSohbet=60;ABN.st.sohbetBugun=0;var sc=[];ABN.cagir=function(o){if(o.tur=='sohbet')sc.push(o);return Promise.resolve({ok:true,v:{metin:'Merhaba Çağlar, buradayım.',tur:1,token:700,model:'claude-sonnet-5-5'}})};
 T.sohbet.orin=[];tmSend('orin','Merhaba Orin','mesaj');return new Promise(function(res){setTimeout(res,300)}).then(function(){var ch=tmChat('orin'),son=ch[ch.length-1];
 t('Sohbet cevabı abonelikten gelir',sc.length==1&&sc[0].tur=='sohbet'&&sc[0].sistemTam===true&&sc[0].araclar===''&&son.r=='o'&&/abonelik/.test(son.model),JSON.stringify({sc:sc.map(function(x){return x.kim+':'+x.tur+':'+String(x.istem||'').slice(0,60)}),son:son}));
 t('Orin Sonnet ile cevaplar',sc[0]&&sc[0].model=='sonnet');t('Sohbette API isteği yok',istek.length==0);t('Bekleyen mesaj kalmaz',!ch.some(function(m){return m.bek}));

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useKlavye } from '@/lib/klavye';
-import { AltPencere, Bos, GelisimFormu, GorevFormu, GorevSinir } from '@/bilesen/formlar';
+import { AltPencere, Bos, FinansFormu, GelisimFormu, GorevFormu, GorevSinir } from '@/bilesen/formlar';
 import { GelisimSatiri } from '@/bilesen/gelisim';
 import { Dugme, Ekran, Foto, Ikon, Nokta, Rozet, s } from '@/bilesen/ortak';
 import { olayEkle, useDurum } from '@/lib/depo';
@@ -108,7 +108,7 @@ function Sohbet({ c }: { c: Calisan }) {
         {!!a.length && <Pressable onPress={temizle} accessibilityRole="button" style={{ alignSelf: 'flex-end', paddingHorizontal: 10, paddingVertical: 4 }}><Text style={{ color: R.soluk, fontSize: 12.5 }}>Sohbeti temizle</Text></Pressable>}
         {!a.length && <Bot c={c} t={'Merhaba, ben ' + c.ad + '. ' + c.gorev + ' işlerine bakıyorum.' + (c.id === 'echo' ? ' Kayıtlarına bakıp hemen özet çıkarabilirim.' : ' Yapay zekâ bağlantısı kurulunca sohbet edebileceğiz; şimdiden mesaj ya da not bırakabilirsin.')} qr={c.id === 'echo' ? ['Bu haftanın raporu', 'Eksik günler', 'Bu ayın özeti'] : []} gonder={gonder} />}
         {a.map((m) => m.r === 'sys' ? (
-          <Pressable key={m.id} onLongPress={() => sil(m)} style={{ flexDirection: 'row', gap: 10, backgroundColor: 'rgba(47,123,245,0.08)', borderWidth: 1, borderColor: 'rgba(47,123,245,0.3)', borderRadius: 14, padding: 11 }}><Ikon ad="simsek" boy={18} renk={R.bilgi} /><Text style={{ flex: 1, color: R.bilgi, fontSize: 13, lineHeight: 19 }}>{m.t}</Text></Pressable>
+          <Pressable key={m.id} onLongPress={() => sil(m)} style={{ flexDirection: 'row', gap: 10, backgroundColor: saydam(R.ana, 0.08), borderWidth: 1, borderColor: saydam(R.ana, 0.3), borderRadius: 14, padding: 11 }}><Ikon ad="simsek" boy={18} renk={R.bilgi} /><Text style={{ flex: 1, color: R.bilgi, fontSize: 13, lineHeight: 19 }}>{m.t}</Text></Pressable>
         ) : m.r === 'o' ? <Bot key={m.id} c={c} t={m.t} ts={m.ts} qr={m.qr} gonder={gonder} sil={() => sil(m)} />
           : m.tur === 'not' ? (
             <Pressable key={m.id} onLongPress={() => sil(m)} style={[s.kart, { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12 }]}><Ikon ad="not" boy={18} renk={R.notTuruncu} /><View style={{ flex: 1 }}><Text style={{ color: '#e4e4e8', fontSize: 14 }}>{m.t}</Text><Text style={{ color: R.solukk, fontSize: 11.5, marginTop: 2 }}>{saat(m.ts)} · not</Text></View><Rozet yazi={bek.has(m.id) ? 'Bekliyor' : 'Kaydedildi'} renk={bek.has(m.id) ? R.notTuruncu : R.yesil} /></Pressable>
@@ -121,7 +121,7 @@ function Sohbet({ c }: { c: Calisan }) {
         {senk.hata ? (
           <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center', backgroundColor: 'rgba(224,149,47,0.1)', borderWidth: 1, borderColor: 'rgba(224,149,47,0.35)', borderRadius: 14, padding: 11 }}><Ikon ad="wifi" boy={20} renk="#f1c88a" /><Text style={{ flex: 1, color: '#f1c88a', fontSize: 13.5 }}><Text style={{ fontWeight: '700' }}>Bağlantı yok.</Text> Yazdıkların saklanır, bağlantı gelince {c.ad}’ya iletilir.</Text></View>
         ) : cevapsiz > 0 ? (
-          <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', backgroundColor: 'rgba(47,123,245,0.08)', borderWidth: 1, borderColor: 'rgba(47,123,245,0.3)', borderRadius: 14, padding: 11 }}><Ikon ad="bilgi" boy={18} renk={R.bilgi} /><Text style={{ flex: 1, color: R.bilgi, fontSize: 13 }}>{o.zeka?.bagli ? cevapsiz + ' mesaj cevap bekliyor · bilgisayardaki Orvane açıkken ' + c.ad + ' birkaç saniyede cevaplar.' : 'Yapay zekâ bağlı değil · ' + cevapsiz + ' mesaj cevap bekliyor. Bağlantı kurulunca ' + c.ad + ' cevaplayacak.'}</Text></View>
+          <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', backgroundColor: saydam(R.ana, 0.08), borderWidth: 1, borderColor: saydam(R.ana, 0.3), borderRadius: 14, padding: 11 }}><Ikon ad="bilgi" boy={18} renk={R.bilgi} /><Text style={{ flex: 1, color: R.bilgi, fontSize: 13 }}>{o.zeka?.bagli ? cevapsiz + ' mesaj cevap bekliyor · bilgisayardaki Orvane açıkken ' + c.ad + ' birkaç saniyede cevaplar.' : 'Yapay zekâ bağlı değil · ' + cevapsiz + ' mesaj cevap bekliyor. Bağlantı kurulunca ' + c.ad + ' cevaplayacak.'}</Text></View>
         ) : null}
       </ScrollView>
       <View style={{ paddingHorizontal: 10, paddingTop: 6, paddingBottom: kl.ortu > 0 ? kl.ortu + 6 : Math.max(alt, 10) + 6 }}>
@@ -159,29 +159,5 @@ function Bot({ c, t, ts, qr, gonder, sil }: { c: Calisan; t: string; ts?: number
         ))}</View>}
       </View>
     </Pressable>
-  );
-}
-
-// 0.7.18: Otto'ya gelir / gider kaydı (masaüstündeki Şirketim › Aylık gelir ve gider'e olay olarak gider)
-function FinansFormu({ kapat }: { kapat: () => void }) {
-  const [tur, setTur] = useState<'gelir' | 'gider'>('gider'), [kim, setKim] = useState<'cagla' | 'sirket'>('cagla'), [tutar, setTutar] = useState(''), [kalem, setKalem] = useState('');
-  const kaydet = () => {
-    const t = Math.round((Number(tutar.replace(',', '.')) || 0) * 100) / 100; if (!(t > 0)) { Alert.alert('Tutarı yaz'); return; }
-    const d = new Date(), tarih = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-    olayEkle('finans_kayit', { tur, kim, tutar: t, kalem: kalem.trim() || 'Diğer', tarih }); esitleSonra(); kapat();
-  };
-  const sec = <T extends string>(deger: T, aktif: T, yazi: string, f: (x: T) => void) => (
-    <Pressable key={deger} onPress={() => f(deger)} accessibilityRole="button" accessibilityState={{ selected: aktif === deger }} style={{ flex: 1, paddingVertical: 10, borderRadius: 12, alignItems: 'center', backgroundColor: aktif === deger ? R.secili : '#252528', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' }}><Text style={{ color: '#fff', fontSize: 14 }}>{yazi}</Text></Pressable>
-  );
-  return (
-    <View style={{ gap: 12 }}>
-      <Text style={{ color: '#fff', fontSize: 17, fontWeight: '600' }}>Gelir / gider ekle</Text>
-      <View style={{ flexDirection: 'row', gap: 8 }}>{sec('gelir', tur, 'Gelir', setTur)}{sec('gider', tur, 'Gider', setTur)}</View>
-      <View style={{ flexDirection: 'row', gap: 8 }}>{sec('cagla', kim, 'Benim', setKim)}{sec('sirket', kim, 'Şirketin', setKim)}</View>
-      <TextInput value={tutar} onChangeText={setTutar} keyboardType="decimal-pad" placeholder="Tutar (₺)" placeholderTextColor={R.soluk} accessibilityLabel="Tutar" style={{ color: '#fff', fontSize: 16, backgroundColor: '#252528', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12 }} />
-      <TextInput value={kalem} onChangeText={setKalem} placeholder="Kalem (ör. Market, Kira, Maaş)" placeholderTextColor={R.soluk} accessibilityLabel="Kalem" style={{ color: '#fff', fontSize: 15, backgroundColor: '#252528', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12 }} />
-      <Text style={{ color: R.soluk, fontSize: 12.5 }}>Bilgisayardaki Orvane’de Şirketim › Aylık gelir ve gider’e eklenir; Otto izler.</Text>
-      <Dugme yazi="Kaydet" ikon="kaydet" onPress={kaydet} />
-    </View>
   );
 }

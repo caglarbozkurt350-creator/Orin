@@ -1,0 +1,134 @@
+/* Orvane 0.8.0 · Tasarım temeli (Aşama 2)
+   Kaynak: Program kurulum\Tasarim\Main.dc.html <helmet><style>. Çevrimdışı çalışır: yazı tipleri renderer/fonts altında yerel.
+   İçerik: yazı tipleri, CSS değişkenleri, 6 tema (data-tema), cam panel, squircle simge, animasyon eğrileri, hareket azaltma.
+   Kabuk (üst çubuk, dock, panel) stilleri orvane08-kabuk.css içindedir. */
+
+/* ---------- Yazı tipleri (yerel, değişken ağırlık) ---------- */
+@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:100 900;src:url(fonts/inter-latin-ext-wght-normal.woff2) format('woff2-variations'),url(fonts/inter-latin-ext-wght-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:100 900;src:url(fonts/inter-latin-wght-normal.woff2) format('woff2-variations'),url(fonts/inter-latin-wght-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Space Grotesk';font-style:normal;font-display:swap;font-weight:300 700;src:url(fonts/space-grotesk-latin-ext-wght-normal.woff2) format('woff2-variations'),url(fonts/space-grotesk-latin-ext-wght-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Space Grotesk';font-style:normal;font-display:swap;font-weight:300 700;src:url(fonts/space-grotesk-latin-wght-normal.woff2) format('woff2-variations'),url(fonts/space-grotesk-latin-wght-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+
+/* ---------- Değişkenler ---------- */
+:root{
+  /* vurgu = tema rengi (varsayılan Turuncu) */
+  --acc:#ff5b37;--acc2:#ffb020;
+  /* zemin ve metin */
+  --zemin:#19191b;--yazi:#f2f2f3;--yazi2:#a9a9b0;--yazi3:#8e8e95;
+  /* cam */
+  --cam:rgba(255,255,255,.06);--cam-kenar:rgba(255,255,255,.10);--cam-bulanik:24px;
+  --cam-golge:0 24px 60px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06);
+  --cam-koyu:rgba(40,40,44,.82);
+  /* durum noktası */
+  --hazir:#3ecf5a;--gorevde:#f5a524;--cevrimdisi:#6b6b73;--kirmizi:#ff3b30;
+  /* departman halka degradeleri (açı 160°) */
+  --dep-yonetim:linear-gradient(160deg,#ff8a3d,#ffc24a);
+  --dep-aile:linear-gradient(160deg,#ff9ad4,#a78bfa);
+  --dep-is:linear-gradient(160deg,#38d6f0,#3b82f6);
+  --dep-plan:linear-gradient(160deg,#6ee7b7,#10b981);
+  --dep-teknik:linear-gradient(160deg,#fde68a,#f59e0b);
+  --dep-ortak:linear-gradient(160deg,#e5e7eb,#9ca3af);
+  /* departman bant renkleri (hiyerarşi) */
+  --dep-yonetim-c:#ffad6b;--dep-aile-c:#ec4899;--dep-is-c:#38d6f0;--dep-plan-c:#6ee7b7;--dep-teknik-c:#fde68a;--dep-ortak-c:#cbd5e1;
+  /* yarıçap */
+  --r-kart:22px;--r-panel:26px;--r-dugme:22px;--r-hap:999px;--r-squircle:30%;
+  /* hareket eğrileri */
+  --ease-yay:cubic-bezier(.34,1.56,.64,1);
+  --ease-yay2:cubic-bezier(.34,1.7,.64,1);
+  --ease-akis:cubic-bezier(.2,.8,.2,1);
+  --ease-cik:cubic-bezier(.4,0,1,1);
+  --ease-ana:cubic-bezier(.65,0,.35,1);
+  --ease-yumusak:cubic-bezier(.16,1,.3,1);
+  /* yazı */
+  --font-ana:'Inter',system-ui,'Segoe UI',sans-serif;
+  --font-marka:'Space Grotesk','Inter',system-ui,sans-serif;
+}
+/* ---------- 6 tema: yalnız vurgu rengi değişir (Ayarlar'dan; ORV.tema(k)) ---------- */
+:root[data-tema="turuncu"]{--acc:#ff5b37;--acc2:#ffb020}
+:root[data-tema="nane"]{--acc:#2fbf8a;--acc2:#9be7c4}
+:root[data-tema="okyanus"]{--acc:#3b82f6;--acc2:#5fe0f5}
+:root[data-tema="lavanta"]{--acc:#8b5cf6;--acc2:#c4b0ff}
+:root[data-tema="gul"]{--acc:#e1488f;--acc2:#ff9ad4}
+:root[data-tema="altin"]{--acc:#d4921c;--acc2:#fde68a}
+
+/* ---------- Genel ---------- */
+html.orv body,html.orv .w{font-family:var(--font-ana)}
+html.orv ::selection{background:color-mix(in srgb,var(--acc) 45%,transparent)}
+html.orv a{color:var(--acc)}
+/* eski sayfaların birincil düğmesi ve seçili kartı da vurgu rengini izler */
+html.orv .bt.p,html.orv .bt.on{background:var(--acc);border-color:var(--acc);color:#fff}
+html.orv .pc.on{border-color:var(--acc)}
+html.orv :focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+
+/* ---------- Cam panel ---------- */
+.orv-cam{background:var(--cam);border:1px solid var(--cam-kenar);backdrop-filter:blur(var(--cam-bulanik));-webkit-backdrop-filter:blur(var(--cam-bulanik));box-shadow:var(--cam-golge)}
+.orv-cam.koyu{background:var(--cam-koyu)}
+.orv-cam.r28{border-radius:28px}.orv-cam.r26{border-radius:26px}.orv-cam.r22{border-radius:22px}
+
+/* ---------- Squircle simge kutucuğu (ORV.ikon) ---------- */
+.orv-sq{position:relative;display:inline-flex;align-items:center;justify-content:center;flex:none;width:var(--bs,34px);height:var(--bs,34px);border-radius:var(--r-squircle);color:#fff;
+  background:linear-gradient(160deg,var(--a,var(--acc2)),var(--b,var(--acc)));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5),inset 0 -2px 5px rgba(0,0,0,.2),0 6px 14px rgba(0,0,0,.35);
+  transition:transform .25s var(--ease-yay),width .4s,height .4s,border-radius .4s}
+.orv-sq::before{content:'';position:absolute;left:6%;right:6%;top:6%;height:45%;border-radius:30% 30% 20% 20%;background:linear-gradient(rgba(255,255,255,.38),rgba(255,255,255,0));pointer-events:none}
+.orv-sq svg{position:relative;width:58%;height:58%;transition:transform .4s var(--ease-yay2)}
+.orv-sq.yuvarlak{border-radius:50%}
+.orv-sq.duz{background:none;box-shadow:none}.orv-sq.duz::before{display:none}
+.orv-sq.tema{--a:var(--acc2);--b:var(--acc)}
+/* hover'da parlama geçişi */
+.orv-sq::after{content:'';position:absolute;inset:0;border-radius:inherit;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.55) 50%,transparent 70%);background-size:250% 100%;background-position:130% 0;opacity:0;pointer-events:none}
+.orv-par:hover .orv-sq::after,.orv-sq.par:hover::after{opacity:1;animation:orvShine .75s ease}
+@keyframes orvShine{from{background-position:130% 0}to{background-position:-30% 0}}
+.orv-par:hover .orv-sq svg{transform:scale(1.12) rotate(-6deg)}
+
+/* durum noktası: halka şeklinde atım */
+.orv-dot{position:relative;display:inline-block;width:14px;height:14px;border-radius:50%;box-sizing:border-box;background:var(--cevrimdisi);color:var(--cevrimdisi)}
+.orv-dot.hz{background:var(--hazir);color:var(--hazir)}
+.orv-dot.cl{background:var(--gorevde);color:var(--gorevde)}
+.orv-dot.hz::after,.orv-dot.cl::after{content:'';position:absolute;left:-3px;top:-3px;right:-3px;bottom:-3px;border-radius:50%;border:2px solid currentColor;pointer-events:none;animation:orvRing 1.8s ease-out infinite}
+.orv-dot.cl::after{animation-duration:1.1s}
+@keyframes orvRing{from{transform:scale(.7);opacity:.95}to{transform:scale(2.1);opacity:0}}
+
+/* ---------- Düğmeler: hover'da hafif yükselir, basınca yaylanarak küçülür ---------- */
+.orv-ib{width:44px;height:44px;border-radius:22px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#e9e9ec;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;font-family:inherit;
+  transition:transform .32s var(--ease-yay),background .2s,border-color .2s,color .2s,opacity .25s,box-shadow .25s}
+.orv-ib:hover{background:rgba(255,255,255,.12);transform:translateY(-2px)}
+.orv-ib:active{transform:scale(.93)}
+.orv-ib.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.orv-ib svg{transition:transform .38s var(--ease-yay2)}
+.orv-ib:hover svg{transform:scale(1.15) rotate(-8deg)}
+.orv-btn{height:44px;border-radius:22px;border:0;background:var(--acc);color:#fff;font:600 14px var(--font-ana);padding:0 18px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:transform .32s var(--ease-yay),filter .2s}
+.orv-btn:hover{filter:brightness(1.08);transform:translateY(-2px)}.orv-btn:active{transform:scale(.93)}
+.orv-btn.hayalet{background:transparent;border:1px solid rgba(255,255,255,.22);color:#eee}.orv-btn.hayalet:hover{background:rgba(255,255,255,.08)}
+.orv-chip{height:40px;padding:0 16px;border-radius:20px;border:1px solid rgba(255,255,255,.18);background:transparent;color:#e6e6e8;font:500 13px var(--font-ana);cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:transform .32s var(--ease-yay),background .2s,color .2s,border-color .2s}
+.orv-chip:hover{background:rgba(255,255,255,.08);transform:translateY(-2px)}.orv-chip:active{transform:scale(.93)}
+.orv-chip.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.orv-hap{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:13px;font:600 12px var(--font-ana);border:0;cursor:pointer}
+.orv-hap.g{background:rgba(62,207,90,.16);color:#6be585}.orv-hap.o{background:rgba(245,165,36,.16);color:#f7bd55}.orv-hap.n{background:rgba(255,255,255,.08);color:#c4c4c9}
+/* sayfa içi sekmeler (hap grubu) */
+.ptabs{display:flex;gap:4px;padding:4px;border-radius:24px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)}
+.orv-tg{width:44px;height:26px;border-radius:13px;background:rgba(255,255,255,.16);position:relative;transition:background .25s;display:inline-block;border:0;padding:0;cursor:pointer;flex:none}
+.orv-tg span{position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .25s var(--ease-yay)}
+.orv-tg.on{background:var(--acc)}.orv-tg.on span{left:21px}
+
+/* ---------- Animasyonlar ---------- */
+@keyframes orvRise{from{opacity:0;transform:translateY(14px) scale(.92)}to{opacity:1;transform:none}}
+@keyframes orvFade{from{opacity:0}}
+@keyframes orvKid{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes orvFlow{to{stroke-dashoffset:-28}}
+@keyframes orvTapPop{0%{transform:scale(.8)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes orvSpin{to{transform:rotate(360deg)}}
+@keyframes orvFloatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes orvGrow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes orvBlurIn{from{opacity:0;transform:translateY(14px) scale(.96);filter:blur(12px)}to{opacity:1;transform:none;filter:none}}
+.orv-rise{animation:orvRise .6s var(--ease-akis) backwards}
+.orv-blur-in{animation:orvBlurIn .65s var(--ease-akis) backwards}
+
+/* ---------- Hareketi azalt ---------- */
+@media (prefers-reduced-motion:reduce){
+  html.orv *,html.orv *::before,html.orv *::after{animation-duration:.001ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:.001ms!important;transition-delay:0s!important;scroll-behavior:auto!important}
+  .orv-spl{display:none!important}
+}
+
+/* smoke penceresi gizli çalışır: geçişler/animasyonlar ilerlemez, ekran görüntüleri kararlı olsun diye kapatılır */
+html.orv-smoke *,html.orv-smoke *::before,html.orv-smoke *::after{transition:none!important;animation:none!important}

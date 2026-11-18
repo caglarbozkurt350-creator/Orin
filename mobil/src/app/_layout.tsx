@@ -7,20 +7,21 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ikon } from '@/bilesen/ortak';
 import { apkIndir, useGuncelleme, yenidenBaslat } from '@/lib/guncelle';
 import { esitle } from '@/lib/senk';
-import { R } from '@/lib/tema';
+import { R, saydam, useGorunumAyari } from '@/lib/tema';
 
-const tema = { ...DarkTheme, colors: { ...DarkTheme.colors, background: R.zemin, card: R.zemin, primary: R.ana, text: R.yazi, border: R.cizgi } };
+const temaDeger = () => ({ ...DarkTheme, colors: { ...DarkTheme.colors, background: R.zemin, card: R.zemin, primary: R.ana, text: R.yazi, border: R.cizgi } });
 
 /** Güncelleme hazırsa ekranın üstünde küçük bir şerit: "Yeniden başlat" ya da "Yeni sürümü indir" */
 function GuncellemeSeridi() {
+  useGorunumAyari(); // tema rengi değişince şerit de yeni renge geçsin
   const g = useGuncelleme(), ust = useSafeAreaInsets().top, [gizle, setGizle] = useState('');
   const apk = g.apk && gizle !== 'apk-' + g.apk.runtime ? g.apk : null, ota = g.bekliyor && gizle !== 'ota';
   if (!apk && !ota) return null;
   return (
     <View pointerEvents="box-none" style={{ position: 'absolute', top: ust + 6, left: 12, right: 12, zIndex: 50 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#24324d', borderWidth: 1, borderColor: 'rgba(47,123,245,0.5)', borderRadius: 16, paddingVertical: 8, paddingLeft: 12, paddingRight: 6, shadowColor: '#000', shadowOpacity: 0.4, shadowRadius: 12, elevation: 6 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#26262a', borderWidth: 1, borderColor: saydam(R.ana, 0.5), borderRadius: 16, paddingVertical: 8, paddingLeft: 12, paddingRight: 6, shadowColor: '#000', shadowOpacity: 0.4, shadowRadius: 12, elevation: 6 }}>
         <Ikon ad={apk ? 'gonder' : 'yildiz'} boy={18} renk={R.bilgi} />
-        <Text style={{ flex: 1, color: '#e4ecff', fontSize: 13.5 }}>{apk ? 'Yeni Orvane sürümü (' + apk.surum + ') var' + (apk.not ? ' · ' + apk.not : '') : 'Güncelleme indirildi'}</Text>
+        <Text style={{ flex: 1, color: '#f2f2f3', fontSize: 13.5 }}>{apk ? 'Yeni Orvane sürümü (' + apk.surum + ') var' + (apk.not ? ' · ' + apk.not : '') : 'Güncelleme indirildi'}</Text>
         <Pressable onPress={() => (apk ? apkIndir(apk) : yenidenBaslat())} accessibilityRole="button" style={{ backgroundColor: R.ana, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7 }}>
           <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600' }}>{apk ? 'İndir' : 'Yeniden başlat'}</Text>
         </Pressable>
@@ -31,6 +32,7 @@ function GuncellemeSeridi() {
 }
 
 export default function KokDuzen() {
+  useGorunumAyari(); // tema değişince kök yeniden çizilsin
   useEffect(() => {
     SystemUI.setBackgroundColorAsync(R.zemin).catch(() => {});
     esitle();
@@ -38,7 +40,7 @@ export default function KokDuzen() {
     return () => clearInterval(t);
   }, []);
   return (
-    <ThemeProvider value={tema}>
+    <ThemeProvider value={temaDeger()}>
       <StatusBar style="light" />
       <View style={{ flex: 1, backgroundColor: R.zemin }}>
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: R.zemin }, animation: 'fade' }} />

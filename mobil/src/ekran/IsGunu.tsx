@@ -1,10 +1,10 @@
-// İş günü: haftanın günleri, girilen kayıtlar, telefondan kayıt (masaüstü Sheets'e yazar)
+// İş günü (Merkez › İş Günleri): haftanın günleri, girilen kayıtlar, telefondan kayıt (masaüstü Sheets'e yazar)
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
 import { Bos } from '@/bilesen/formlar';
-import { Dugme, Ekran, Ikon, Rozet, s } from '@/bilesen/ortak';
+import { Dugme, Ikon, Rozet, s } from '@/bilesen/ortak';
 import { olayEkle, useDurum } from '@/lib/depo';
-import { cagladaBekleyen, gunAnahtari, useGorunum } from '@/lib/ekip';
+import { gunAnahtari, useGorunum } from '@/lib/ekip';
 import { etiketOku } from '@/lib/etiket';
 import { esitleSonra } from '@/lib/senk';
 import { R, saydam } from '@/lib/tema';
@@ -14,7 +14,7 @@ const GN = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'C
 const AY = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
 const IZ: Record<string, string> = { yillik: 'Yıllık izin', ucretsiz: 'Ücretsiz izin', rapor13: 'Rapor', rapor4: 'Rapor', mazeret: 'Mazeret izni', refakat: 'Refakat izni', sevk: 'İş yeri sevki' };
 
-export default function IsGunu() {
+export function IsGunu() {
   const o = useGorunum(), olaylar = useDurum((d) => d.olaylar);
   const hafta = useMemo(() => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return [0, 1, 2, 3, 4].map((i) => { const x = new Date(d); x.setDate(d.getDate() + i); return x; }); }, []);
   const [sec, setSec] = useState(gunAnahtari(new Date()));
@@ -43,8 +43,7 @@ export default function IsGunu() {
   };
   const doldur = () => { if (!L) return setHata('Bu gün için iş süresi yok'); const kalan = H - T; if (kalan <= 0) return setHata('Gün zaten dolu'); kaydet(kalan); };
   return (
-    <Ekran baslik={<Text style={s.baslik}>İş günü</Text>} altMenu rozet={{ '/onaylar': cagladaBekleyen(o).length }}>
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 10, paddingBottom: 30 }} keyboardShouldPersistTaps="handled">
+    <View style={{ gap: 10 }}>
         <View>
           <Text style={{ color: R.yazi, fontSize: 20, fontWeight: '700' }}>{tarih.getDate()} {AY[tarih.getMonth()]} {GN[tarih.getDay()]}</Text>
           <Text style={[s.soluk, { marginTop: 4 }]}>{bugun ? 'Bugün · ' : ''}{g?.D ? (IZ[g.D] || 'İzin') + ' · tam gün sayılır' : L ? 'iş süresi ' + L + (g?.OT ? ' + ' + g.OT + ' mesai' : '') + ' · yazılan ' + T + ' · kalan ' + Math.max(0, H - T) + ' dk' : 'Bu gün için iş süresi yok'}</Text>
@@ -90,7 +89,6 @@ export default function IsGunu() {
           </View>
           <Text style={[s.soluk, { fontSize: 12 }]}>Kayıt önce eşitlemeye gider; bilgisayardaki Orvane alır ve Sheets’e yazar. İnternet yokken sırada bekler. Günü doldur: günün hedefinden girilmiş süre çıkarılır, kalan eklenir.</Text>
         </>}
-      </ScrollView>
-    </Ekran>
+    </View>
   );
 }

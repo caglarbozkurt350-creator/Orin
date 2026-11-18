@@ -71,7 +71,9 @@ export function gorunum(d: Durum): Ozet {
   d.olaylar.filter((e) => !e.sira || e.sira > o.olaySira).sort((a, b) => a.ts - b.ts).forEach((e) => uygula(o, e));
   return o;
 }
-export function useGorunum() { const d = useDurum((x) => x); return useMemo(() => gorunum(d), [d]); }
+// Görünüm bütün ekranlarda aynı durum nesnesinden bir kez hesaplanır (her kanca ayrı kopya üretmesin)
+let _gd: Durum | null = null, _go: Ozet | null = null;
+export function useGorunum() { const d = useDurum((x) => x); if (_gd !== d || !_go) { _go = gorunum(d); _gd = d; } return _go; }
 
 // ---------- Çalışanlar ----------
 export function calisanlar(o: Ozet): Calisan[] {

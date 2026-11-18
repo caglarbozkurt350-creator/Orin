@@ -149,7 +149,7 @@ document.getElementById('rail').style.display=railOn?'flex':'none';
 document.getElementById('nsb').setAttribute('data-tip','Kenar çubuğunu '+(sbOn?'gizle':'göster')+'  Ctrl+Shift+S');
 var sb=document.getElementById('sb'),st=sb.scrollTop;sb.innerHTML=sbH();sb.style.display=sbOn?'block':'none';sb.scrollTop=st;
 document.getElementById('tl').textContent=titleOf();document.getElementById('tr').textContent='Sürüm '+INFO.version;
-var P2=(area=='home'||area=='set')?P[pg]:area=='team'?teamPage:area=='msg'?P.haber:area=='cal'?P.takvim:area=='plan'?P.notlar:P.gorsel;var CT=document.getElementById('ct');CT.className='ct'+(area=='team'?' tmc':'');CT.innerHTML=P2?P2():'';if(area=='team')teamAfter();
+var P2=(area=='home'||area=='set')?P[pg]:area=='team'?teamPage:area=='orv'?orvPage:area=='msg'?P.haber:area=='cal'?P.takvim:area=='plan'?P.notlar:P.gorsel;var CT=document.getElementById('ct');CT.className='ct'+(area=='team'?' tmc':'');CT.innerHTML=P2?P2():'';if(area=='team')teamAfter();
 document.getElementById('nbk').className='nb'+(hp>0?'':' off');document.getElementById('nfw').className='nb'+(hp<hist.length-1?'':' off');banner();syncLabel()}
 
 // ---------- Notlar (.txt dosyaları) ----------

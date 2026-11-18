@@ -1,6 +1,6 @@
 // Orvane Mobil · alttan açılan formlar: doğrudan görev, gelişim isteği
 import { useEffect, useState } from 'react';
-import { Keyboard, Modal, Platform, Pressable, ScrollView, Text, TextInput, useWindowDimensions, View } from 'react-native';
+import { Alert, Keyboard, Modal, Platform, Pressable, ScrollView, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Dugme, Foto, Ikon, s } from '@/bilesen/ortak';
 import { olayEkle, uid } from '@/lib/depo';
@@ -126,4 +126,28 @@ export function GorevSinir({ g }: { g: import('@/lib/depo').Gorev }) {
 
 export function Bos({ yazi, ikon = 'bilgi' }: { yazi: string; ikon?: string }) {
   return <View style={{ alignItems: 'center', gap: 8, padding: 24 }}><Ikon ad={ikon} boy={26} renk={R.solukk} /><Text style={[s.soluk, { textAlign: 'center' }]}>{yazi}</Text></View>;
+}
+
+// 0.7.18: Otto'ya gelir / gider kaydı (masaüstündeki Şirketim › Aylık gelir ve gider'e olay olarak gider)
+export function FinansFormu({ kapat }: { kapat: () => void }) {
+  const [tur, setTur] = useState<'gelir' | 'gider'>('gider'), [kim, setKim] = useState<'cagla' | 'sirket'>('cagla'), [tutar, setTutar] = useState(''), [kalem, setKalem] = useState('');
+  const kaydet = () => {
+    const t = Math.round((Number(tutar.replace(',', '.')) || 0) * 100) / 100; if (!(t > 0)) { Alert.alert('Tutarı yaz'); return; }
+    const d = new Date(), tarih = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    olayEkle('finans_kayit', { tur, kim, tutar: t, kalem: kalem.trim() || 'Diğer', tarih }); esitleSonra(); kapat();
+  };
+  const sec = <T extends string>(deger: T, aktif: T, yazi: string, f: (x: T) => void) => (
+    <Pressable key={deger} onPress={() => f(deger)} accessibilityRole="button" accessibilityState={{ selected: aktif === deger }} style={{ flex: 1, paddingVertical: 10, borderRadius: 12, alignItems: 'center', backgroundColor: aktif === deger ? R.secili : '#252528', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' }}><Text style={{ color: '#fff', fontSize: 14 }}>{yazi}</Text></Pressable>
+  );
+  return (
+    <View style={{ gap: 12 }}>
+      <Text style={{ color: '#fff', fontSize: 17, fontWeight: '600' }}>Gelir / gider ekle</Text>
+      <View style={{ flexDirection: 'row', gap: 8 }}>{sec('gelir', tur, 'Gelir', setTur)}{sec('gider', tur, 'Gider', setTur)}</View>
+      <View style={{ flexDirection: 'row', gap: 8 }}>{sec('cagla', kim, 'Benim', setKim)}{sec('sirket', kim, 'Şirketin', setKim)}</View>
+      <TextInput value={tutar} onChangeText={setTutar} keyboardType="decimal-pad" placeholder="Tutar (₺)" placeholderTextColor={R.soluk} accessibilityLabel="Tutar" style={{ color: '#fff', fontSize: 16, backgroundColor: '#252528', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12 }} />
+      <TextInput value={kalem} onChangeText={setKalem} placeholder="Kalem (ör. Market, Kira, Maaş)" placeholderTextColor={R.soluk} accessibilityLabel="Kalem" style={{ color: '#fff', fontSize: 15, backgroundColor: '#252528', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12 }} />
+      <Text style={{ color: R.soluk, fontSize: 12.5 }}>Bilgisayardaki Orvane’de Şirketim › Aylık gelir ve gider’e eklenir; Otto izler.</Text>
+      <Dugme yazi="Kaydet" ikon="kaydet" onPress={kaydet} />
+    </View>
+  );
 }

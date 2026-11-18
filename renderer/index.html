@@ -8,19 +8,33 @@
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="team.css">
 <link rel="stylesheet" href="cam.css">
+<link rel="stylesheet" href="orvane08.css">
+<link rel="stylesheet" href="orvane08-kabuk.css">
 </head>
 <body>
 <div class="w" id="app">
 <div class="mb" id="mb">
+<button type="button" class="orv-ib" id="orvMenuBtn" aria-label="Kategori sekmesini aç / kapat" aria-pressed="false" onclick="ORV.menuTog()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
 <span class="nb off" id="nbk" data-tip="Geri  Ctrl+[" onclick="back()"><i class="ti ti-arrow-left"></i></span>
 <span class="nb off" id="nfw" data-tip="İleri  Alt+→" onclick="fwd()"><i class="ti ti-arrow-right"></i></span>
-<span class="nb" id="nsb" data-tip="Kenar çubuğunu gizle  Ctrl+Shift+S" onclick="togSb()"><i class="ti ti-layout-sidebar"></i></span>
-<span class="mi" id="m_Dosya" onmousedown="event.preventDefault()" onclick="menu('Dosya')">Dosya</span>
-<span class="mi" id="m_Düzenle" onmousedown="event.preventDefault()" onclick="menu('Düzenle')">Düzenle</span>
-<span class="mi" id="m_Görünüm" onmousedown="event.preventDefault()" onclick="menu('Görünüm')">Görünüm</span>
-<span class="mi" id="m_Yardım" onmousedown="event.preventDefault()" onclick="menu('Yardım')">Yardım</span>
+<span class="nb" id="nsb" data-tip="Alt gezinmeyi gizle  Ctrl+Shift+S" onclick="togSb()"><i class="ti ti-layout-sidebar"></i></span>
+<span id="orvLogo" aria-hidden="true"></span>
+<span class="orv-yol" id="orvYol"></span>
 <span class="ttl">ORVANE</span>
-<span id="sy" class="sy"></span>
+<span class="orv-bos"></span>
+<button type="button" class="orv-ara" id="orvAra" aria-label="Ara (Ctrl K)" onclick="ORV.ara()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Ara…</span><kbd>Ctrl K</kbd></button>
+<span class="orv-zilw"><button type="button" class="orv-ib" id="orvZil" aria-label="Bildirimler" onclick="ORV.git('bildirimler')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9a6 6 0 1 1 12 0c0 6 2 7 2 7H4s2-1 2-7"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></button><span class="orv-zilb" id="orvZilB" style="display:none"></span></span>
+<span class="orv-pw" style="position:relative;display:inline-flex"><button type="button" class="orv-prof" id="orvProfil" aria-label="Profil ve uygulama menüsü: Çağlar, Sahip" aria-haspopup="menu" aria-expanded="false" onclick="ORV.popAc()"><span class="orv-ring"><span class="orv-mono"><i>Ç</i></span></span><span class="orv-pn"><b>Çağlar</b><small>Sahip</small></span></button>
+<div class="orv-pop" id="orvPop" role="menu" aria-label="Uygulama menüsü">
+<div class="orv-pb"><span class="orv-ring"><span class="orv-mono"><i>Ç</i></span></span><span class="t"><b>Çağlar</b><small>Sahip · Orvane</small></span></div>
+<small class="orv-pa">UYGULAMA MENÜSÜ</small>
+<span class="mi" id="m_Dosya" role="menuitem" onmousedown="event.preventDefault()" onclick="menu('Dosya')">Dosya</span>
+<span class="mi" id="m_Düzenle" role="menuitem" onmousedown="event.preventDefault()" onclick="menu('Düzenle')">Düzenle</span>
+<span class="mi" id="m_Görünüm" role="menuitem" onmousedown="event.preventDefault()" onclick="menu('Görünüm')">Görünüm</span>
+<span class="mi" id="m_Yardım" role="menuitem" onmousedown="event.preventDefault()" onclick="menu('Yardım')">Yardım</span>
+<div class="orv-ps"></div>
+<button type="button" class="orv-pr" role="menuitem" onclick="ORV.popKapat();ORV.git('ayarlar')">Ayarlar</button>
+</div></span>
 </div>
 <div class="dd" id="dd" style="display:none"></div>
 <div class="bd" id="bd">
@@ -37,7 +51,7 @@
 </div>
 <div class="pn">
 <div class="sb" id="sb"></div>
-<div class="mn"><div class="top"><span id="tl"></span><span class="hn" id="tr"></span></div>
+<div class="mn"><div class="top"><span id="tl"></span><span id="sy" class="sy"></span><span class="hn" id="tr"></span></div>
 <div id="fb" style="display:none;padding:8px 18px;border-bottom:0.5px solid #2c2c30;gap:8px;align-items:center"><input id="fi" placeholder="Sayfada ara" style="flex:1" onkeydown="if(event.key=='Enter')doFind()"><button class="bt" onclick="doFind()">Sonraki</button><button class="bt" onclick="closeFind()">Kapat</button></div>
 <div id="bn"></div><div class="ct" id="ct"></div></div>
 </div>
@@ -76,6 +90,9 @@
 <script src="js/ofis.js"></script>
 <script src="js/onaylar.js"></script>
 <script src="js/haftalik.js"></script>
+<script src="js/orvane08.js"></script>
 <script src="js/cam.js"></script>
+<script src="js/orvane08-kabuk.js"></script>
+<script src="js/orvane08-test.js"></script>
 </body>
 </html>

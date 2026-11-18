@@ -7,5 +7,20 @@
   "ikBas": "#ff8a5b", "ikSon": "#ffc35b", "bilgi": "#a9c8ff"
  },
  "yaricap": { "kart": 16, "giris": 16, "menu": 14, "hap": 999, "yazma": 26 },
- "yazi": { "baslik": 21, "govde": 14.5, "kucuk": 12.5, "marka": 17, "markaAralik": 0.32 }
+ "yazi": { "baslik": 21, "govde": 14.5, "kucuk": 12.5, "marka": 17, "markaAralik": 0.32 },
+ "surum": "0.8.0",
+ "not2": "0.8.0: yeni tasarım değerleri aşağıdaki yeni alanlardadır (eski \"renk\", \"yaricap\", \"yazi\" anahtarları telefonun mevcut sürümü için korunur). Masaüstü ve Android tema/geçiş SEÇİMLERİ ayrı saklanır, eşitlenmez; yalnız bu dosyadaki değerler ortaktır.",
+ "vurgu": {"varsayilan":"turuncu","degisken":{"acc":"--acc","acc2":"--acc2"}},
+ "temalar": {"turuncu":{"ad":"Turuncu","acc":"#ff5b37","acc2":"#ffb020"},"nane":{"ad":"Nane","acc":"#2fbf8a","acc2":"#9be7c4"},"okyanus":{"ad":"Okyanus","acc":"#3b82f6","acc2":"#5fe0f5"},"lavanta":{"ad":"Lavanta","acc":"#8b5cf6","acc2":"#c4b0ff"},"gul":{"ad":"Gül","acc":"#e1488f","acc2":"#ff9ad4"},"altin":{"ad":"Altın","acc":"#d4921c","acc2":"#fde68a"}},
+ "sira": ["turuncu","nane","okyanus","lavanta","gul","altin"],
+ "zemin08": {"zemin":"#19191b","isikSolUst":"#3b3633","isikSagAlt":"#2a3038","aciklama":"Koyu zemin; üstte iki çok hafif radyal ışık (sıcak sol üst, soğuk sağ alt)"},
+ "metin": {"ana":"#f2f2f3","ikincil":"#a9a9b0","sonuk":"#8e8e95","enAzKontrast":4.5},
+ "durum": {"hazir":"#3ecf5a","gorevde":"#f5a524","cevrimdisi":"#6b6b73","kirmizi":"#ff3b30","aciklama":"yeşil=bağlı ve hazır, turuncu=görev üzerinde, gri=çevrimdışı; noktanın etrafında halka atımı"},
+ "departman": {"yonetim":["#ff8a3d","#ffc24a"],"aile":["#ff9ad4","#a78bfa"],"is":["#38d6f0","#3b82f6"],"plan":["#6ee7b7","#10b981"],"teknik":["#fde68a","#f59e0b"],"ortak":["#e5e7eb","#9ca3af"],"aciklama":"halka degradeleri (açı 160°): Yönetim turuncu-sarı, Aile pembe-mor, İş camgöbeği-mavi, Plan & İletişim nane-yeşil, Teknik sarı-amber, Ortak servis gümüş","bant":{"yonetim":"#ffad6b","aile":"#ec4899","is":"#38d6f0","plan":"#6ee7b7","teknik":"#fde68a","ortak":"#cbd5e1"}},
+ "cam": {"zemin":"rgba(255,255,255,0.06)","kenar":"rgba(255,255,255,0.10)","bulanik":24,"golge":"0 24px 60px rgba(0,0,0,0.35)","yaricapPanel":[22,28]},
+ "simge": {"yaricapOran":0.3,"aciklama":"parlak squircle: degrade + üstte parlama (%45 yükseklik) + iç gölge; içinde beyaz çizgi simge (24x24, kalınlık 2.2)","menu":{"home":["#ffc24a","#ff7a2f"],"aile":["#ff9ad4","#e14fa0"],"gorev":["#7cf096","#16a34a"],"ekip":["#5fe0f5","#3b82f6"],"merkez":["#c4b0ff","#7c3aed"],"izin":["#fde68a","#f59e0b"],"zamanlanmis":["#9fdcff","#38bdf8"]}},
+ "yazi08": {"ana":"Inter","marka":"Space Grotesk","agirlik":[400,500,600,700],"markaAgirlik":700,"aciklama":"Logo ve açılış ekranında Space Grotesk 700; gövde Inter. Telefon için yazı tipi dosyaları uygulama paketine konur."},
+ "hareket": {"yay":"cubic-bezier(.34,1.56,.64,1)","yay2":"cubic-bezier(.34,1.7,.64,1)","akis":"cubic-bezier(.2,.8,.2,1)","cik":"cubic-bezier(.4,0,1,1)","ana":"cubic-bezier(.65,0,.35,1)","azalt":"prefers-reduced-motion açıksa animasyonlar kapanır"},
+ "gecis": {"varsayilan":"akiskan","secenekler":[["akiskan","Akışkan"],["kaydir","Kaydır"],["yakinlas","Yakınlaş"],["sol","Solma"],["yok","Kapalı"]],"cikisMs":350},
+ "yaricap08": {"kart":22,"panel":26,"dugme":22,"hap":999}
 }

@@ -2,12 +2,12 @@
   "expo": {
     "name": "Orvane",
     "slug": "orvane",
-    "version": "0.7.20",
+    "version": "0.8.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "orvane",
     "userInterfaceStyle": "dark",
-    "backgroundColor": "#18181a",
+    "backgroundColor": "#19191b",
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.caglar.orvane"
@@ -15,7 +15,7 @@
     "android": {
       "package": "com.caglar.orvane",
       "adaptiveIcon": {
-        "backgroundColor": "#18181a",
+        "backgroundColor": "#19191b",
         "foregroundImage": "./assets/icon.png"
       },
       "predictiveBackGestureEnabled": false

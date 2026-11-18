@@ -242,7 +242,7 @@ var _titleOf=titleOf;titleOf=function(){if(area=='orv')return orvBaslik();return
 var _sbH=sbH;sbH=function(){if(area=='orv'){var df=ORV.sayfalar[pg];return df&&typeof df.sb=='function'?df.sb():''}return _sbH()};
 var _render=render;render=function(){_render();
  var ct=document.getElementById('ct'),sb=document.getElementById('sb'),df=area=='orv'?ORV.sayfalar[pg]:null;
- if(ct){ct.classList.toggle('orvc',area=='orv');if(df&&df.sinif)ct.classList.add(df.sinif)}
+ if(ct){ct.classList.toggle('orvc',area=='orv');if(ORV._sn){ct.classList.remove(ORV._sn);ORV._sn=null}if(df&&df.sinif){ct.classList.add(df.sinif);ORV._sn=df.sinif}} // sayfa sınıfı bir sonraki sayfaya sızmasın
  if(area=='orv'&&sb)sb.style.display=(df&&typeof df.sb=='function')?'block':'none';
  if(df&&typeof df.sonra=='function'){try{df.sonra(arg)}catch(e){console.error(e)}}
  ORV.navGuncelle();ORV.ustGuncelle()};

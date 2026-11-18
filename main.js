@@ -92,6 +92,7 @@ function smoke(win) {
   win.webContents.on('console-message', (e, level, msg) => { if (level >= 3) errors.push(msg); });
   win.webContents.on('render-process-gone', (e, d) => errors.push('render-gone ' + d.reason));
   win.webContents.on('did-finish-load', async () => {
+    if (process.env.ORV_SMOKE_BOYUT) { const [w, h] = process.env.ORV_SMOKE_BOYUT.split('x').map(Number); if (w && h) { try { win.setContentSize(w, h); await new Promise(s => setTimeout(s, 400)); } catch (e) {} } } // yalnız ekran görüntüsü için (ör. 1600x1040)
     const out = app.isPackaged ? path.join(app.getPath('temp'), 'orin-test-sonuc') : path.join(__dirname, 'test-sonuc');
     try { const a = await win.webContents.executeJavaScript('window.__asyncTest ? window.__asyncTest() : []'); a.forEach(x => { if (!x.ok) errors.push('TEST ' + x.n + ': ' + x.m); }); fs.mkdirSync(out, { recursive: true }); fs.writeFileSync(path.join(out, 'async.json'), JSON.stringify(a, null, 1)); } catch (e) { errors.push('async ' + e.message); }
     fs.mkdirSync(out, { recursive: true });
@@ -101,6 +102,7 @@ function smoke(win) {
         const res = await win.webContents.executeJavaScript('window.__smokeGo(' + JSON.stringify(r) + ')');
         if (res && res.error) errors.push(r.join('/') + ': ' + res.error);
         await new Promise(s => setTimeout(s, 150));
+        if (process.env.ORV_SMOKE_BOYUT) { try { await win.webContents.capturePage(); } catch (e) {} await new Promise(s => setTimeout(s, 300)); try { await win.webContents.capturePage(); } catch (e) {} await new Promise(s => setTimeout(s, 150)); } // gizli pencerede eski kare gelmesin
         const img = await win.webContents.capturePage();
         fs.writeFileSync(path.join(out, r.join('_').replace(/[^\w.-]/g, '-') + '.png'), img.toPNG());
       }

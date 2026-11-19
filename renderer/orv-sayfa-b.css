@@ -32,7 +32,9 @@
 .ob-kod{flex:none;height:24px;padding:0 9px;border-radius:8px;background:rgba(56,214,240,.14);color:#7fe8f8;font:600 12px ui-monospace,Menlo,Consolas,monospace;display:inline-flex;align-items:center}
 .ob-liste{display:flex;flex-direction:column;gap:6px}
 .ob-det{position:sticky;top:0}
-.ob-eski{min-width:0;font-size:13px}
+.ob-eski{min-width:0;font-size:13px;container-type:inline-size}
+@container (max-width:640px){.ob-eski [style*="140px 1fr 80px 90px 120px 100px"]{grid-template-columns:repeat(3,minmax(0,1fr))!important}.ob-eski [style*="grid-template-columns:200px 1fr"],.ob-eski [style*="grid-template-columns:180px 1fr 200px"]{grid-template-columns:minmax(0,1fr)!important}}
+.ob-eski .bx,.ob-eski .bx input,.ob-eski .bx select,.ob-eski [style*="grid-template-columns"]>*{min-width:0;max-width:100%}
 .ob-eski .card{margin-bottom:10px}
 .ob-eski>.h:first-child{font-size:18px}
 .ob-ibar{display:flex;height:16px;border-radius:8px;overflow:hidden;background:rgba(255,255,255,.07);gap:2px}

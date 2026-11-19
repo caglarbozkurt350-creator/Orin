@@ -77,7 +77,7 @@ OB.esitleme=function(){var t=tabSec(arg,ET),d=OB.pbD.d,bek=OB.pbBekleyen(),sirad
  else h+=OA.kart('',OB.kutu(OB.eski(t=='sheets'?P.baglanti:t=='telefon'?P.telefon:P.oturum,'')),0);
  return h+'</div>'};
 OB.esTab=function(t){OB.tabGit('esitleme',t)};
-ORV.sayfa('esitleme',{ciz:OB.esitleme,baslik:'Merkez › Eşitleme',sonra:function(a){OB.pbDurumAl(true).then(function(){if(area=='orv'&&pg=='esitleme')yenile()});
+ORV.sayfa('esitleme',{ciz:OB.esitleme,baslik:'Merkez › Eşitleme',sonra:function(a){if(!OB._esT||Date.now()-OB._esT>3000){OB._esT=Date.now();OB.pbDurumAl(true).then(function(){if(area=='orv'&&pg=='esitleme')yenile()},function(){})}
  if(a=='telefon'&&typeof bulutDurum=='function'&&!BL.st)bulutDurum().then(function(){if(pg=='esitleme')yenile()});if(a=='oturum'&&typeof pbDurumAl=='function'&&!PB.st)pbDurumAl().then(function(){if(pg=='esitleme'&&PB.st)yenile()})}});
 
 // ========================================================================

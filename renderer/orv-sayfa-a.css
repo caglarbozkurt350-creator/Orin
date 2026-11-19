@@ -135,7 +135,7 @@ button.oa-pill:active{transform:scale(.93)}
 .oa-fit{position:relative;overflow:hidden!important}
 .oa-hy.dr .oa-hyhd{padding-right:364px}
 .oa-hy .oa-chip{height:36px;padding:0 12px;font-size:12.5px}
-.oa-hy{position:absolute;left:0;top:0;right:0;bottom:0;padding:24px 28px 20px;display:flex;flex-direction:column;gap:12px}
+.oa-hy{overflow:hidden;position:absolute;left:0;top:0;right:0;bottom:0;padding:24px 28px 20px;display:flex;flex-direction:column;gap:12px}
 .oa-hyst{position:relative;flex:1;min-height:0;display:flex;justify-content:center}
 .oa-host{position:relative;width:1300px;height:776px;flex:none;transform-origin:top center}
 .oa-band{position:absolute;animation:orvFade .8s ease backwards}

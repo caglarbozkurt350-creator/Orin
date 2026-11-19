@@ -139,7 +139,7 @@ function katH(k){var acik=d.mod=='open',tekli=k.alt.length<=1,acc=acik&&(d.acc==
  return '<div class="orv-ig" data-k="'+k.id+'"><button type="button" class="orv-it'+(act?' act':'')+'" data-k="'+k.id+'" aria-label="'+E2(k.ad)+'"'+(tekli?'':' aria-expanded="'+(acc?'true':'false')+'"')+'>'+sq+
   '<span class="orv-lbl">'+E2(k.ad)+'</span><span class="orv-lbl orv-meta">'+meta+(tekli?'':chev(k.id))+'</span></button>'+
   (acc?'<div class="orv-accw">'+k.alt.filter(altMatch).map(function(a){return '<button type="button" class="orv-sub'+(aid==a.id?' on':'')+'" data-id="'+a.id+'"><span class="orv-sw" style="background:'+a.renk+'"></span>'+E2(a.ad)+'</button>'}).join('')+'</div>':'')+'</div>'}
-function eskiH(){if(d.mod!='open')return '';var acc=d.acc=='eski'||(d.q&&ORV.ESKI.some(function(x){return trl2(x[0]).indexOf(d.q)>=0}));
+function eskiH(){if(d.mod!='open'||!ORV.ESKI.length)return '';var acc=d.acc=='eski'||(d.q&&ORV.ESKI.some(function(x){return trl2(x[0]).indexOf(d.q)>=0}));
  if(d.q&&!ORV.ESKI.some(function(x){return trl2(x[0]).indexOf(d.q)>=0}))return '';
  return '<div class="orv-ig orv-onlyopen" data-k="eski"><button type="button" class="orv-it" data-k="eski" aria-label="Diğer sayfalar" aria-expanded="'+(acc?'true':'false')+'">'+ORV.ikon('liste',{renk:['#d4d4d8','#71717a']})+'<span class="orv-lbl">Diğer sayfalar</span><span class="orv-lbl orv-meta">'+ORV.ESKI.length+'<svg class="orv-lbl" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8e8e95" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" style="flex:none;margin-left:4px;transition:transform .3s;transform:rotate('+(acc?180:0)+'deg)"><path d="m6 9 6 6 6-6"/></svg></span></button>'+
   (acc?'<div class="orv-accw">'+ORV.ESKI.map(function(x,i){return !d.q||trl2(x[0]).indexOf(d.q)>=0?'<button type="button" class="orv-sub eski" data-eski="'+i+'">'+E2(x[0])+'</button>':''}).join('')+'</div>':'')+'</div>'}
@@ -226,7 +226,7 @@ ORV.zpTog=function(v){d.zp=v===undefined?!d.zp:!!v;clearTimeout(tCol);zpCiz();na
 ORV.popAc=function(v){var p=document.getElementById('orvPop'),b=document.getElementById('orvProfil');if(!p)return;var ac=v===undefined?!p.classList.contains('ac'):v;p.classList.toggle('ac',ac);if(b)b.setAttribute('aria-expanded',ac?'true':'false');if(!ac&&typeof closeM=='function')closeM()};
 ORV.popKapat=function(){ORV.popAc(false)};
 ORV.ustGuncelle=function(){var y=document.getElementById('orvYol');if(y){var p=ORV.yol();y.innerHTML=E2(p[0])+'<i>/</i><b>'+E2(p[1])+'</b>'}
- var zb=document.getElementById('orvZilB');if(zb){var n=onayBekleyen();zb.textContent=n>9?'9+':String(n);zb.style.display=n>0?'flex':'none'}};
+ var zb=document.getElementById('orvZilB');if(zb){var n=ORV.okunmamis?ORV.okunmamis():onayBekleyen();zb.textContent=n>9?'9+':String(n);zb.style.display=n>0?'flex':'none'}};
 ORV.ara=function(){if(typeof openPal=='function')openPal()};
 
 // ---------- Açılış ekranı (~2,5 sn; Ayarlar'dan kapatılabilir: S.orvAcilis=false) ----------

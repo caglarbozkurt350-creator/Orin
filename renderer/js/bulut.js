@@ -16,6 +16,7 @@ else if(e.tur=='gorev_durum'){var g=T.gorev.filter(function(x){return x.id==v.id
 else if(e.tur=='gelisim'){if(T.gel.some(function(x){return x.id==v.id}))return;var o={id:v.id,kim:v.kim,tur:v.gtur,ad:v.ad||'',metin:v.metin||'',asama:'ik',kimden:v.kimden||'cagla',ts:e.ts};if(v.kimden=='nika'){o.ik={ts:e.ts,ok:1};o.asama=tmGelSonraki(o)}T.gel.push(o)}
 else if(e.tur=='gelisim_karar'){var x=T.gel.filter(function(y){return y.id==v.id})[0];if(!x||x.asama!=v.asama)return;
 if(v.asama=='ik'){x.ik={ts:e.ts,ok:v.ok?1:0};x.asama=v.ok?tmGelSonraki(x):'red'}else if(v.asama=='orin'){x.orin={ts:e.ts,ok:v.ok?1:0,kim:'cagla'};x.asama=v.ok?'ceo':'red'}else{x.ceo={ts:e.ts,ok:v.ok?1:0};x.asama=v.ok?'tamam':'red';if(v.ok)tmGelApply(x)}}
+else if(e.tur=='telegram'){if(!window.OA||!v.kim)return;var tga=OA.st();if(tga.tg.some(function(x){return x.eid==e.id}))return;tga.tg.push({id:uid(),eid:e.id,kim:v.kim,bot:v.bot||'',metin:String(v.t||''),ts:e.ts,durum:'sirada',kaynak:'telefon'});if(tga.tg.length>200)tga.tg.splice(0,tga.tg.length-200)}
 else if(e.tur=='kayit'){var k=v.k;if(!k||!v.kod||!v.dk)return;var en={k:String(v.kod),i:String(v.is||''),d:+v.dk,st:1,u:uid(),src:'telefon',pid:e.id};
 if((E[k]||[]).some(function(z){return z.pid==e.id}))return;(E[k]=E[k]||[]).push(en);entryAdded(k,en)}}
 

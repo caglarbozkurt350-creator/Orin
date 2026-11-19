@@ -224,6 +224,8 @@ async function pbTests() {
       if (q.url.startsWith('/api/health')) return js(200, { code: 200, message: 'API is healthy.' });
       if (q.url.startsWith('/api/collections/users/auth-with-password')) { let j = {}; try { j = JSON.parse(b); } catch (e) {} return j.password === 'dogru-sifre' ? js(200, { token: 'tkn-giris', record: kayit }) : js(400, { code: 400, message: 'Failed to authenticate.', data: {} }); }
       if (q.url.startsWith('/api/collections/users/auth-refresh')) { if (mod === 'red') return js(401, { code: 401, message: 'The request requires valid record authorization token.', data: {} }); if (mod === 'coktu') return js(503, { code: 503, message: 'down' }); return js(200, { token: 'tkn-yeni', record: kayit }); }
+      if (q.url.startsWith('/api/collections/gorevler/records') && q.method === 'GET') return js(200, { page: 1, perPage: 40, items: [{ id: 'g00000000000001', baslik: 'x', durum: 'bekliyor' }] });
+      if (q.url.startsWith('/api/collections/gorevler/records') && q.method === 'POST') { let j = {}; try { j = JSON.parse(b); } catch (e) {} return js(200, Object.assign({ collectionName: 'gorevler' }, j)); }
       js(404, { code: 404, message: 'yok' });
     });
   });
@@ -244,6 +246,7 @@ async function pbTests() {
     await dene('PB: şifreleme yoksa oturum dosyaya yazılmaz', async () => sifreli || !fs.existsSync(ses()) || 'şifresiz dosya yazıldı');
     await dene('PB: yeniden açılışta oturum geri gelir', async () => { pbm._test.istemciKur(); const d = pbm.durum(); return sifreli ? (d.girisli || 'oturum gelmedi') : (!d.girisli || 'şifresiz oturum geldi'); });
     if (!pbm.durum().girisli) await pbm.giris({ eposta: 'caglar@test.local', sifre: 'dogru-sifre', hatirla: true });
+    await dene('PB: koleksiyon okuma/yazma (izinli liste, 15 karakter kimlik)', async () => { const l = await pbm.liste({ k: 'gorevler' }); const y = await pbm.yaz({ k: 'gorevler', id: 'abcde1234567890', veri: { baslik: 'a' } }); let r1 = false, r2 = false, r3 = false; try { await pbm.yaz({ k: 'users', id: 'abcde1234567890', veri: {} }); } catch (e) { r1 = true; } try { await pbm.yaz({ k: 'gorevler', id: 'kisa', veri: {} }); } catch (e) { r2 = true; } try { await pbm.liste({ k: 'users' }); } catch (e) { r3 = true; } return (l.length === 1 && y.id === 'abcde1234567890' && r1 && r2 && r3) || JSON.stringify({ l, y, r1, r2, r3 }); });
     await dene('PB: oturum yenileme token gönderir ve günceller', async () => { istekler = []; mod = 'ok'; const d = await pbm.yenile(); return (d.girisli && !d.cevrimdisi && istekler.some(x => /auth-refresh tkn-/.test(x))) || JSON.stringify({ d, istekler }); });
     await dene('PB: sunucu çökükken (503) oturum korunur', async () => { mod = 'coktu'; const d = await pbm.yenile(); return (d.girisli && !!d.sonHata) || JSON.stringify(d); });
     await dene('PB: 401 → oturum kapanır, dosya silinir', async () => { mod = 'red'; const d = await pbm.yenile(); return (!d.girisli && !fs.existsSync(ses())) || JSON.stringify(d); });
@@ -413,6 +416,8 @@ ipcMain.handle('pb:giris', wrap(o => pbOturum.giris(o)));
 ipcMain.handle('pb:yenile', wrap(() => pbOturum.yenile()));
 ipcMain.handle('pb:cikis', wrap(() => pbOturum.cikis()));
 ipcMain.handle('pb:config', wrap(c => pbOturum.setCfg(c)));
+ipcMain.handle('pb:liste', wrap(o => pbOturum.liste(o)));
+ipcMain.handle('pb:yaz', wrap(o => pbOturum.yaz(o)));
 pbOturum.degisti(d => BrowserWindow.getAllWindows().forEach(w => { try { w.webContents.send('pb:degisti', d); } catch (e) {} }));
 const bulut = require('./bulut');
 ipcMain.handle('bulut:status', wrap(() => bulut.status()));

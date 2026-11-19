@@ -124,6 +124,34 @@ function setCfg({ url } = {}) {
 // Sunucu ayakta mı (yedek mod algılaması 7. aşamada bunu kullanacak)
 async function saglik() { try { await istemci().health.check(); return true; } catch (e) { return false; } }
 
+
+// ---------- Koleksiyon okuma/yazma (şema DEĞİŞMEZ: yalnız mevcut koleksiyonlar, izinli listeyle) ----------
+const OKU_IZIN = ['gorevler', 'ayarlar', 'is_kayitlari', 'gun_durumu', 'projeler', 'calisanlar', 'mesajlar', 'hafizalar', 'toplantilar'];
+const YAZ_IZIN = ['gorevler', 'ayarlar'];
+function girisGerek() { const p = istemci(); if (!p.authStore.token) throw new Error('Sunucu oturumu açık değil'); return p; }
+function kimlikGecerli(id) { return /^[a-z0-9]{15}$/.test(String(id || '')); }
+async function liste({ k, adet, sirala, filtre } = {}) {
+  if (!OKU_IZIN.includes(k)) throw new Error('Bu koleksiyon okunamaz');
+  const p = girisGerek();
+  try { const r = await p.collection(k).getList(1, Math.min(200, Math.max(1, adet | 0 || 50)), { sort: sirala || '-updated', filter: filtre || '', skipTotal: true }); Object.assign(D, { cevrimdisi: false }); return r.items; }
+  catch (e) { if (agHatasi(e)) D.cevrimdisi = true; throw new Error(hataMetni(e)); }
+}
+// Kayıt kimliği istemcide verilir (15 karakter); aynı kayıt iki kez gönderilse tek kalır: "zaten var" → güncelle
+async function yaz({ k, id, veri } = {}) {
+  if (!YAZ_IZIN.includes(k)) throw new Error('Bu koleksiyona yazılamaz');
+  if (!kimlikGecerli(id) || !veri || typeof veri !== 'object') throw new Error('Geçersiz kayıt');
+  const p = girisGerek(), c = p.collection(k);
+  try {
+    if (k === 'ayarlar') { // anahtar tekil: önce var mı bak
+      let var1 = null; try { var1 = await c.getFirstListItem('anahtar="' + String(veri.anahtar).replace(/"/g, '') + '"'); } catch (e) { if (e && e.status && e.status !== 404) throw e; if (agHatasi(e)) throw e; }
+      if (var1) return await c.update(var1.id, { deger: veri.deger });
+      return await c.create(Object.assign({ id }, veri));
+    }
+    try { return await c.create(Object.assign({ id }, veri)); }
+    catch (e) { if (e && e.status === 400 && e.response && e.response.data && e.response.data.id) return await c.update(id, veri); throw e; }
+  } catch (e) { if (agHatasi(e)) D.cevrimdisi = true; throw new Error(hataMetni(e)); }
+}
+
 function baslat({ otomatik = true } = {}) {
   istemciKur();
   if (!otomatik) return;
@@ -132,4 +160,4 @@ function baslat({ otomatik = true } = {}) {
   zamanlayici = setInterval(yenile, GUN);
 }
 
-module.exports = { baslat, durum, giris, yenile, cikis, setCfg, saglik, degisti, VARSAYILAN_URL, _test: { istemciKur, SES, CFG } };
+module.exports = { liste, yaz, baslat, durum, giris, yenile, cikis, setCfg, saglik, degisti, VARSAYILAN_URL, _test: { istemciKur, SES, CFG } };

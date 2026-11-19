@@ -29,7 +29,7 @@ function ayAnahtari() { const d = new Date(); return d.getFullYear() + '-' + Str
 // Anahtar ve harcama defteri bellekte tutulur (status() her çağrıda diski okuyup şifre çözmesin); yazınca güncellenir
 let _anh, _def = null;
 function anahtar() { if (_anh === undefined) { try { _anh = safeStorage.decryptString(fs.readFileSync(KEY())); } catch (e) { _anh = null; } } return _anh; }
-function cfg() { return Object.assign({ butce: 10 }, okuJ(CFG(), {})); }
+function cfg() { return Object.assign({ butce: 15 }, okuJ(CFG(), {})); }
 // Harcama defteri: aylara göre; her ayın günlük toplamı (canlı grafik için) ve çalışan başına dökümü
 function defter() { if (_def) return _def; const d = okuJ(LOG(), null); if (d && d.aylar) return (_def = d); const y = { aylar: {} }; if (d && d.ay) y.aylar[d.ay] = d; return (_def = y); }
 function defterYaz(d) { _def = d; yazJ(LOG(), d); }

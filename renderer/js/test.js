@@ -287,7 +287,7 @@ var __srPb=window.__smokeRoutes;window.__smokeRoutes=function(){return __srPb().
 window.__pbTest=function(){var R=[];function t(n,c,m){try{var ok=typeof c=='function'?c():c;R.push({n:n,ok:!!ok,m:ok?'':String(m||'beklenmeyen sonuç')})}catch(e){R.push({n:n,ok:false,m:e.message})}}
 var bk=PB.st;
 t('PB: smoke açılışında giriş ekranı kendiliğinden açılmaz',function(){var o=document.getElementById('pbg');return !o||o.style.display=='none'});
-t('PB: köprü token göstermez',function(){return !!(API&&API.pb)&&Object.keys(API.pb).join(',')=='durum,giris,yenile,cikis,config,degisti'},API&&API.pb&&Object.keys(API.pb).join(','));
+t('PB: köprü token göstermez',function(){return !!(API&&API.pb)&&Object.keys(API.pb).join(',')=='durum,giris,yenile,cikis,config,liste,yaz,degisti'},API&&API.pb&&Object.keys(API.pb).join(','));
 window.__pbTestModu=true;PB.st={girisli:false,eposta:'',url:'https://veri.orinorvane.com',varsayilanUrl:'https://veri.orinorvane.com',sifreleme:true};
 t('PB: giriş ekranı açılır (e-posta, şifre, beni hatırla açık, sunucu)',function(){pbGirisGoster('Oturum süresi doldu, yeniden giriş yap');var o=document.getElementById('pbg'),h=document.getElementById('pbgH');return o.style.display=='flex'&&!!document.getElementById('pbgE')&&document.getElementById('pbgS').type=='password'&&h&&h.checked&&/veri\.orinorvane\.com/.test(o.innerHTML)&&/Oturum süresi doldu/.test(document.getElementById('pbgMsj').textContent)});
 t('PB: şifre göster/gizle',function(){pbSifreGoster();var a=document.getElementById('pbgS').type=='text';pbSifreGoster();return a&&document.getElementById('pbgS').type=='password'});

@@ -65,6 +65,8 @@ contextBridge.exposeInMainWorld('api', {
     yenile: () => ipcRenderer.invoke('pb:yenile'),
     cikis: () => ipcRenderer.invoke('pb:cikis'),
     config: c => ipcRenderer.invoke('pb:config', c),
+    liste: o => ipcRenderer.invoke('pb:liste', o),
+    yaz: o => ipcRenderer.invoke('pb:yaz', o),
     degisti: fn => ipcRenderer.on('pb:degisti', (e, d) => fn(d))
   },
   bulut: {

@@ -1,0 +1,63 @@
+/* 0.8.4 · Menü Planlayıcı (Ailem › Menü & Market) — Orvane cam görünümü ve tema rengi (--acc) */
+.mp-tabs{display:flex;justify-content:flex-start;margin:-4px 0 12px}
+.mp-pg{display:flex;flex-direction:column;gap:14px;align-items:center}
+.mp-pg>*{width:100%}
+.mp-hero{max-width:760px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;padding:4px 0}
+.mp-hero b{font:700 20px var(--font-ana);color:var(--yazi);letter-spacing:-.2px}
+.mp-form{max-width:760px;border-radius:22px;background:var(--cam);border:1px solid var(--cam-kenar);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);padding:18px;display:flex;flex-direction:column;gap:16px;animation:orvRise .6s var(--ease-akis) backwards}
+.mp-bl{display:flex;flex-direction:column;gap:8px}
+.mp-bh{display:flex;align-items:center;gap:6px;font:700 11.5px var(--font-ana);letter-spacing:.07em;color:var(--yazi2)}
+.mp-r4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.mp-r3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.mp-r2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.mp-sc{height:44px;border-radius:14px;border:1px solid var(--cam-kenar);background:rgba(255,255,255,.04);color:var(--yazi);font:500 13.5px var(--font-ana);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;padding:0 12px;transition:background .15s,border-color .15s,transform .15s}
+.mp-sc:hover{background:rgba(255,255,255,.08)}.mp-sc:active{transform:scale(.97)}
+.mp-sc:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.mp-sc.on{background:color-mix(in srgb,var(--acc) 18%,transparent);border-color:color-mix(in srgb,var(--acc) 70%,transparent);font-weight:700}
+.mp-sc.g{justify-content:space-between;height:50px;padding:0 16px}
+.mp-sc.g i{font-style:normal;color:var(--acc);font-weight:700}
+.mp-sc.k{height:40px;font-size:12.5px}
+.mp-chips{display:flex;flex-wrap:wrap;gap:6px}
+.mp-sc.c{height:34px;border-radius:17px;font-size:12.5px;padding:0 12px}
+.mp-kc{border-radius:16px;background:rgba(255,255,255,.03);border:1px solid var(--cam-kenar);padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.mp-kh{display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--yazi2)}
+.mp-kh b{font:700 24px var(--font-ana);color:var(--acc);font-variant-numeric:tabular-nums}
+.mp-rng{width:100%;accent-color:var(--acc);height:22px;cursor:pointer}
+.mp-ol{display:flex;justify-content:space-between;font-size:11px;color:var(--yazi3)}
+.mp-dgs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px}
+.mp-dg{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--yazi2);padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.04)}
+.mp-dg b{color:var(--acc);font-weight:700}
+.mp-go{height:52px;border-radius:26px;border:0;background:var(--acc);color:#fff;font:700 15px var(--font-ana);cursor:pointer;transition:filter .15s,transform .15s}
+.mp-go:hover{filter:brightness(1.08);transform:translateY(-2px)}.mp-go:active{transform:scale(.97)}
+.mp-sonuc{display:flex;flex-direction:column;gap:14px}
+.mp-pw{overflow-x:auto}
+.mp-plan{display:grid;gap:6px;align-items:stretch;min-width:560px}
+.mp-ph{font:600 12px var(--font-ana);color:var(--yazi2);padding:0 4px 2px}
+.mp-gn{font:600 13px var(--font-ana);color:var(--yazi);display:flex;align-items:center}
+.mp-hc{position:relative;display:flex;flex-direction:column;gap:3px;padding:9px 34px 9px 11px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid transparent;font-size:13px;min-height:52px;justify-content:center}
+.mp-hc:hover{border-color:var(--cam-kenar)}
+.mp-hc.bos{color:var(--yazi3);align-items:center}
+.mp-sw{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:26px;height:26px;opacity:.45}
+.mp-hc:hover .mp-sw,.mp-sw:focus-visible{opacity:1}
+.mp-dl{color:#6be585}
+.mp-tp{display:flex;flex-direction:column;justify-content:center;align-items:flex-end;font-variant-numeric:tabular-nums;font-size:13px}
+.mp-lw{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.mp-lg{display:flex;flex-direction:column;gap:4px}
+.mp-lgh{font:700 11.5px var(--font-ana);letter-spacing:.05em;color:var(--yazi2);text-transform:uppercase;padding:2px 2px 4px}
+.mp-li{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:10px;background:rgba(255,255,255,.03);border:0;color:var(--yazi);font:500 13px var(--font-ana);text-align:left;cursor:pointer;width:100%}
+.mp-li:hover{background:rgba(255,255,255,.07)}
+.mp-li b{font-weight:600;font-variant-numeric:tabular-nums;color:var(--yazi2)}
+.mp-lt{flex:1;min-width:0}
+.mp-ck{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--cam-kenar);display:inline-flex;align-items:center;justify-content:center;font-size:12px;color:#fff;flex:0 0 auto}
+.mp-li.al .mp-ck{background:var(--acc);border-color:var(--acc)}
+.mp-li.al .mp-lt{text-decoration:line-through;color:var(--yazi3)}
+.mp-li.dolap{cursor:default;opacity:.6}.mp-li.dolap .mp-ck{border:0}
+.mp-ozellik{max-width:760px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.mp-ozellik span{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;border-radius:16px;background:rgba(255,255,255,.03);border:1px solid var(--cam-kenar);font-size:12px;color:var(--yazi2);text-align:center}
+.mp-ozellik i{font-style:normal;font-size:20px}
+@media (max-width:640px){.mp-r4{grid-template-columns:repeat(2,minmax(0,1fr))}.mp-r3,.mp-r2{grid-template-columns:1fr}.mp-ozellik{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (prefers-reduced-motion:reduce){.mp-form{animation:none}}
+.mp-tab{height:38px;padding:0 16px;border-radius:19px;border:0;background:transparent;color:#cfcfd4;font:600 13px var(--font-ana);cursor:pointer;transition:background .25s,color .25s,transform .3s var(--ease-yay)}
+.mp-tab:hover{background:rgba(255,255,255,.07)}.mp-tab:active{transform:scale(.93)}
+.mp-tab.on{background:var(--acc);color:#fff}
+.mp-tab:focus-visible{outline:2px solid var(--acc);outline-offset:2px}

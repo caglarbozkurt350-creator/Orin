@@ -79,6 +79,9 @@ html.orv :focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .orv-sq::after{content:'';position:absolute;inset:0;border-radius:inherit;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.55) 50%,transparent 70%);background-size:250% 100%;background-position:130% 0;opacity:0;pointer-events:none}
 .orv-par:hover .orv-sq::after,.orv-sq.par:hover::after{opacity:1;animation:orvShine .75s ease}
 @keyframes orvShine{from{background-position:130% 0}to{background-position:-30% 0}}
+/* 0.8.4: simge kutucuklarında ara ara parıltı geçer (tasarım: Pasif Ekip · Hareket); üzerine gelince yukarıdaki hızlı parıltı çalışır */
+@keyframes orvIdle{0%,88%{background-position:130% 0}100%{background-position:-30% 0}}
+.orv-sq:not(.duz)::after{opacity:1;animation:orvIdle 8s ease-in-out infinite}
 .orv-par:hover .orv-sq svg{transform:scale(1.12) rotate(-6deg)}
 
 /* durum noktası: halka şeklinde atım */

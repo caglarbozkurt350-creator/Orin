@@ -25,6 +25,8 @@ button.oa-pill:active{transform:scale(.93)}
 .oa-ico::before{content:'';position:absolute;left:2px;right:2px;top:2px;height:45%;border-radius:9px 9px 6px 6px;background:linear-gradient(rgba(255,255,255,.38),rgba(255,255,255,0));pointer-events:none}
 .oa-ico svg{position:relative;transition:transform .4s var(--ease-yay2)}
 .oa-card:hover .oa-ico svg{transform:scale(1.12) rotate(-6deg)}
+.oa-ico::after{content:'';position:absolute;inset:0;border-radius:inherit;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.55) 50%,transparent 70%);background-size:250% 100%;background-position:130% 0;animation:orvIdle 7s ease-in-out infinite;pointer-events:none}
+.oa-card:hover .oa-ico::after{animation:orvShine .75s ease}
 .oa-num{font-size:26px;line-height:30px;font-weight:700;letter-spacing:-.5px;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--yazi)}
 .oa-sub{font-size:12px;line-height:16px;color:var(--yazi2)}
 .oa-sub.l{color:#c9c9cf}

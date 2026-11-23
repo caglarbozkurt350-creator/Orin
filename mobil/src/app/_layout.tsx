@@ -6,7 +6,7 @@ import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ikon } from '@/bilesen/ortak';
 import { apkIndir, useGuncelleme, yenidenBaslat } from '@/lib/guncelle';
-import { esitle } from '@/lib/senk';
+import { esitle, onde } from '@/lib/senk';
 import { R, saydam, useGorunumAyari } from '@/lib/tema';
 
 const temaDeger = () => ({ ...DarkTheme, colors: { ...DarkTheme.colors, background: R.zemin, card: R.zemin, primary: R.ana, text: R.yazi, border: R.cizgi } });
@@ -36,7 +36,7 @@ export default function KokDuzen() {
   useEffect(() => {
     SystemUI.setBackgroundColorAsync(R.zemin).catch(() => {});
     esitle();
-    const t = setInterval(esitle, 20000); // 20 sn'de bir masaüstüyle eşitle (mesaj gönderince 3 sn'de bir)
+    const t = setInterval(() => { if (onde()) esitle(); }, 60000); // 60 sn'de bir, yalnız uygulama öndeyken (veri tasarrufu; öne gelince hemen eşitler)
     return () => clearInterval(t);
   }, []);
   return (

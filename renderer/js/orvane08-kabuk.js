@@ -26,7 +26,8 @@ ORV.KAT=[
   {id:'saglik',ad:'Sağlık',kisa:'Sağlık',renk:'#c4b5fd',hedef:['team','calisan','iris']},
   {id:'market',ad:'Menü & Market',kisa:'Menü & Market',renk:'#fda4af',hedef:['team','calisan','marco']},
   {id:'satinalma',ad:'Satın Alma',kisa:'Satın Alma',renk:'#f9a8d4',hedef:['team','calisan','nerya']},
-  {id:'evisleri',ad:'Ev İşleri',kisa:'Ev İşleri',renk:'#e9d5ff',hedef:['cal','takvim','']}]},
+  {id:'evisleri',ad:'Ev İşleri',kisa:'Ev İşleri',renk:'#e9d5ff',hedef:['cal','takvim','']},
+  {id:'ilac',ad:'İlaç Planı',kisa:'İlaç Planı',renk:'#a5f3fc',hedef:['home','gun','']}]},
  {id:'gorev',ad:'Görevler',bolum:'fav',ikon:'arti',renk:['#7cf096','#16a34a'],sinif:'ic-gorev',alt:[
   {id:'gorevler',ad:'Görevler',renk:'#7cf096',hedef:gGorev},
   {id:'onaylar',ad:'Onaylar',renk:'#ffc24a',hedef:['team','onaylar','']},
@@ -44,7 +45,9 @@ ORV.KAT=[
   {id:'projeler',ad:'Projeler',renk:'#ffc24a',hedef:['home','yeni','']},
   {id:'ozet',ad:'Özet',renk:'#7cf096',hedef:['cal','takvim','']}]},
  {id:'izin',ad:'İzinler',bolum:'calisma',ikon:'gunes',renk:['#fde68a','#f59e0b'],sinif:'ic-izin',alt:[
-  {id:'izinler',ad:'İzinler',renk:'#fde68a',hedef:['home','yil','']}]}
+  {id:'izinler',ad:'İzinler',renk:'#fde68a',hedef:['home','yil','']}]},
+ {id:'bordro',ad:'Bordro',bolum:'calisma',ikon:'bordro',renk:['#7cf096','#16a34a'],sinif:'ic-bordro',alt:[
+  {id:'bordro',ad:'Bordro',renk:'#7cf096',hedef:['home','gun','']}]}
 ];
 var KEYS=ORV.KAT.map(function(k){return k.id});
 ORV.katBul=function(id){return ORV.KAT.filter(function(k){return k.id==id})[0]||null};
@@ -131,9 +134,9 @@ function altMatch(a){return !d.q||trl2(a.ad).indexOf(d.q)>=0}
 function katMatch(k){return !d.q||trl2(k.ad).indexOf(d.q)>=0||k.alt.some(altMatch)}
 function katH(k){var acik=d.mod=='open',tekli=k.alt.length<=1,acc=acik&&(d.acc==k.id||(d.q&&k.alt.some(altMatch)))&&!tekli,act=katAktif()==k.id,aid=ORV.aktif();
  if(!katMatch(k))return '';
- var sq=k.tarih?ORV.tarihKutu():ORV.ikon(k.ikon,{renk:k.renk,sinif:k.sinif}),bd='',meta='';
+ var pas=k.id=='ekip'&&ORV.pasif&&ORV.pasif(),sq=k.tarih?ORV.tarihKutu():ORV.ikon(k.ikon,{renk:pas?['#6b6b72','#3f3f45']:k.renk,sinif:k.sinif+(pas?' pasif':'')}),bd='',meta='';
  if(k.id=='gorev'){var n=onayBekleyen();if(n>0){bd='<span class="orv-bdg">'+n+'</span>';meta='<span class="orv-rb">'+n+'</span>'}}
- if(k.id=='ekip')meta='<span style="font-size:11px;color:#ff9a7f;font-weight:600">Hiyerarşi</span>';
+ if(k.id=='ekip')meta=pas?'<span style="font-size:11px;color:var(--yazi3);font-weight:600">'+(typeof tmAll=='function'?tmAll().length+' · ':'')+'kapalı</span>':'<span style="font-size:11px;color:#ff9a7f;font-weight:600">Hiyerarşi</span>';
  if(k.id=='isgunu')meta='<span class="orv-sw" style="background:#f5a524"></span>'+k.meta;
  if(bd)sq=sq.replace('</svg></span>','</svg>'+bd+'</span>');
  return '<div class="orv-ig" data-k="'+k.id+'"><button type="button" class="orv-it'+(act?' act':'')+'" data-k="'+k.id+'" aria-label="'+E2(k.ad)+'"'+(tekli?'':' aria-expanded="'+(acc?'true':'false')+'"')+'>'+sq+

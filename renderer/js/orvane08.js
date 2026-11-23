@@ -38,7 +38,7 @@ ORV.tema=function(k,kaydetme){if(!ORV.TEMA[k])k='turuncu';
  return k};
 
 // ---------- Çizgi simgeler (24x24, çizgi) ve squircle bileşeni ----------
-ORV.IKON={
+ORV.IKON={bordro:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/>',ay:'<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
  ev:'<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
  kalp:'<path d="M12 20.5s-7.5-4.4-9.2-9.1C1.6 8 3.6 4.5 7.1 4.5c2 0 3.6 1.1 4.9 2.8 1.3-1.7 2.9-2.8 4.9-2.8 3.5 0 5.5 3.5 4.3 6.9-1.7 4.7-9.2 9.1-9.2 9.1z"/>',
  arti:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',

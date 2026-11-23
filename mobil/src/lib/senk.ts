@@ -18,6 +18,8 @@ export function istemci(): SupabaseClient | null {
   _c = createClient(url, key, { auth: { storage: Storage, autoRefreshToken: true, persistSession: true, detectSessionInUrl: false } });
   return _c;
 }
+/** Uygulama önde değilse eşitleme yapılmaz (arka planda mobil veri harcamaz) */
+export function onde() { return Platform.OS === 'web' || AppState.currentState === 'active'; }
 if (Platform.OS !== 'web') AppState.addEventListener('change', (s) => { const c = istemci(); if (!c) return; if (s === 'active') { c.auth.startAutoRefresh(); esitle(); } else c.auth.stopAutoRefresh(); });
 
 export function hataMetni(e: any): string {
@@ -35,7 +37,7 @@ export async function girisYap(eposta: string, sifre: string) { const c = istemc
 export async function kayitOl(eposta: string, sifre: string) { const c = istemci(); if (!c) throw new Error('Önce eşitleme adresini gir'); const { data, error } = await c.auth.signUp({ email: eposta.trim(), password: sifre }); if (error) throw error; return !!data.session; }
 export async function cikis() { const c = istemci(); if (c) await c.auth.signOut(); }
 
-let _calisiyor = false;
+let _calisiyor = false, _ozTs = '';
 /** Bekleyen olayları gönderir, masaüstü özetini ve diğer cihazların olaylarını alır */
 export async function esitle(): Promise<void> {
   const c = istemci(); if (!c || _calisiyor) return;
@@ -50,10 +52,15 @@ export async function esitle(): Promise<void> {
       const m = new Map((data || []).map((r: any) => [r.id, r.sira]));
       guncelle((d) => ({ ...d, olaylar: d.olaylar.map((o) => (m.has(o.id) ? { ...o, gitti: true, sira: m.get(o.id) } : o)) }));
     }
-    // 2) masaüstü özeti
-    const { data: oz, error: e2 } = await c.from('orvane_durum').select('veri').maybeSingle();
-    if (e2) throw e2;
-    const ozet = (oz?.veri as Ozet) || durum().ozet;
+    // 2) masaüstü özeti — veri tasarrufu: önce yalnız zaman damgası (birkaç bayt); özet yalnız değiştiyse indirilir
+    const { data: zt, error: e0 } = await c.from('orvane_durum').select('ts').maybeSingle();
+    if (e0) throw e0;
+    let ozet = durum().ozet;
+    if (zt?.ts && (zt.ts !== _ozTs || !ozet)) {
+      const { data: oz, error: e2 } = await c.from('orvane_durum').select('veri,ts').maybeSingle();
+      if (e2) throw e2;
+      if (oz?.veri) { ozet = oz.veri as Ozet; _ozTs = oz.ts; }
+    }
     // 3) özete henüz girmemiş olaylar (başka cihazlardan da)
     const bas = ozet?.olaySira || 0;
     const { data: ol, error: e3 } = await c.from('orvane_olay').select('id,tur,veri,ts,sira').gt('sira', bas).order('sira').limit(500);
@@ -70,6 +77,6 @@ export async function esitle(): Promise<void> {
 }
 let _p: ReturnType<typeof setTimeout> | null = null;
 export function esitleSonra(ms = 400) { if (_p) clearTimeout(_p); _p = setTimeout(esitle, ms); }
-// Mesaj gönderince cevap gelene kadar 3 sn'de bir eşitle (en fazla 90 sn): çalışan cevabı hızlı görünür
+// Mesaj gönderince cevap gelene kadar 6 sn'de bir eşitle (en fazla 60 sn); veri tasarrufu için eskiden 3 sn / 90 sn idi
 let _h: ReturnType<typeof setInterval> | null = null, _hBit = 0;
-export function hizliBekle(sn = 90) { _hBit = Date.now() + sn * 1000; if (_h) return; _h = setInterval(() => { if (Date.now() > _hBit) { if (_h) clearInterval(_h); _h = null; return; } esitle(); }, 3000); }
+export function hizliBekle(sn = 60) { _hBit = Date.now() + sn * 1000; if (_h) return; _h = setInterval(() => { if (Date.now() > _hBit) { if (_h) clearInterval(_h); _h = null; return; } esitle(); }, 6000); }

@@ -3,7 +3,7 @@
 // Iris tanı koymaz, doz önermez. Nerya yalnız önerir, kararı Çağlar verir.
 (function(){
 var AYK=['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'],GUN=['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'];
-var TABS=[['butce','Bütçe'],['saglik','Sağlık'],['market','Menü & Market'],['satinalma','Satın Alma'],['evisleri','Ev İşleri']];
+var TABS=[['butce','Bütçe'],['saglik','Sağlık'],['market','Menü & Market'],['satinalma','Satın Alma'],['evisleri','Ev İşleri']];OA.AILE_TABS=TABS;
 var CALISAN={butce:'otto',saglik:'iris',market:'marco',satinalma:'nerya',evisleri:'mia'};
 OA.aiGit=function(k){ORV.git(k)};
 OA.aiBas=function(id,dolu){var cid=CALISAN[id];

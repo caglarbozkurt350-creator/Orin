@@ -268,6 +268,8 @@ const YZ_FILE = () => path.join(app.getPath('userData'), 'yz.json');
 let YZ_ACIK = null;
 function yzAcik() { if (YZ_ACIK === null) { const c = readJSON(YZ_FILE(), null); YZ_ACIK = c && typeof c.acik === 'boolean' ? c.acik : !!SMOKE; } return YZ_ACIK; }
 const yzGerek = fn => (a, e) => { if (!yzAcik()) throw new Error('Yapay zekâ kapalı (Merkez › Ayarlar › Yapay zekâ)'); return fn(a, e); };
+// 0.8.3: Bordro ilk içe aktarma — yalnız Belgeler\Orin\Bordro-gecici\bordro.json okunur (smoke'ta okunmaz)
+ipcMain.handle('bordro:oku', () => { if (SMOKE) return null; try { const p = path.join(app.getPath('documents'), 'Orin', 'Bordro-gecici', 'bordro.json'); return fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, 'utf8')) : null; } catch (e) { return null; } });
 ipcMain.handle('yz:durum', wrap(() => ({ acik: yzAcik() })));
 ipcMain.handle('yz:ayar', wrap(o => { YZ_ACIK = !!(o && o.acik); if (!SMOKE) fs.writeFileSync(YZ_FILE(), JSON.stringify({ acik: YZ_ACIK })); return { acik: YZ_ACIK }; }));
 // Yalnız smoke: korumayı test etmek için kanalı yapay zekâ kapalıymış gibi çağırır. Koruma eşzamanlı attığından bayrak aynı adımda geri alınır, paralel testler etkilenmez.

@@ -4,7 +4,7 @@
 //       (3) sonuçtan öğrenilenler Haiku ile çıkarılır → gelişim talebi olarak Nika (İK) → Orin (CEO) onayına gider
 var ABN={st:null,bekle:0,isaret:null,cagir:function(o){return API.abonelik.calistir(o)},sor:function(o){return API.zeka.sor(o)}};
 function abnDurum(){if(!API||!API.abonelik)return Promise.resolve(null);return API.abonelik.status().then(function(r){ABN.st=r.ok?r.v:null;return ABN.st})}
-function abnAcik(){var s=ABN.st;return !!(s&&s.kurulu&&s.acik)}
+function abnAcik(){if(yzKapali())return false;var s=ABN.st;return !!(s&&s.kurulu&&s.acik)}
 function abnHazir(){var s=ABN.st;return abnAcik()&&s.bugun<s.gunluk&&!(s.test&&s.test.ok===false&&s.test.kod=='giris')&&Date.now()>=ABN.bekle&&tmOnline()}
 // 0.7.24 (Çağlar): bakım, onarım ve güncelleme yalnız abonelikle. Kai ve Ada'nın görevleri her zaman aboneliğe gider;
 // abonelik yoksa API işi YAPMAZ, yalnız Claude Code için iş emri yazar ve görev abonelik erişilince çalışır.
@@ -16,7 +16,7 @@ var _abnZh=zekaHazir;function abnApiVar(){return _abnZh()}
 function abnSohbetHazir(){var s=ABN.st;return abnAcik()&&(s.sohbetBugun||0)<(s.gunlukSohbet||0)&&Date.now()>=ABN.bekle&&tmOnline()}
 zekaHazir=function(){return abnSohbetHazir()||_abnZh()};
 var ABN_MODEL={'claude-sonnet-5-5':'sonnet','claude-haiku-5-5':'haiku','claude-opus-5-5':'opus'};
-function abnCevapla(id){if(komutMu(id))return Promise.resolve();var c=tm(id);if(!c||ZK.yaz[id])return Promise.resolve();var msgs=zekaGecmis(id);if(!msgs.length||msgs[msgs.length-1].role!='user')return Promise.resolve();
+function abnCevapla(id){if(yzKapali())return Promise.resolve();if(komutMu(id))return Promise.resolve();var c=tm(id);if(!c||ZK.yaz[id])return Promise.resolve();var msgs=zekaGecmis(id);if(!msgs.length||msgs[msgs.length-1].role!='user')return Promise.resolve();
 ZK.yaz[id]=1;TMSCR=true;if(area=='team')render();
 var son=msgs.slice(-12).map(function(m){return (m.role=='user'?'Çağlar':c.ad)+': '+(typeof m.content=='string'?m.content:JSON.stringify(m.content))}).join('\n\n');
 return ABN.cagir({kim:id,tur:'sohbet',sistemTam:true,araclar:'',maxTur:1,model:ABN_MODEL[tmModel(c)]||'haiku',zamanAsimiMs:120000,
@@ -142,7 +142,7 @@ return gelenIsle()}).then(function(n2){t('İşlenen dosya tekrar işlenmez',n2==
 .then(function(){T.gel=bk.gel;T.sohbet=JSON.parse(bk.ch);save();return R})};
 
 // Yapay zekâ durumu yazısı (0.7.13): abonelik ve/veya API bağlıysa öyle gösterilir
-function yzDurum(id){var a=abnAcik(),k=!!(ZK.st&&ZK.st.anahtar),t=id&&ZK.st&&ZK.st.harcama&&ZK.st.harcama.kisi&&ZK.st.harcama.kisi[id];return (a||k)?'yapay zekâ: '+(a?'Claude aboneliği':'')+(a&&k?' + ':'')+(k?'API'+(t&&t.token?' · '+fmtTok(t.token)+' token':''):''):'yapay zekâ bağlı değil'}
+function yzDurum(id){if(yzKapali())return 'yapay zekâ kapalı · manuel mod';var a=abnAcik(),k=!!(ZK.st&&ZK.st.anahtar),t=id&&ZK.st&&ZK.st.harcama&&ZK.st.harcama.kisi&&ZK.st.harcama.kisi[id];return (a||k)?'yapay zekâ: '+(a?'Claude aboneliği':'')+(a&&k?' + ':'')+(k?'API'+(t&&t.token?' · '+fmtTok(t.token)+' token':''):''):'yapay zekâ bağlı değil'}
 
 // 0.7.24 testleri (yalnız smoke): Kai/Ada görevleri API ile yapılmaz; API yalnız iş emri yazar; araştırma önce abonelik
 function abnZorTest(){var R=[],T=TMS(),bk={st:ABN.st,cagir:ABN.cagir,sor:ABN.sor,av:ABN.apiVar,zg:_abnZg,gor:T.gorev.slice(),ch:JSON.stringify(T.sohbet),bek:ABN.bekle};

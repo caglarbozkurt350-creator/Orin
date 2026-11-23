@@ -10,7 +10,7 @@ function yonJson(t){var m=String(t||'').match(/\[[\s\S]*\]/);if(!m)return [];try
 function yonModel(id){var c=tm(id);return c&&typeof ABN_MODEL!='undefined'&&ABN_MODEL[tmModel(c)]||'haiku'}
 
 // Nika: İK incelemesi (en fazla 20 talep tek çağrıda)
-function nikaIncele(){var L=TMS().gel.filter(function(g){return g.asama=='ik'}).slice(0,20),n=tm('nika');
+function nikaIncele(){if(yzKapali())return Promise.resolve(0);var L=TMS().gel.filter(function(g){return g.asama=='ik'}).slice(0,20),n=tm('nika');
 if(YON.calisiyor||!yonAyar().nikaOto||!L.length||!n||!abnSohbetHazir())return orinOto().then(function(){return 0});YON.calisiyor=true;
 return YON.cagir({kim:'nika',tur:'sohbet',sistemTam:true,araclar:'',maxTur:1,model:yonModel('nika'),zamanAsimiMs:180000,
 sistem:zekaSistem(n)+'\nŞu an İK Müdürü olarak gelişim taleplerini kendin onaylıyorsun; onayladıkların Orin’in (CEO) onayına, oradan Çağlar’a gider. '+YON_IK_OLCUT+'\nYalnız JSON dizi yaz: [{"id":"talep id","ok":true|false,"neden":"en fazla 15 kelime"}]',

@@ -263,6 +263,15 @@ async function pbTests() {
 // ---- IPC ----
 const ipcHandlers = {}; { const h = ipcMain.handle.bind(ipcMain); ipcMain.handle = (ch, fn) => { ipcHandlers[ch] = fn; return h(ch, fn); }; }
 const wrap = fn => async (e, a) => { try { return { ok: true, v: await fn(a, e) }; } catch (err) { return { ok: false, err: err.message }; } };
+// Manuel mod: yapay zekâ varsayılan KAPALI (smoke'ta açık, eski testler değişmesin). Ayar userData/yz.json'da; arayüz 'yz:ayar' ile bildirir.
+const YZ_FILE = () => path.join(app.getPath('userData'), 'yz.json');
+let YZ_ACIK = null;
+function yzAcik() { if (YZ_ACIK === null) { const c = readJSON(YZ_FILE(), null); YZ_ACIK = c && typeof c.acik === 'boolean' ? c.acik : !!SMOKE; } return YZ_ACIK; }
+const yzGerek = fn => (a, e) => { if (!yzAcik()) throw new Error('Yapay zekâ kapalı (Merkez › Ayarlar › Yapay zekâ)'); return fn(a, e); };
+ipcMain.handle('yz:durum', wrap(() => ({ acik: yzAcik() })));
+ipcMain.handle('yz:ayar', wrap(o => { YZ_ACIK = !!(o && o.acik); if (!SMOKE) fs.writeFileSync(YZ_FILE(), JSON.stringify({ acik: YZ_ACIK })); return { acik: YZ_ACIK }; }));
+// Yalnız smoke: korumayı test etmek için kanalı yapay zekâ kapalıymış gibi çağırır. Koruma eşzamanlı attığından bayrak aynı adımda geri alınır, paralel testler etkilenmez.
+if (SMOKE) ipcMain.handle('yz:dene', (e, ch) => { const h = ipcHandlers[ch]; if (!h) return { ok: false, err: 'kanal yok' }; const eski = YZ_ACIK; YZ_ACIK = false; let p; try { p = h(e, {}); } finally { YZ_ACIK = eski; } return p; });
 ipcMain.on('state:load', e => { const f = STATE_FILE(); e.returnValue = f ? readJSON(f, null) : null; });
 // Kayıt yeri güvenli değilse (konum.json okunamıyor / klasör yok) yazma: varsayılana düşüp veriyi bölmek yerine reddet
 function stateKaydet(v) { const f = STATE_FILE(); if (!f) return { ok: false, err: BLOCK_MSG() + '. Veri karışmasın diye kaydedilmedi.', warn: DWARN }; try { writeJSON(f, v); return { ok: true }; } catch (er) { return { ok: false, err: 'Kaydedilemedi: ' + er.message }; } }
@@ -433,7 +442,7 @@ ipcMain.handle('zeka:status', wrap(() => zeka.status()));
 ipcMain.handle('zeka:setKey', wrap(k => zeka.setKey(k)));
 ipcMain.handle('zeka:clearKey', wrap(() => zeka.clearKey()));
 ipcMain.handle('zeka:setBudget', wrap(b => zeka.setBudget(b)));
-ipcMain.handle('zeka:sor', wrap(o => zeka.sor(o)));
+ipcMain.handle('zeka:sor', wrap(yzGerek(o => zeka.sor(o))));
 // Gelen kutusu: Claude Code Belgeler\Orin\Gelen\*.json bırakır (çalışana mesaj / gelişim talebi); uygulama iletir, dosya İşlenen'e taşınır
 const GELEN = () => path.join(SMOKE ? DATA() : app.getPath('documents'), 'Orin', 'Gelen');
 ipcMain.handle('gelen:al', wrap(() => {
@@ -468,7 +477,7 @@ ipcMain.handle('abonelik:status', wrap(() => abonelik.status()));
 ipcMain.handle('abonelik:ayar', wrap(a => abonelik.setAyar(a)));
 ipcMain.handle('abonelik:isler', wrap(() => abonelik.isler()));
 ipcMain.handle('abonelik:test', wrap(() => SMOKE ? abonelik.status() : abonelik.test()));
-ipcMain.handle('abonelik:calistir', wrap(o => { if (SMOKE) throw new Error('Testte abonelik çalıştırılmaz'); const h = abonelikHazirla(o); return abonelik.calistirIzle(h).then(r => { if (h.gizliSonuc) r.gizli = true; return r; }); }));
+ipcMain.handle('abonelik:calistir', wrap(yzGerek(o => { if (SMOKE) throw new Error('Testte abonelik çalıştırılmaz'); const h = abonelikHazirla(o); return abonelik.calistirIzle(h).then(r => { if (h.gizliSonuc) r.gizli = true; return r; }); })));
 // Arayüz MCP yapılandırması gönderemez; Apify bağlantısını yalnız ana süreç, izinli çalışanın görevine ekler
 function abonelikHazirla(o) { o = Object.assign({}, o || {}); delete o.mcp; delete o.mcpDosya; delete o.okuDizin; delete o.koruEk; delete o.gizliSonuc; if (!o.mod && o.tur !== 'sohbet' && o.tur !== 'toplanti' && apify.izinli(o.kim)) o.mcp = apify.mcp();
   // Gizli klasörler: yalnız sahibi, yalnız görevde, görev metni klasörü anıyorsa ve internetsiz okur; herkes için diğer durumlarda yasak
@@ -483,7 +492,7 @@ apify.init(DATA());
 ipcMain.handle('apify:durum', wrap(() => apify.durum()));
 ipcMain.handle('apify:kaydet', wrap(t => apify.kaydet(t)));
 ipcMain.handle('apify:sil', wrap(() => apify.sil()));
-ipcMain.handle('apify:calisanlar', wrap(L => apify.calisanlar(L)));
+ipcMain.handle('apify:calisanlar', wrap(yzGerek(L => apify.calisanlar(L))));
 ipcMain.handle('apify:test', wrap(async () => { if (SMOKE) throw new Error('Testte Apify çalıştırılmaz'); const m = apify.mcp(); if (!m) throw new Error('Apify anahtarı kayıtlı değil');
   try { const r = await abonelik.calistir({ test: true, kim: 'sage', mcp: m, araclar: '', model: 'haiku', maxTur: 6, zamanAsimiMs: 180000, sistem: 'Orvane Apify bağlantı denemesi. Yalnız Apify araçlarını kullan. Hiçbir aktörü ÇALIŞTIRMA; yalnız ara. Kısa yaz.', istem: 'Apify aktör arama aracıyla "instagram" aktörlerini ara ve ilk 3 aktörün adını tek satırda yaz.' });
     return apify.testKaydet({ ok: r.tur >= 2 && !!String(r.metin).trim(), ts: Date.now(), metin: String(r.metin).slice(0, 300), adim: r.tur, hata: r.tur >= 2 ? '' : 'Apify aracı kullanılmadı' }); }
@@ -494,7 +503,7 @@ gelistir.init(SMOKE ? DATA() : app.getPath('documents'), abonelik, kay => [dataD
 ipcMain.handle('isemri:yaz', wrap(o => gelistir.emirYaz(o)));
 ipcMain.handle('isemri:liste', wrap(() => gelistir.emirler()));
 ipcMain.handle('isemri:durum', wrap(() => gelistir.durum()));
-ipcMain.handle('isemri:gelistir', wrap(o => { if (SMOKE) throw new Error('Testte geliştirme çalıştırılmaz'); return gelistir.gelistir(o); }));
+ipcMain.handle('isemri:gelistir', wrap(yzGerek(o => { if (SMOKE) throw new Error('Testte geliştirme çalıştırılmaz'); return gelistir.gelistir(o); })));
 // Jarvis (0.7.14): Jarvis projesinin giden/ klasöründeki prompt taslakları (yalnız okuma; şirkete yalnız Çağlar'ın düğmesiyle gider)
 const JARVIS_DIR = () => path.join(app.getPath('documents'), 'Cloude Dosyaları', 'Jarvis');
 const JARVIS = () => path.join(JARVIS_DIR(), 'giden');
@@ -511,7 +520,7 @@ function jarvisIstem(o) {
   if (o.mod === 'prompt') return 'Aşağıda Çağlar’la planlama sohbetimiz var.\n\n' + G + '\n\nGörev: Aramızda KARARLAŞTIRILAN konuyu CEO Orin’e gidecek net bir iş promptuna çevir. Ölçütler: Amaç (neden) · Kapsam (ne dahil, ne değil) · Beklenen çıktı (biçim, uzunluk, süre) · Ölçüt (iyi iş neye benzer) · Kısıtlar (veri güvenliği, abonelik öncelikli düşük maliyet, sade görünüm, önceki sürümü koruma, her yayın onaylı) · Kime rapor verilecek ve hangi çalışana verilmesi gerektiği önerisi. İlk satır kısa bir başlık olsun ("# Başlık"). Yalnız promptu yaz; açıklama, soru ya da "Çağlar’dan" öneki yazma. Karar verilmemiş bir nokta varsa promptun sonunda "Açık nokta:" diye tek satırla belirt.';
   return (G ? 'Sohbetin şimdiye kadarki kısmı:\n\n' + G + '\n\n' : '') + 'Çağlar’ın son mesajı: ' + String(o.mesaj || '') + '\n\nJarvis olarak cevap ver (başına adını yazma).';
 }
-ipcMain.handle('jarvis:sor', wrap(o => { if (SMOKE) throw new Error('Testte Jarvis çalıştırılmaz'); if (!fs.existsSync(JARVIS_DIR())) throw new Error('Jarvis klasörü bulunamadı: ' + JARVIS_DIR());
+ipcMain.handle('jarvis:sor', wrap(o => { if (!yzAcik()) throw new Error('Yapay zekâ kapalı (Merkez › Ayarlar › Yapay zekâ)'); if (SMOKE) throw new Error('Testte Jarvis çalıştırılmaz'); if (!fs.existsSync(JARVIS_DIR())) throw new Error('Jarvis klasörü bulunamadı: ' + JARVIS_DIR());
   return abonelik.calistirIzle({ koruEk: Object.values(gizliKlasorler()).map(x => x.yol), kim: 'jarvis', tur: 'sohbet', mod: 'jarvis', cwd: JARVIS_DIR(), sistemTam: true, araclar: 'Read,Glob,Grep', maxTur: 8, model: (o && o.model) || 'sonnet', zamanAsimiMs: 240000, sistem: jarvisSistem(), istem: jarvisIstem(o || {}) }); }));
 // Piyasa (0.7.18): TCMB günlük resmî döviz kurları (anahtarsız, herkese açık XML); gün içinde önbellekten
 function tcmbAyikla(xml) { const tarih = (String(xml).match(/Tarih="([\d.]+)"/) || [])[1] || '', kur = {};

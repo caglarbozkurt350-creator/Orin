@@ -2,7 +2,7 @@
 var ZK={st:null,yaz:{},hata:''};
 var MODEL_AD={'claude-opus-5-5':'Opus 5.5','claude-sonnet-5-5':'Sonnet 5.5','claude-haiku-5-5':'Haiku 5.5'};
 function zekaDurum(){if(!API||!API.zeka)return Promise.resolve(null);return call(API.zeka.status()).then(function(s){ZK.st=s;return s},function(){return null})}
-function zekaHazir(){var s=ZK.st;return !!(s&&s.anahtar&&s.harcama.usd<s.butce&&tmOnline())}
+function zekaHazir(){if(yzKapali())return false;var s=ZK.st;return !!(s&&s.anahtar&&s.harcama.usd<s.butce&&tmOnline())}
 // Bütçe payı: S.team.m[id].pay = aylık bütçenin yüzdesi (boş = ortak havuz, ayrı sınır yok)
 function zekaPay(id){var p=(TMS().m[id]||{}).pay;return p==null||p===''?null:+p}
 function zekaPayUsd(id){var p=zekaPay(id),s=ZK.st;return p==null||!s?null:s.butce*p/100}

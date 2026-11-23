@@ -113,7 +113,7 @@ if(typeof AP!='undefined'&&AP.liste===null&&typeof apYukle=='function'){AP.liste
 var kart=function(k,ad,ozet,ek,git,canli){return '<a href="#" class="skk'+(canli?' canli':'')+'" onclick="'+git+';return false"><span class="skkh">'+skKutu(k,40)+'<span style="font-size:16px;font-weight:600">'+ad+'</span>'+(canli?'<span class="skcanli"><span class="dt ok"></span>Sürüyor</span>':'')+'</span><span class="skko">'+ozet+'</span>'+ek+'</a>'};
 return '<div class="hrh">'+skKutu('bina',52)+'<div style="flex:1;min-width:0"><div class="en">Şirketim</div><div class="es">Orvane’nin insan kaynakları, toplantıları, arka plan işleri ve finansı tek yerde</div></div></div>'+
 '<div class="skg">'+kart('ik','İnsan Kaynakları',tmAll().length+' çalışan · '+b.ceo+' gelişim onayı bekliyor · gizlilik dereceleri Nika’da','<span class="skch"><span>Kartlar</span><span>Hiyerarşi</span></span>',"nav('team','ik','')")+
-kart('toplanti','Toplantı Odası',t?esc(t.konu)+' · '+t.kim.length+' katılımcı · '+(t.kararlar||[]).length+' karar':(P?P+' planlı toplantı':'Şu an toplantı yok'),t&&ABN.st?'<span class="tpgb" style="margin:0"><span style="width:'+Math.min(100,Math.round((ABN.st.toplantiBugun||0)*100/(ABN.st.gunlukToplanti||300)))+'%;background:#3fb950"></span></span>':'',t?"tpGit('"+jq(t.id)+"')":"nav('team','toplanti','')",!!t)+
+
 kart('arkaplan','Arka plan işleri',cal.length+' iş çalışıyor · bugün '+bg+' iş · '+E+' iş emri Claude Code’da',cal.length?'<span class="skch" style="color:#8ee6a9"><span class="dt ok"></span> '+esc(((tm(cal[0].kim)||{}).ad||cal[0].kim)+' · '+cal[0].etiket)+'</span>':'',"nav('team','arkaplan','')")+'</div>'+
 fnKart()+
 '<div class="card" style="margin-top:14px"><div class="ch">Senden bekleyenler</div>'+(b.top?
@@ -129,7 +129,7 @@ function sirketSb(){var t=typeof tpAktif=='function'&&tpAktif(),P=(typeof tpS=='
 var it=function(p,k,ad,alt,ek,altRenk){return '<div class="si ski'+(pg==p?' on':'')+'" data-nav="1" onclick="nav(\'team\',\''+p+'\',\'\')">'+skKutu(k,32)+'<div style="flex:1;min-width:0"><div>'+ad+'</div><div class="rl"'+(altRenk?' style="color:'+altRenk+'"':'')+'>'+alt+'</div></div>'+(ek||'')+'</div>'};
 return '<div class="skbas">ŞİRKETİM</div>'+it('sirket','bina','Genel bakış','Finans · bekleyenler',b.top?'<span class="cnt sko">'+b.top+'</span>':'')+
 it('ik','ik','İnsan Kaynakları',(function(){var G=TMS().gel.filter(function(x){return x.asama=='ceo'});if(!G.length)return 'Kartlar · hiyerarşi · Nika';var g=G[0],c=tm(g.kim)||{ad:g.kim};return G.length+' onayın bekliyor: '+esc(c.ad)+(g.ad?' · '+esc(g.ad):'')})(),b.ceo?'<span class="cnt sko" title="CEO onayın bekleyen">'+b.ceo+'</span>':'<span class="cnt">'+tmAll().length+'</span>',b.ceo?'#ffb454':'')+
-it('toplanti','toplanti','Toplantı Odası',t?esc(t.konu)+' sürüyor':P?P+' planlı':'Çalışanlarla ortak oda',t?'<span class="dt ok" title="Toplantı sürüyor"></span>':'',t?'#8ee6a9':'')+
+
 it('arkaplan','arkaplan','Arka plan işleri','Claude Code işleri',cal?'<span class="cnt">'+cal+'</span>':'')+
 it('haftalik','grafik','Haftalık rapor','Tüm çalışanların haftası')+
 (t?'<div class="tpser skser" data-id="'+esc(t.id)+'" onclick="tpGit(this.dataset.id)"><span class="dt ok"></span><span style="flex:1;min-width:0">Toplantı sürüyor: <b>'+esc(t.konu)+'</b><br><span style="text-decoration:underline">Odaya dön</span></span></div>':'')}
@@ -147,7 +147,7 @@ delete S.finans;var ay=fnBuAy();ZK.st=Object.assign({},ZK.st||{},{aylar:{}});ZK.
 FN.tcmb=function(){return Promise.resolve({ok:true,v:{tarih:'12.11.2026',kur:{usd:{alis:41,satis:41.5},eur:{alis:47,satis:47.5}},kaynak:'TCMB'}})};
 return fnTcmb().then(function(){
 delete S.sirketPg;delete S.tpSon;openArea('sirket');t('Sol çubukta Şirketim: genel bakışa gider, düğme seçili, Çalışanlarım seçili değil',pg=='sirket'&&document.getElementById('r_sirket').className=='rb on'&&document.getElementById('r_team').className=='rb',pg+' '+document.getElementById('r_sirket').className);
-var sb=document.getElementById('sb').innerHTML;t('Şirketim kenar çubuğu: Genel bakış, İK, Toplantı Odası, Arka plan işleri',/ŞİRKETİM/.test(sb)&&/Genel bakış/.test(sb)&&/İnsan Kaynakları/.test(sb)&&/Toplantı Odası/.test(sb)&&/Arka plan işleri/.test(sb));
+var sb=document.getElementById('sb').innerHTML;t('Şirketim kenar çubuğu: Genel bakış, İK, Arka plan işleri (toplantı yok)',/ŞİRKETİM/.test(sb)&&/Genel bakış/.test(sb)&&/İnsan Kaynakları/.test(sb)&&!/Toplantı Odası/.test(sb)&&/Arka plan işleri/.test(sb));
 t('Şirketim başlığı',document.getElementById('tl').textContent=='Şirketim');
 nav('team','ik');t('İK Şirketim altında (başlık ve seçili düğme)',/^Şirketim › /.test(document.getElementById('tl').textContent)&&document.getElementById('r_sirket').className=='rb on',document.getElementById('tl').textContent);
 openArea('team');var sb2=document.getElementById('sb').innerHTML;t('Çalışanlarım’da yalnız Jarvis ve çalışanlar (İK, toplantı, arka plan yok)',pg=='calisan'&&/Jarvis/.test(sb2)&&sb2.indexOf("nav('team','ik'")<0&&sb2.indexOf("nav('team','toplanti'")<0&&sb2.indexOf("nav('team','arkaplan'")<0&&/Yönetim/.test(sb2)&&document.getElementById('r_team').className=='rb on',sb2.slice(0,300));

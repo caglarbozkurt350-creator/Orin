@@ -204,7 +204,7 @@ t('Karar en yetkilinin hafızasına girer',tmMem('orin').some(function(h){return
 t('Kim kime kaç kez cevap verdi sayılır',tp.sayac&&tp.sayac.orin.cagla==1&&tp.sayac.orla.orin==1,JSON.stringify(tp.sayac));
 tpGit(tp.id);var h=document.getElementById('ct').innerHTML;
 t('Odada kırmızı ünlemli karar, sarı soru işareti, mavi etiket',/class="tpkarar"><span class="krr">!<\/span>/.test(h)&&/Şu kuralı notlarıma ekledim!/.test(h)&&/class="sru">\?<\/span>/.test(h)&&/class="etk"[^>]*>→ Çağlar/.test(h),h.slice(0,200));
-t('Bitir düğmesi yazı alanında, Alt+Enter ipucu, Toplantı Odası adı, bilgi paneli',/class="bt tpbit"/.test(h)&&/Alt\+Enter alt satır/.test(h)&&/Toplantı Odası/.test(h)&&/Kim kimi çağırdı/.test(h)&&/Toplantı Odası/.test(document.getElementById('sb').innerHTML));
+t('Bitir düğmesi yazı alanında, Alt+Enter ipucu, Toplantı Odası adı, bilgi paneli',/class="bt tpbit"/.test(h)&&/Alt\+Enter alt satır/.test(h)&&/Toplantı Odası/.test(h)&&/Kim kimi çağırdı/.test(h));/* 0.8.2: kenar çubuğunda toplantı yok */
 t('Odanın üstünde ilerleme çubuğu (kalan cevap) ve konuşma gantt çizelgesi',/Kalan toplantı cevabı: <b>\d+<\/b> \/ 300/.test(h)&&/class="tpgb"><span style="width:/.test(h)&&(h.match(/class="tpgr"/g)||[]).length==4,h.slice(0,300));
 var e=document.getElementById('tpi');e.value='satır';e.selectionStart=e.selectionEnd=5;var ev=new KeyboardEvent('keydown',{key:'Enter',altKey:true,bubbles:true,cancelable:true});e.dispatchEvent(ev);t('Alt+Enter alt satıra geçer',e.value=='satır\n',JSON.stringify(e.value));
 e.value='+Ma';e.selectionStart=e.selectionEnd=3;tpOneri(e);t('+ yazarken ad önerisi çıkar',/\+Marco/.test(document.getElementById('tpon').innerHTML));tpOneriKapat();e.value='';

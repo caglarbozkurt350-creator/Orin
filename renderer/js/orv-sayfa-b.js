@@ -121,6 +121,7 @@ OB.ozet=function(){var V=OB.ozetVeri(OB.hf),kf=OB.kf,tk=kf.t||OB.ymd(TODAY),son=
  var secili=OB.ymd(OB.kf.t?OB.keyOf(OB.kf.t):TODAY),projeSec=allP().slice().sort(function(a,b){return a[0]<b[0]?1:-1}).map(function(p){return '<option value="'+esc(p[0])+'"'+(kf.kd==p[0]?' selected':'')+'>'+esc(p[0])+' · '+esc(p[1])+'</option>'}).join('');
  var form='<div class="oa-hd">'+OA.ico('linear-gradient(160deg,#5fe0f5,#3b82f6)','ekle')+'<span class="oa-tl">Kayıt gir</span></div><div class="ob-form">'+
   '<label class="oa-zl">Tarih<input id="obKt" class="oa-in" type="date" value="'+secili+'" onchange="OB.kfSet(\'t\',this.value)"></label>'+
+  '<label class="oa-zl">Gün türü<select id="obKtur" class="oa-in" onchange="OB.turAta(this.value)"><option value="">Otomatik (iş günü)</option>'+SO.map(function(x){var gk=OB.keyOf(secili);return '<option value="'+x[0]+'"'+(gk&&D[gk]==x[0]?' selected':'')+'>'+esc(x[1])+'</option>'}).join('')+'</select></label>'+
   '<label class="oa-zl">Proje kodu<select id="obKk" class="oa-in" onchange="OB.kfSet(\'kd\',this.value)"><option value="">Seç…</option>'+projeSec+'<option value="Diğer"'+(kf.kd=='Diğer'?' selected':'')+'>Diğer (proje dışı)</option><option value="Standart dışı"'+(kf.kd=='Standart dışı'?' selected':'')+'>Standart dışı</option></select></label>'+
   '<label class="oa-zl">İş<input id="obKi" class="oa-in" type="text" list="obDl" placeholder="Örn. ön montaj" value="'+esc(kf.is)+'" oninput="OB.kfSet(\'is\',this.value)"><datalist id="obDl">'+DG.map(function(n){return '<option value="'+n+'">'}).join('')+'</datalist></label>'+
   '<label class="oa-zl">Süre (dk)<input id="obKd" class="oa-in" type="number" min="0" step="any" placeholder="0–525" value="'+esc(kf.d)+'" oninput="OB.kfSet(\'d\',this.value)"></label>'+
@@ -145,6 +146,8 @@ ORV.sayfa('ozet',{ciz:OB.ozet,baslik:'İş Günleri › Özet'});
 // ========================================================================
 // İŞ GÜNLERİ · GÜNLÜK (kayıt listesi + gün ayrıntısı: eski P.gun ile tüm işlevler)
 // ========================================================================
+// Kayıt gir kartından gün türü (izin, rapor, mesai…) atama: Gün ayrıntısındaki setT ile aynı kurallar (refakat hakkı vb.)
+OB.turAta=function(v){var k=OB.keyOf((document.getElementById('obKt')||{}).value)||TODAY;sel=k;setT(v)};
 OB.gunler=function(){var ks={};Object.keys(E).forEach(function(k){if(E[k]&&E[k].length)ks[k]=1});Object.keys(D).forEach(function(k){ks[k]=1});Object.keys(PL).forEach(function(k){ks[k]=1});ks[TODAY]=1;
  return Object.keys(ks).filter(function(k){return pk(k)<=pk(TODAY)}).sort(function(a,b){return pk(b)-pk(a)}).slice(0,60)};
 OB.durumAd=function(e){return e.st?(e.row?'Sheets’te':e.u&&typeof qOf=='function'&&qOf(e.u)?'Sırada':'Yerel'):'Onay bekliyor'};

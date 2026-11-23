@@ -22,16 +22,16 @@ ORV.KAT=[
  {id:'home',ad:'Anasayfa',bolum:'fav',ikon:'ev',renk:['#ffc24a','#ff7a2f'],sinif:'ic-home',alt:[
   {id:'anasayfa',ad:'Anasayfa',renk:'#ffb020',hedef:function(){nav('home','gun',sel)}}]},
  {id:'aile',ad:'Ailem',bolum:'fav',ikon:'kalp',renk:['#ff9ad4','#e14fa0'],sinif:'ic-aile',alt:[
-  {id:'butce',ad:'Bütçe · Otto',kisa:'Bütçe',renk:'#ff9ad4',hedef:['team','calisan','otto']},
-  {id:'saglik',ad:'Sağlık · Iris',kisa:'Sağlık',renk:'#c4b5fd',hedef:['team','calisan','iris']},
-  {id:'market',ad:'Menü & Market · Marco',kisa:'Menü & Market',renk:'#fda4af',hedef:['team','calisan','marco']},
-  {id:'satinalma',ad:'Satın Alma · Nerya',kisa:'Satın Alma',renk:'#f9a8d4',hedef:['team','calisan','nerya']},
-  {id:'evisleri',ad:'Ev İşleri · Mia',kisa:'Ev İşleri',renk:'#e9d5ff',hedef:['cal','takvim','']}]},
+  {id:'butce',ad:'Bütçe',kisa:'Bütçe',renk:'#ff9ad4',hedef:['team','calisan','otto']},
+  {id:'saglik',ad:'Sağlık',kisa:'Sağlık',renk:'#c4b5fd',hedef:['team','calisan','iris']},
+  {id:'market',ad:'Menü & Market',kisa:'Menü & Market',renk:'#fda4af',hedef:['team','calisan','marco']},
+  {id:'satinalma',ad:'Satın Alma',kisa:'Satın Alma',renk:'#f9a8d4',hedef:['team','calisan','nerya']},
+  {id:'evisleri',ad:'Ev İşleri',kisa:'Ev İşleri',renk:'#e9d5ff',hedef:['cal','takvim','']}]},
  {id:'gorev',ad:'Görevler',bolum:'fav',ikon:'arti',renk:['#7cf096','#16a34a'],sinif:'ic-gorev',alt:[
   {id:'gorevler',ad:'Görevler',renk:'#7cf096',hedef:gGorev},
   {id:'onaylar',ad:'Onaylar',renk:'#ffc24a',hedef:['team','onaylar','']},
   {id:'gorseller',ad:'Görseller',renk:'#8ff3cf',hedef:['img','gorsel','']}]},
- {id:'ekip',ad:'Ekip',bolum:'fav',ikon:'kisi',renk:['#5fe0f5','#3b82f6'],sinif:'ic-ekip',meta:'Hiyerarşi',alt:[
+ {id:'ekip',ad:'Ekip',bolum:'alt',ikon:'kisi',renk:['#5fe0f5','#3b82f6'],sinif:'ic-ekip',meta:'Hiyerarşi',alt:[
   {id:'ekip',ad:'Ekip',renk:'#5fe0f5',hedef:gEkip},
   {id:'hiyerarsi',ad:'Hiyerarşi',renk:'var(--acc)',hedef:gHiy}]},
  {id:'merkez',ad:'Merkez',bolum:'fav',ikon:'zil',renk:['#c4b0ff','#7c3aed'],sinif:'ic-merkez',alt:[
@@ -145,13 +145,11 @@ function eskiH(){if(d.mod!='open'||!ORV.ESKI.length)return '';var acc=d.acc=='es
   (acc?'<div class="orv-accw">'+ORV.ESKI.map(function(x,i){return !d.q||trl2(x[0]).indexOf(d.q)>=0?'<button type="button" class="orv-sub eski" data-eski="'+i+'">'+E2(x[0])+'</button>':''}).join('')+'</div>':'')+'</div>'}
 function altH(){var s=durumSay(),api=ORV.apiDurum(),zpn=ORV.zpAktif();
  var f1=foto('orin'),f2=foto('orla'),f3=foto('echo'),im=function(u){return u?'<img class="stk" src="'+E2(u)+'" alt="">':'<span class="stk"></span>'};
- return '<div class="orv-mc"><span class="orv-onlydock orv-foto" title="Ekip durumu: '+s.h+' hazır">'+(f1?'<img src="'+E2(f1)+'" alt="">':'')+'<span class="orv-bdg" style="background:var(--hazir)">'+s.h+'</span></span>'+
-  '<div class="orv-onlyopen" style="display:flex;align-items:center;gap:12px"><span style="display:flex">'+im(f1)+im(f2)+im(f3)+'</span><span style="flex:1;display:flex;flex-direction:column;line-height:17px"><b style="font-size:13.5px;font-weight:600">Ekip durumu</b><span style="font-size:12px;color:var(--yazi2)">'+s.h+' hazır · '+s.c+' çalışıyor</span></span><span class="orv-sw" style="background:var(--hazir)"></span></div>'+
-  '<div class="orv-onlyopen orv-api'+(api.uyari?' uyari':'')+'"><span class="s1"><span>Bu ay API</span><b>'+usd(api.kul)+' / '+api.lim+' $</b></span><span class="bar08"><i style="width:'+api.yuzde+'%;background:'+(api.uyari?'#f5a524':'linear-gradient(90deg,#7cf096,#16a34a)')+'"></i></span><span class="s2">'+(api.uyari?'Uyarı: ':'')+'%90 sonrası yalnızca Echo çalışır</span></div></div>'+
+ return ORV.KAT.filter(function(k){return k.bolum=='alt'}).map(katH).join('')+
   '<button type="button" class="orv-it'+(d.zp?' act':'')+'" data-act="zp" aria-label="Zamanlanmış işler" aria-expanded="'+(d.zp?'true':'false')+'">'+ORV.ikon('kronometre',{renk:['#9fdcff','#38bdf8'],sinif:'ic-zp'}).replace('</svg></span>','</svg>'+(zpn>0?'<span class="orv-bdg" style="background:#38bdf8">'+zpn+'</span>':'')+'</span>')+'<span class="orv-lbl">Zamanlanmış işler</span><span class="orv-lbl orv-meta">'+zpn+' aktif</span></button>'+
   '<div class="orv-onlyopen orv-auto"><span>Otomatik daralt</span><button type="button" class="orv-tg'+(auto()?' on':'')+'" data-act="auto" role="switch" aria-checked="'+(auto()?'true':'false')+'" aria-label="Otomatik daraltmayı aç / kapat"><span></span></button></div>'+
   '<div class="orv-prow"><span class="orv-sq yuvarlak" style="--a:#ffc24a;--b:#ff7a2f"><span class="orv-mono"><i>Ç</i></span><span class="orv-on"></span></span><span class="orv-lbl t"><b>Çağlar</b><small>Sahip · Orvane</small></span></div></div>'}
-function navH(){var fav='',cal='';ORV.KAT.forEach(function(k){if(k.bolum=='fav')fav+=katH(k);else cal+=katH(k)});
+function navH(){var fav='',cal='';ORV.KAT.forEach(function(k){if(k.bolum=='fav')fav+=katH(k);else if(k.bolum!='alt')cal+=katH(k)});
  return '<button type="button" class="orv-chev orv-cam" data-act="chev" aria-label="Sekmeyi genişlet / daralt">'+ORV.svg('sag',14,2.4)+'</button>'+
   '<label class="orv-srch" data-act="srch"><span style="display:flex;flex:none">'+ORV.svg('ara',18,2.2)+'</span><input class="orv-lbl" type="search" placeholder="Ara" aria-label="Kategorilerde ara" value="'+E2(d.qr||'')+'" autocomplete="off"><span class="orv-lbl" style="font-size:11px;color:#8e8e95;flex:none">Ctrl K</span></label>'+
   '<div class="orv-scr">'+(fav?'<span class="orv-sec">FAVORİLER</span>'+fav:'')+(cal?'<span class="orv-sec">ÇALIŞMA</span>'+cal:'')+eskiH()+'</div>'+

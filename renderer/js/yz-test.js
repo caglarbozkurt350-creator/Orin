@@ -23,6 +23,7 @@ window.__manuelModTest=function(){var R=[];
   t('YZ: açıkken anahtar açık görünür',/aria-checked="true"/.test(k));
  }finally{arg=a0;if(bk===undefined)delete S.yzAcik;else S.yzAcik=bk}
  t('YZ: test sonrası ayar geri alındı',!yzKapali());
+ t('İş Günleri: Kayıt gir kartında gün türü listesi (Mazeret izni dahil)',function(){var h=OB.ozet();return /id="obKtur"/.test(h)&&/value="mazeret"/.test(h)&&typeof OB.turAta=='function'});
  var ad=['zeka:sor','isemri:gelistir','jarvis:sor','abonelik:calistir','apify:calisanlar'];
  return Promise.all(ad.map(function(c){return API.yz.dene(c)})).then(function(L){
   L.forEach(function(r,j){t('YZ: ana süreç '+ad[j]+' kapalıyken reddeder',r&&!r.ok&&/kapalı/.test(r.err),r&&r.err)});

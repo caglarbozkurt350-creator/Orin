@@ -55,6 +55,15 @@ export function uygula(o: Ozet, e: Olay) {
   } else if (e.tur === 'kayit') {
     const d = (o.gun[v.k] = o.gun[v.k] || { L: null, T: 0, OT: 0, e: [] });
     d.e.push([v.kod, v.is, v.dk]); d.T += v.dk;
+  } else if (e.tur === 'izin') {
+    // masaüstündeki OB.izKaydet ile aynı: yalnız iş günleri; başka türle dolu gün atlanır
+    const pa = (k: string) => { const a = k.split('-').map(Number); return new Date(a[0], a[1] - 1, a[2]); };
+    const son = pa(v.s || v.b);
+    for (let d = pa(v.b), n = 0; d <= son && n < 31; d.setDate(d.getDate() + 1), n++) {
+      const k = gunAnahtari(d), g = o.gun[k];
+      if (g ? !g.L || (g.D && g.D !== v.t) : d.getDay() === 0 || d.getDay() === 6) continue;
+      o.gun[k] = { ...(g || { L: null, T: 0, OT: 0, e: [] }), D: v.t };
+    }
   }
 }
 function gelisimUygula(o: Ozet, g: Gelisim, ts: number) {

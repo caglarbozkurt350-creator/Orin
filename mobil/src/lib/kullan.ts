@@ -9,7 +9,9 @@ export function useEkip() {
   const cevrim = !senk.hata;
   const durum = (c: Calisan): 'ok' | 'bz' | 'id' => (cevrim ? durumNoktasi(c, o) : 'id');
   const bul = (id: string) => hepsi.find((c) => c.id === id);
-  return { o, hepsi, senk, cevrim, durum, bul };
+  // Pasif ekip: yapay zekâ kapalıyken (manuel mod) persona isim/avatarları ana akışta görünmez
+  const pasif = o.zeka?.yz !== true;
+  return { o, hepsi, senk, cevrim, durum, bul, pasif };
 }
 
 /** "18 Kasım Çarşamba" gibi */

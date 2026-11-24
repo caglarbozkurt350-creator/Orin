@@ -11,24 +11,36 @@ import { Ailem, AileRayi } from '@/ekran/Ailem';
 import { Anasayfa } from '@/ekran/Anasayfa';
 import { EkipSekmesi } from '@/ekran/Ekip';
 import { GorevlerSekmesi } from '@/ekran/Gorevler';
+import { KayitSekmesi } from '@/ekran/Kayit';
 import { MerkezSekmesi } from '@/ekran/Merkez';
 import { useBildirimler } from '@/lib/bildirim';
-import { cagladaBekleyen } from '@/lib/ekip';
 import { menuAc, menuKapat, merkezAlt, sekmeGit, useGezinti } from '@/lib/gezinti';
 import { useEkip } from '@/lib/kullan';
 import { R, useGorunumAyari } from '@/lib/tema';
 
+/** Görevler ve onaylar: alt menüde yok (ortada + var); Anasayfa kartlarından açılır, üstte geri bağlantısı */
+function GorevSayfasi() {
+  return (
+    <View style={{ gap: 6 }}>
+      <Pressable onPress={() => sekmeGit(0)} accessibilityRole="button" accessibilityLabel="Anasayfaya dön" style={{ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44, alignSelf: 'flex-start', paddingRight: 12 }}>
+        <Ikon ad="sol" boy={20} renk={R.yazi} kalin={2.2} /><Text style={{ color: R.yazi, fontSize: 14, fontWeight: '600' }}>Anasayfa</Text>
+      </Pressable>
+      <GorevlerSekmesi />
+    </View>
+  );
+}
+
 let ACILDI = false; // açılış ekranı uygulama başına bir kez
 
-function Ust() {
+function Ust({ pasif }: { pasif: boolean }) {
   const ust = useSafeAreaInsets().top;
   return (
     <View style={{ position: 'absolute', left: 12, right: 12, top: ust + 8, height: 60, borderRadius: 22, flexDirection: 'row', alignItems: 'center', gap: 10, paddingLeft: 14, paddingRight: 8, backgroundColor: 'rgba(40,40,44,0.94)', borderWidth: 1, borderColor: R.camKenar, zIndex: 3 }}>
       <Logo boy={32} />
       <Text style={{ flex: 1, color: R.yazi, fontSize: 16, fontWeight: '700', letterSpacing: 5 }}>ORVANE</Text>
-      <Pressable onPress={() => menuAc()} accessibilityRole="button" accessibilityLabel="Çalışanlar menüsünü aç" style={({ pressed }) => ({ width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)', backgroundColor: 'rgba(255,255,255,0.05)', alignItems: 'center', justifyContent: 'center', transform: [{ scale: pressed ? 0.93 : 1 }] })}>
+      {!pasif && <Pressable onPress={() => menuAc()} accessibilityRole="button" accessibilityLabel="Çalışanlar menüsünü aç" style={({ pressed }) => ({ width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)', backgroundColor: 'rgba(255,255,255,0.05)', alignItems: 'center', justifyContent: 'center', transform: [{ scale: pressed ? 0.93 : 1 }] })}>
         <Ikon ad="ekip" boy={20} renk="#e9e9ec" kalin={2} />
-      </Pressable>
+      </Pressable>}
       <View accessible accessibilityLabel="Çağlar" style={{ width: 44, height: 44, borderRadius: 22, padding: 2, backgroundColor: R.ana }}>
         <View style={{ flex: 1, borderRadius: 22, backgroundColor: '#26262a', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: R.ana2, fontSize: 17, fontWeight: '800' }}>Ç</Text></View>
       </View>
@@ -50,7 +62,7 @@ function KenarOku() {
 
 export default function Kabuk() {
   const sekme = useGezinti((d) => d.sekme), yon = useGezinti((d) => d.yon), onizle = useGezinti((d) => d.onizle), menuAcik = useGezinti((d) => d.menu.acik), merkezIc = useGezinti((d) => d.merkezAlt);
-  const g = useGorunumAyari(), { o } = useEkip(), { okunmamis } = useBildirimler(), ins = useSafeAreaInsets();
+  const g = useGorunumAyari(), { pasif } = useEkip(), { okunmamis } = useBildirimler(), ins = useSafeAreaInsets();
   const [splash, setSplash] = useState(() => g.acilis && !ACILDI);
   const giris = useRef(new Animated.Value(1)).current;
 
@@ -75,7 +87,7 @@ export default function Kabuk() {
       : g.gecis === 'yakinlas' ? [{ scale: giris.interpolate({ inputRange: [0, 1], outputRange: [0.88, 1] }) }]
       : g.gecis === 'akiskan' ? [{ translateY: giris.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }, { scale: giris.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] }) }] : [],
   };
-  const SEKMELER = [<Anasayfa key="0" />, <Ailem key="1" />, <GorevlerSekmesi key="2" />, <EkipSekmesi key="3" />, <MerkezSekmesi key="4" />];
+  const SEKMELER = [<Anasayfa key="0" />, <Ailem key="1" />, <KayitSekmesi key="2" />, <EkipSekmesi key="3" />, <MerkezSekmesi key="4" />, <GorevSayfasi key="5" />];
   return (
     <View style={{ flex: 1, backgroundColor: R.zemin }}>
       {/* tema değişince bütün görünüm yeni vurgu rengiyle yeniden kurulur; sekme ve menü durumu gezinti deposunda korunur */}
@@ -87,9 +99,9 @@ export default function Kabuk() {
             {SEKMELER[sekme]}
           </ScrollView>
         </Animated.View>
-        <Ust />
-        {sekme === 1 ? <AileRayi /> : <KenarOku />}
-        <AltMenu sekme={sekme} git={(i) => sekmeGit(i, i === 4 ? { merkez: '' } : undefined)} onay={cagladaBekleyen(o).length} bildirim={okunmamis > 0} />
+        <Ust pasif={pasif} />
+        {pasif ? null : sekme === 1 ? <AileRayi /> : <KenarOku />}
+        <AltMenu sekme={sekme} git={(i) => sekmeGit(i, i === 4 ? { merkez: '' } : undefined)} bildirim={okunmamis > 0} />
         <CalisanMenusu />
       </View>
       {splash && <Acilis bitti={() => { ACILDI = true; setSplash(false); }} />}

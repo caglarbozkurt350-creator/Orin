@@ -23,7 +23,7 @@ export default function InsanKaynaklari() {
     <Ekran geri baslik={<Text style={{ color: R.yazi, fontSize: 17, fontWeight: '600' }}>İnsan Kaynakları</Text>} sag={<Foto c={hepsi.find((c) => c.id === 'nika')} boy={34} />}>
       <ScrollView contentContainerStyle={{ padding: 16, gap: 6, paddingBottom: 30 }}>
         {cagladaBekleyen(o).length > 0 && (
-          <Pressable onPress={() => { sekmeGit(2, { gorev: 'onay' }); router.back(); }} style={{ backgroundColor: 'rgba(245,165,36,0.1)', borderWidth: 1, borderColor: 'rgba(245,165,36,0.4)', borderRadius: 14, padding: 12, marginBottom: 6 }}>
+          <Pressable onPress={() => { sekmeGit(5, { gorev: 'onay' }); router.back(); }} style={{ backgroundColor: 'rgba(245,165,36,0.1)', borderWidth: 1, borderColor: 'rgba(245,165,36,0.4)', borderRadius: 14, padding: 12, marginBottom: 6 }}>
             <Text style={{ color: R.turuncu, fontSize: 13.5, fontWeight: '600' }}>{cagladaBekleyen(o).length} gelişim talebi senin onayını bekliyor · Onaylar’a git ›</Text>
           </Pressable>
         )}

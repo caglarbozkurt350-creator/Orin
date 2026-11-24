@@ -46,7 +46,7 @@ var top=a.slice(0,3),rest=a.slice(3).reduce(function(t,x){return t+k[x].usd},0),
 var _zkCh=tmCharts;tmCharts=function(c){if(c.id=='orin'&&!(c.grafikler&&c.grafikler.length))c=Object.assign({},c,{grafikler:['harcama','harcamaKisi',{t:'Alan grafiği',s:'tasarım bekleniyor'}]});return _zkCh(c)};
 var _zkMs=tmMsgs;tmMsgs=function(c){var h=_zkMs(c);if(zekaHazir()){h=h.replace(/Yapay zekâ bağlı değil · (\d+) mesaj cevap bekliyor\. Bağlantı kurulunca [^<]+ cevaplayacak\./,'$1 mesaj cevap bekliyor'+(ZK.hata?' · '+esc(ZK.hata):'')+(/kredi/i.test(ZK.hata)?' <button class="bt p" style="min-height:30px;padding:4px 12px;margin-left:8px" onclick="zekaConsole(\'kredi\')">Kredi yükle</button>':'')+' <button class="bt" style="min-height:30px;padding:4px 12px;margin-left:8px" onclick="zekaCevapla(\''+jq(c.id)+'\')">Şimdi cevapla</button>')}
 if(ZK.yaz[c.id])h=h.replace(/<\/div>$/,'<div class="mr l">'+av(c,32)+'<div style="flex:1"><div class="who">'+esc(c.ad)+'</div><div class="bo" style="color:#8e8e95">yazıyor…</div></div></div></div>');return h};
-if(typeof bulutOzet=='function'){var _zkOz=bulutOzet;bulutOzet=function(){var o=_zkOz(),s=ZK.st;o.zeka={bagli:!!(s&&s.anahtar),usd:s?Math.round(s.harcama.usd*1000)/1000:0,butce:s?s.butce:0};return o}}
+if(typeof bulutOzet=='function'){var _zkOz=bulutOzet;bulutOzet=function(){var o=_zkOz(),s=ZK.st;o.zeka={bagli:!!(s&&s.anahtar),usd:s?Math.round(s.harcama.usd*1000)/1000:0,butce:s?s.butce:0,yz:!yzKapali()};return o}}
 // Telefondan gelen cevap bekleyen mesajlar: bilgisayar açıkken cevaplanır
 if(typeof bulutUygula=='function'){var _zkBu=bulutUygula;bulutUygula=function(e){_zkBu(e);if(e.tur=='mesaj'&&e.veri&&e.veri.bek&&e.veri.mod!='not'&&zekaHazir())setTimeout(function(){zekaCevapla(e.veri.kim)},300)}}
 

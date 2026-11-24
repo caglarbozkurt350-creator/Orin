@@ -5,23 +5,26 @@ import { useSyncExternalStore } from 'react';
 export type Kip = 'gorev' | 'mesaj' | 'not' | 'tg';
 type Durum = {
   sekme: number; yon: 'r' | 'l';
-  gorevBolum: 'gorev' | 'onay' | 'gorsel'; ekipBolum: 'ekip' | 'hiyer'; merkezAlt: '' | 'gun' | 'izin';
+  gorevBolum: 'gorev' | 'onay' | 'gorsel'; kayitBolum: 'gun' | 'izin'; ekipBolum: 'ekip' | 'hiyer'; merkezAlt: '' | 'gun' | 'izin';
   menu: { acik: boolean; sec: string | null; kip: Kip | null; artir: number };
   aile: { fam: string | null; ray: boolean };
   onizle: number;
 };
-let D: Durum = { sekme: 0, yon: 'r', gorevBolum: 'gorev', ekipBolum: 'ekip', merkezAlt: '', menu: { acik: false, sec: null, kip: null, artir: 0 }, aile: { fam: 'mia', ray: true }, onizle: 0 };
+let D: Durum = { sekme: 0, yon: 'r', gorevBolum: 'gorev', kayitBolum: 'gun', ekipBolum: 'ekip', merkezAlt: '', menu: { acik: false, sec: null, kip: null, artir: 0 }, aile: { fam: 'mia', ray: true }, onizle: 0 };
 const dn = new Set<() => void>();
 const yay = () => dn.forEach((f) => f());
 export const gezinti = () => D;
 export function useGezinti<T>(sec: (d: Durum) => T): T { return useSyncExternalStore((cb) => { dn.add(cb); return () => { dn.delete(cb); }; }, () => sec(D)); }
 function koy(y: Partial<Durum>) { D = { ...D, ...y }; yay(); }
 
-export function sekmeGit(i: number, o?: { gorev?: Durum['gorevBolum']; ekip?: Durum['ekipBolum']; merkez?: Durum['merkezAlt'] }) {
-  koy({ sekme: i, yon: i >= D.sekme ? 'r' : 'l', ...(o?.gorev ? { gorevBolum: o.gorev } : {}), ...(o?.ekip ? { ekipBolum: o.ekip } : {}), ...(o?.merkez !== undefined ? { merkezAlt: o.merkez } : {}) });
+/** Sekmeler: 0 Anasayfa · 1 Ailem · 2 Kayıt (ortadaki +: iş günü / izin) · 3 Ekip · 4 Merkez · 5 Görevler ve onaylar (alt menüde yok; Anasayfa kartlarından açılır) */
+export const SEKME_GOREV = 5;
+export function sekmeGit(i: number, o?: { gorev?: Durum['gorevBolum']; kayit?: Durum['kayitBolum']; ekip?: Durum['ekipBolum']; merkez?: Durum['merkezAlt'] }) {
+  koy({ sekme: i, yon: i >= D.sekme ? 'r' : 'l', ...(o?.gorev ? { gorevBolum: o.gorev } : {}), ...(o?.kayit ? { kayitBolum: o.kayit } : {}), ...(o?.ekip ? { ekipBolum: o.ekip } : {}), ...(o?.merkez !== undefined ? { merkezAlt: o.merkez } : {}) });
 }
 export const gorevBolumu = (b: Durum['gorevBolum']) => koy({ gorevBolum: b });
-export const ekipBolumu = (b: Durum['ekipBolum']) => koy({ ekipBolum: b });
+export const kayitBolumu = (b: Durum['kayitBolum']) => koy({ kayitBolum: b });
+export const ekipBolumu =(b: Durum['ekipBolum']) => koy({ ekipBolum: b });
 export const merkezAlt = (b: Durum['merkezAlt']) => koy({ merkezAlt: b });
 
 /** Sağ çalışan menüsünü açar; id verilirse o çalışan açık gelir (Ağaç, Ekip ızgarası, Ailem rayı) */

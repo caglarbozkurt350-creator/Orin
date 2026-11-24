@@ -11,10 +11,10 @@ import { saatYazi, useEkip } from '@/lib/kullan';
 import { R, saydam } from '@/lib/tema';
 
 export function EkipSekmesi() {
-  const bolum = useGezinti((d) => d.ekipBolum), { hepsi } = useEkip();
+  const bolum = useGezinti((d) => d.ekipBolum), { hepsi, pasif } = useEkip();
   return (
     <View style={{ gap: 14 }}>
-      <SayfaBasligi ust={hepsi.length + ' yapay zekâ çalışanı'} baslik={bolum === 'ekip' ? 'Ekip' : 'Hiyerarşi'} />
+      <SayfaBasligi ust={pasif ? 'Yapay zekâ kapalı · manuel mod' : hepsi.length + ' yapay zekâ çalışanı'} baslik={bolum === 'ekip' ? 'Ekip' : 'Hiyerarşi'} />
       <Bolumler secenek={[['ekip', 'Ekip'], ['hiyer', 'Hiyerarşi']]} deger={bolum} sec={ekipBolumu} />
       {bolum === 'ekip' ? <EkipIzgara /> : <Hiyerarsi />}
     </View>
@@ -22,27 +22,42 @@ export function EkipSekmesi() {
 }
 
 function EkipIzgara() {
-  const { o, hepsi, durum, cevrim } = useEkip(), [q, setQ] = useState('');
-  const sz = q.trim().toLocaleLowerCase('tr'), gor = hepsi.filter((c) => !sz || (c.ad + ' ' + c.gorev).toLocaleLowerCase('tr').includes(sz));
+  const { o, hepsi, durum, cevrim, pasif } = useEkip(), [q, setQ] = useState('');
+  const sz = q.trim().toLocaleLowerCase('tr'), gor = hepsi.filter((c) => !sz || (c.ad + ' ' + c.gorev + ' ' + (KISA[c.id] || '')).toLocaleLowerCase('tr').includes(sz));
   const onay = cagladaBekleyen(o).length;
   const yazisma = hepsi.map((c) => { const a = o.ekip.sohbet[c.id] || [], son = [...a].reverse().find((m) => m.r !== 'sys'); return { c, son }; }).filter((x) => x.son).sort((a, b) => (b.son?.ts || 0) - (a.son?.ts || 0)).slice(0, 6);
   return (
     <View style={{ gap: 14 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, height: 44, paddingHorizontal: 16, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.07)', borderWidth: 1, borderColor: R.camKenar }}>
         <Ikon ad="ara" boy={18} renk={R.soluk} />
-        <TextInput value={q} onChangeText={setQ} placeholder="Çalışan ara" placeholderTextColor={R.soluk} style={{ flex: 1, color: '#fff', fontSize: 14, paddingVertical: 0 }} accessibilityLabel="Çalışan ara" />
+        <TextInput value={q} onChangeText={setQ} placeholder={pasif ? 'İşlev ara' : 'Çalışan ara'} placeholderTextColor={R.soluk} style={{ flex: 1, color: '#fff', fontSize: 14, paddingVertical: 0 }} accessibilityLabel="Çalışan ara" />
       </View>
       <Pressable onPress={() => router.push('/ik' as any)} accessibilityRole="button" style={({ pressed }) => [s.cam, { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 18, transform: [{ scale: pressed ? 0.97 : 1 }] }]}>
         <View style={{ width: 40, height: 40, borderRadius: 13, backgroundColor: R.ikBas, alignItems: 'center', justifyContent: 'center' }}><Ikon ad="kart" boy={20} renk="#fff" kalin={1.9} /></View>
-        <View style={{ flex: 1 }}><Text style={{ color: R.yazi, fontSize: 15, fontWeight: '600' }}>İnsan Kaynakları</Text><Text style={s.sub}>Çalışan kartları · Nika</Text></View>
-        {onay > 0 ? <Pressable onPress={() => sekmeGit(2, { gorev: 'onay' })} accessibilityLabel={onay + ' onay bekliyor'} hitSlop={8}><Hap yazi={onay + ' onay bekliyor'} t="o" /></Pressable> : <Hap yazi={String(hepsi.length)} />}
+        <View style={{ flex: 1 }}><Text style={{ color: R.yazi, fontSize: 15, fontWeight: '600' }}>İnsan Kaynakları</Text><Text style={s.sub}>{pasif ? 'Çalışan kartları' : 'Çalışan kartları · Nika'}</Text></View>
+        {onay > 0 ? <Pressable onPress={() => sekmeGit(5, { gorev: 'onay' })} accessibilityLabel={onay + ' onay bekliyor'} hitSlop={8}><Hap yazi={onay + ' onay bekliyor'} t="o" /></Pressable> : <Hap yazi={String(hepsi.length)} />}
       </Pressable>
       {!o.ts && (
         <Pressable onPress={() => sekmeGit(4, { merkez: '' })} style={{ flexDirection: 'row', gap: 10, alignItems: 'center', backgroundColor: saydam(R.ana, 0.08), borderWidth: 1, borderColor: saydam(R.ana, 0.3), borderRadius: 14, padding: 12 }}>
           <Ikon ad="bilgi" boy={18} renk={R.bilgi} /><Text style={{ flex: 1, color: R.bilgi, fontSize: 13, lineHeight: 18 }}>Masaüstü Orvane ile henüz eşitlenmedi. Merkez › Eşitleme’den giriş yap; görevler, sohbetler ve iş günü kayıtları buraya gelir.</Text>
         </Pressable>
       )}
-      <View style={[s.cam, { flexDirection: 'row', flexWrap: 'wrap', rowGap: 16 }]}>
+      {pasif ? (
+        // Pasif: sade liste — önce işlev, isim gri ve ikinci planda
+        <View style={[s.cam, { padding: 8, borderRadius: 20, gap: 2 }]}>
+          {gor.map((c) => (
+            <View key={c.id} accessible accessibilityLabel={(KISA[c.id] || c.gorev) + ', ' + c.ad + ', kapalı'} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingHorizontal: 8 }}>
+              <View style={{ width: 34, height: 34, borderRadius: 11, backgroundColor: 'rgba(255,255,255,0.07)', alignItems: 'center', justifyContent: 'center' }}><Ikon ad="kisi" boy={17} renk={R.yazi2} kalin={2} /></View>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text numberOfLines={1} style={{ color: R.yazi, fontSize: 14, fontWeight: '600' }}>{KISA[c.id] || c.gorev}</Text>
+                <Text numberOfLines={1} style={{ color: R.soluk, fontSize: 12 }}>{c.ad}</Text>
+              </View>
+              <Hap yazi="Kapalı" />
+            </View>
+          ))}
+          {!gor.length && <Text style={[s.soluk, { padding: 8 }]}>Sonuç yok</Text>}
+        </View>
+      ) : <View style={[s.cam, { flexDirection: 'row', flexWrap: 'wrap', rowGap: 16 }]}>
         {gor.map((c) => (
           <Pressable key={c.id} onPress={() => menuAc(c.id)} accessibilityRole="button" accessibilityLabel={c.ad + ', ' + c.gorev} style={({ pressed }) => ({ width: '25%', alignItems: 'center', gap: 6, transform: [{ scale: pressed ? 0.93 : 1 }] })}>
             <Avatar c={c} boy={52} durum={durum(c)} />
@@ -51,8 +66,8 @@ function EkipIzgara() {
           </Pressable>
         ))}
         {!gor.length && <Text style={[s.soluk, { padding: 8 }]}>Çalışan bulunamadı</Text>}
-      </View>
-      {yazisma.length > 0 && (
+      </View>}
+      {!pasif && yazisma.length > 0 && (
         <View style={{ gap: 4 }}>
           <Text style={s.bolum}>SON YAZIŞMALAR</Text>
           {yazisma.map(({ c, son }) => (

@@ -18,7 +18,13 @@ else if(e.tur=='gelisim_karar'){var x=T.gel.filter(function(y){return y.id==v.id
 if(v.asama=='ik'){x.ik={ts:e.ts,ok:v.ok?1:0};x.asama=v.ok?tmGelSonraki(x):'red'}else if(v.asama=='orin'){x.orin={ts:e.ts,ok:v.ok?1:0,kim:'cagla'};x.asama=v.ok?'ceo':'red'}else{x.ceo={ts:e.ts,ok:v.ok?1:0};x.asama=v.ok?'tamam':'red';if(v.ok)tmGelApply(x)}}
 else if(e.tur=='telegram'){if(!window.OA||!v.kim)return;var tga=OA.st();if(tga.tg.some(function(x){return x.eid==e.id}))return;tga.tg.push({id:uid(),eid:e.id,kim:v.kim,bot:v.bot||'',metin:String(v.t||''),ts:e.ts,durum:'sirada',kaynak:'telefon'});if(tga.tg.length>200)tga.tg.splice(0,tga.tg.length-200)}
 else if(e.tur=='kayit'){var k=v.k;if(!k||!v.kod||!v.dk)return;var en={k:String(v.kod),i:String(v.is||''),d:+v.dk,st:1,u:uid(),src:'telefon',pid:e.id};
-if((E[k]||[]).some(function(z){return z.pid==e.id}))return;(E[k]=E[k]||[]).push(en);entryAdded(k,en)}}
+if((E[k]||[]).some(function(z){return z.pid==e.id}))return;(E[k]=E[k]||[]).push(en);entryAdded(k,en)}
+else if(e.tur=='izin'){var tur=v.t;if(!v.b||!tur||!IZL[tur])return;var d=pk(v.b),son=pk(v.s||v.b),n=0;if(isNaN(d)||isNaN(son))return;
+ while(d<=son&&n<31){var gk=key(d);d.setDate(d.getDate()+1);n++;if(!lim(gk))continue;if(D[gk]&&D[gk]!=tur)continue;
+  if(tur=='refakat'&&D[gk]!='refakat'&&refUsed(pk(gk).getFullYear())>=S.ref)continue;
+  var v2=tur;if(v2=='rapor13'){var c=0,p=gk;while((p=prevWork(p))&&(D[p]=='rapor13'||D[p]=='rapor4'))c++;if(c>=S.rap-1)v2='rapor4'}
+  var was=D[gk];D[gk]=v2;if((IZL[was]||IZL[v2])&&was!==v2)dayTypeChanged(gk);
+  if(v.a&&window.OB){var b2=OB.st();b2.izinNot=b2.izinNot||{};b2.izinNot[gk]=String(v.a)}}}}
 
 // ---------- Telefona gidecek özet ----------
 function bulutOzet(){var T=TMS(),so={},gun={},sy={};

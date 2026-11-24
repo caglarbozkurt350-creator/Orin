@@ -16,7 +16,8 @@ export type Ozet = {
   v: 1; ts: number; olaySira: number;
   ekip: { m: Record<string, Uye>; gorev: Gorev[]; gel: Gelisim[]; sohbet: Record<string, Mesaj[]> };
   gun: Record<string, Gun>; proj: string[]; ayar: { w1: number; w2: number }; bugun?: string;
-  zeka?: { bagli: boolean; usd: number; butce: number };
+  /** yz: masaüstünde yapay zekâ çalışanları açık mı (manuel mod varsayılan; alan yoksa kapalı sayılır) */
+  zeka?: { bagli: boolean; usd: number; butce: number; yz?: boolean };
 };
 export type Olay = { id: string; tur: string; veri: any; ts: number; sira?: number; gitti?: boolean };
 export type Durum = {

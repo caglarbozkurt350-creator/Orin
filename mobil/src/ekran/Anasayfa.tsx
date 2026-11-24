@@ -4,9 +4,9 @@ import { useEffect, useRef } from 'react';
 import { Animated, Easing, Pressable, Text, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { Bos } from '@/bilesen/formlar';
-import { Avatar, Dugme, Foto, Hap, KartK, SayfaBasligi, s } from '@/bilesen/ortak';
+import { Avatar, Dugme, Foto, Hap, Ikon, KartK, SayfaBasligi, s } from '@/bilesen/ortak';
 import { cagladaBekleyen, gunAnahtari } from '@/lib/ekip';
-import { depAdi } from '@/lib/ekipMeta';
+import { depAdi, KISA } from '@/lib/ekipMeta';
 import { sekmeGit } from '@/lib/gezinti';
 import { bugunYazi, useEkip } from '@/lib/kullan';
 import { R, saydam } from '@/lib/tema';
@@ -31,7 +31,7 @@ function Gosterge({ etiket, deger, kucuk, hap, onPress }: { etiket: string; dege
 const KISA_DEP: Record<string, string> = { 'YÖNETİM': 'Yönetim', 'AİLE': 'Aile', 'İŞ': 'İş', 'PLAN & İLETİŞİM': 'Plan', 'TEKNİK': 'Teknik', 'ORTAK SERVİS': 'Servis', DİĞER: 'Diğer' };
 
 export function Anasayfa() {
-  const { o, hepsi, durum, cevrim, senk } = useEkip();
+  const { o, hepsi, durum, cevrim, senk, pasif } = useEkip();
   const onay = cagladaBekleyen(o).length;
   const say = { ok: 0, bz: 0, id: 0 };
   hepsi.forEach((c) => { say[durum(c)]++; });
@@ -53,19 +53,34 @@ export function Anasayfa() {
   const GK = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'];
   const gunOzet = !o.ts ? 'Eşitlenmedi' : bg?.D ? 'Bugün izinli' : bH ? 'Bugün ' + (bg?.T || 0) + ' / ' + bH + ' dk' : 'Bugün iş süresi yok';
   const gorevler = acik.slice().sort((a, b) => Number(b.onc === 'acil') - Number(a.onc === 'acil') || b.ts - a.ts).slice(0, 4);
+  // Pasif (manuel mod) göstergeleri: bu haftanın dakikası ve önümüzdeki 14 gündeki izin günleri
+  let hT = 0, hH = 0;
+  hafta.forEach((d) => { const g = o.gun[gunAnahtari(d)]; if (g && !g.D) { hT += g.T || 0; hH += (g.L || 0) + (g.OT || 0); } });
+  const yakinIzin = [...Array(14)].map((_, i) => { const d = new Date(); d.setDate(d.getDate() + i); return o.gun[gunAnahtari(d)]?.D; }).filter(Boolean).length;
   return (
     <View style={{ gap: 14 }}>
       <SayfaBasligi ust={bugunYazi()} baslik="Merhaba Çağlar" sag={<View style={{ marginBottom: 4 }}><Hap yazi={senk.calisiyor ? 'Eşitleniyor' : cevrim ? 'Çevrimiçi' : 'Çevrimdışı'} t={cevrim ? 'g' : 'o'} /></View>} />
-      <View style={{ flexDirection: 'row', gap: 10 }}>
-        <Gosterge etiket="Hazır çalışan" deger={String(say.ok)} kucuk={'/' + hepsi.length} hap={<Hap yazi={say.bz + ' görevde'} t="g" />} onPress={() => sekmeGit(3, { ekip: 'ekip' })} />
-        <Gosterge etiket="Bekleyen onay" deger={String(onay)} hap={<Hap yazi={onay ? 'Onayla →' : 'Bekleyen yok'} t={onay ? 'o' : 'n'} />} onPress={() => sekmeGit(2, { gorev: 'onay' })} />
-      </View>
-      <View style={{ flexDirection: 'row', gap: 10 }}>
-        <Gosterge etiket="Açık görev" deger={String(acik.length)} hap={<Hap yazi={acil ? acil + ' acil' : 'acil yok'} t={acil ? 'o' : 'n'} />} onPress={() => sekmeGit(2, { gorev: 'gorev' })} />
-        <Gosterge etiket="API · bu ay" deger={o.zeka?.bagli ? '$' + o.zeka.usd.toFixed(2).replace('.', ',') : '—'} kucuk={o.zeka?.bagli ? ' / ' + o.zeka.butce + ' $' : undefined} hap={<Hap yazi={o.zeka?.bagli ? '%90’da Echo’ya ayrılır' : 'Claude bağlı değil'} t="n" />} onPress={() => sekmeGit(4, { merkez: '' })} />
-      </View>
+      {pasif ? (<>
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <Gosterge etiket="Bekleyen onay" deger={String(onay)} hap={<Hap yazi={onay ? 'Onayla →' : 'Bekleyen yok'} t={onay ? 'o' : 'n'} />} onPress={() => sekmeGit(5, { gorev: 'onay' })} />
+          <Gosterge etiket="Açık görev" deger={String(acik.length)} hap={<Hap yazi={acil ? acil + ' acil' : 'acil yok'} t={acil ? 'o' : 'n'} />} onPress={() => sekmeGit(5, { gorev: 'gorev' })} />
+        </View>
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <Gosterge etiket="Bu hafta" deger={String(hT)} kucuk={hH ? ' / ' + hH + ' dk' : ' dk'} hap={<Hap yazi={hH && hT >= hH ? 'Tamam' : 'Kayıt ekle →'} t={hH && hT >= hH ? 'g' : 'o'} />} onPress={() => sekmeGit(2, { kayit: 'gun' })} />
+          <Gosterge etiket="İzin · 14 gün" deger={String(yakinIzin)} kucuk=" gün" hap={<Hap yazi="İzin gir →" t="r" />} onPress={() => sekmeGit(2, { kayit: 'izin' })} />
+        </View>
+      </>) : (<>
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <Gosterge etiket="Hazır çalışan" deger={String(say.ok)} kucuk={'/' + hepsi.length} hap={<Hap yazi={say.bz + ' görevde'} t="g" />} onPress={() => sekmeGit(3, { ekip: 'ekip' })} />
+          <Gosterge etiket="Bekleyen onay" deger={String(onay)} hap={<Hap yazi={onay ? 'Onayla →' : 'Bekleyen yok'} t={onay ? 'o' : 'n'} />} onPress={() => sekmeGit(5, { gorev: 'onay' })} />
+        </View>
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <Gosterge etiket="Açık görev" deger={String(acik.length)} hap={<Hap yazi={acil ? acil + ' acil' : 'acil yok'} t={acil ? 'o' : 'n'} />} onPress={() => sekmeGit(5, { gorev: 'gorev' })} />
+          <Gosterge etiket="API · bu ay" deger={o.zeka?.bagli ? '$' + o.zeka.usd.toFixed(2).replace('.', ',') : '—'} kucuk={o.zeka?.bagli ? ' / ' + o.zeka.butce + ' $' : undefined} hap={<Hap yazi={o.zeka?.bagli ? '%90’da Echo’ya ayrılır' : 'Claude bağlı değil'} t="n" />} onPress={() => sekmeGit(4, { merkez: '' })} />
+        </View>
+      </>)}
 
-      <KartK ad="donut" baslik="EKİP DURUMU" ozet={say.ok + ' hazır · ' + say.bz + ' görevde'}>
+      {!pasif && <KartK ad="donut" baslik="EKİP DURUMU" ozet={say.ok + ' hazır · ' + say.bz + ' görevde'}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18 }}>
           <View style={{ width: 132, height: 132 }}>
             <Svg width={132} height={132} viewBox="0 0 132 132" style={{ transform: [{ rotate: '-90deg' }] }}>
@@ -84,9 +99,9 @@ export function Anasayfa() {
         </View>
         {aktifler.length ? <View style={{ flexDirection: 'row', gap: 6 }}>{aktifler.map((c) => <Avatar key={c.id} c={c} boy={40} durum={durum(c)} />)}</View>
           : <Text style={s.soluk}>Şu an hazır ya da görevde çalışan yok. Çalışanlar bilgisayardaki Orvane görev verdiğinde burada görünür.</Text>}
-      </KartK>
+      </KartK>}
 
-      <KartK ad="dep" baslik="DEPARTMANLAR" ozet={depL.length + ' departman · ' + hepsi.length + ' çalışan'}>
+      {!pasif && <KartK ad="dep" baslik="DEPARTMANLAR" ozet={depL.length + ' departman · ' + hepsi.length + ' çalışan'}>
         <View style={{ flexDirection: 'row', alignItems: 'flex-end', height: 150, paddingTop: 8, gap: 8 }}>
           {depL.map(([k, n], i) => (
             <View key={k} style={{ flex: 1, height: '100%', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
@@ -96,15 +111,16 @@ export function Anasayfa() {
             </View>
           ))}
         </View>
-      </KartK>
+      </KartK>}
 
-      <KartK ad="gorev" baslik="BUGÜNKÜ GÖREVLER" ozet={acik.length + ' açık görev'} sag={<Pressable onPress={() => sekmeGit(2, { gorev: 'gorev' })} accessibilityRole="button" style={{ height: 32, paddingHorizontal: 12, borderRadius: 16, backgroundColor: saydam(R.ana, 0.16), justifyContent: 'center' }}><Text style={{ color: R.ana2, fontSize: 12, fontWeight: '600' }}>Tümü</Text></Pressable>}>
+      <KartK ad="gorev" baslik="BUGÜNKÜ GÖREVLER" ozet={acik.length + ' açık görev'} sag={<Pressable onPress={() => sekmeGit(5, { gorev: 'gorev' })} accessibilityRole="button" style={{ height: 32, paddingHorizontal: 12, borderRadius: 16, backgroundColor: saydam(R.ana, 0.16), justifyContent: 'center' }}><Text style={{ color: R.ana2, fontSize: 12, fontWeight: '600' }}>Tümü</Text></Pressable>}>
         {gorevler.length ? gorevler.map((g) => {
           const c = hepsi.find((x) => x.id === g.kim);
           return (
             <View key={g.id} style={s.satir}>
-              <Foto c={c} boy={36} halka={false} />
-              <View style={{ flex: 1, gap: 2 }}><Text numberOfLines={2} style={{ color: R.yazi, fontSize: 14, fontWeight: '600' }}>{g.metin}</Text><Text style={s.sub}>{c?.ad}{g.son ? ' · ' + g.son : ''}</Text></View>
+              {pasif ? <View style={{ width: 36, height: 36, borderRadius: 11, backgroundColor: 'rgba(255,255,255,0.07)', alignItems: 'center', justifyContent: 'center' }}><Ikon ad="gorev" boy={18} renk={R.yazi2} kalin={2} /></View>
+                : <Foto c={c} boy={36} halka={false} />}
+              <View style={{ flex: 1, gap: 2 }}><Text numberOfLines={2} style={{ color: R.yazi, fontSize: 14, fontWeight: '600' }}>{g.metin}</Text><Text style={s.sub}>{pasif ? KISA[g.kim] || 'Görev' : c?.ad}{g.son ? ' · ' + g.son : ''}</Text></View>
               <Hap yazi={g.onc === 'acil' ? 'Acil' : g.durum === 'calisiyor' ? 'Çalışıyor' : 'Bekliyor'} t={g.onc === 'acil' ? 'r' : g.durum === 'calisiyor' ? 'g' : 'o'} />
             </View>
           );
@@ -127,7 +143,7 @@ export function Anasayfa() {
           })}
         </View>
         <Text style={s.sub}>{o.ts ? (bH ? 'Bugün ' + (bg?.T || 0) + ' dk girildi, ' + Math.max(0, bH - (bg?.T || 0)) + ' dk kaldı.' : bg?.D ? 'Bugün izin günü, tam gün sayılır.' : 'Bugün için iş süresi yok.') : 'Masaüstü Orvane ile eşitlenince bu haftanın kayıtları burada görünür.'}</Text>
-        <Dugme yazi="İş günü gir" onPress={() => sekmeGit(4, { merkez: 'gun' })} />
+        <Dugme yazi="İş günü gir" onPress={() => sekmeGit(2, { kayit: 'gun' })} />
       </KartK>
     </View>
   );

@@ -33,6 +33,13 @@ window.__menuPlanTest=function(){var R=[];
   var tik=L.filter(function(x){return !x.dolap})[0];t('Market listesine ekle: işaretlenen ve dolaptakiler hariç',n>0&&a.market.length==n0+n&&!a.market.slice(n0).some(function(x){return x.ad.indexOf(tik.ad+' · ')===0||dl.some(function(d){return x.ad.indexOf(d.ad+' · ')===0})}),n+' / '+L.length);
   t('Market listesine ekle: ikinci kez eklemez',MP.marketeEkle()===0);
   t('Haftalık menüye aktar: öğle ve akşam',MP.menuyeAktar()==14&&!!a.menu['0-ogle']&&!!a.menu['6-aksam']);
+  // 0.8.5 · telefondan izin olayı ve yz bayrağı
+  (function(){var d=pk(TODAY),g=[];d.setDate(d.getDate()+40);while(g.length<2){var k=key(d);if(lim(k)&&!D[k]&&!(E[k]||[]).length)g.push(k);else if(g.length){g=[]}d.setDate(d.getDate()+1)}
+   var dc=window.dayTypeChanged,kopya={};dayTypeChanged=function(){};
+   try{bulutUygula({id:'t-iz',tur:'izin',veri:{t:'yillik',b:g[0],s:g[1]}});bulutUygula({id:'t-iz2',tur:'izin',veri:{t:'uydurma',b:g[0]}});
+    t('Telefon izni: iş günlerine yıllık izin işlenir, bilinmeyen tür yok sayılır',D[g[0]]=='yillik'&&D[g[1]]=='yillik',JSON.stringify([D[g[0]],D[g[1]]]))}
+   finally{delete D[g[0]];delete D[g[1]];dayTypeChanged=dc}
+   t('Telefon özeti: yz bayrağı manuel modu bildirir',typeof bulutOzet!='function'||bulutOzet().zeka.yz===!yzKapali())})();
  }finally{ORV.yenile=yen;if(mp0===undefined)delete a.mplan;else a.mplan=mp0;a.menu=JSON.parse(menu0);a.market=JSON.parse(mk0);MP.ui=JSON.parse(ui0)}
  return Promise.resolve(R)};
 (function(){var a=window.__asyncTest;window.__asyncTest=function(){return (a?a():Promise.resolve([])).then(function(x){var y;try{y=window.__menuPlanTest()}catch(e){y=Promise.resolve([{n:'Menü: test çöktü',ok:false,m:String(e&&e.message||e)}])}return y.then(function(y){return x.concat(y)})})}})();

@@ -9,7 +9,7 @@ import { AltPencere, FinansFormu, GorevFormu } from '@/bilesen/formlar';
 import { Avatar, Dugme, Foto, Ikon, KartK, SayfaBasligi, s } from '@/bilesen/ortak';
 import { aciklama } from '@/lib/ekip';
 import { KISA } from '@/lib/ekipMeta';
-import { aileSec, rayDegis, useGezinti } from '@/lib/gezinti';
+import { aileSec, rayDegis, sekmeGit, useGezinti } from '@/lib/gezinti';
 import { useEkip } from '@/lib/kullan';
 import { R, saydam } from '@/lib/tema';
 
@@ -30,11 +30,22 @@ const ISLER: Record<string, string> = {
   remy: 'Takvim ve hatırlatmalar; Bozkurt Ailesi takvimine etkinlik ekler.',
 };
 const AILE = ['mia', 'otto', 'iris', 'marco', 'nerya'];
+// Pasif (manuel mod): isim/avatar yerine işlev simgesi ve işlev açıklaması
+const SIMGE: Record<string, string> = { otto: 'kart', iris: 'kalp', marco: 'not', nerya: 'ara', mia: 'ev', remy: 'izin' };
+const PASIF_IS: Record<string, string> = {
+  otto: 'Gelir-gider kaydı; iki kişinin bakiyesi ayrı tutulur, aradaki transfer gelir/gider sayılmaz.',
+  iris: 'Sağlık takibi ve günlük ilaç planı.',
+  marco: 'Haftalık yemek menüsü ve market listesi.',
+  nerya: 'Alışveriş listesi ve karşılaştırma notları.',
+  mia: 'Ev işleri ve aile yapılacakları.',
+  remy: 'Aile takvimi ve hatırlatmalar.',
+};
 
 export function Ailem() {
-  const { o, hepsi, durum, bul } = useEkip();
+  const { o, hepsi, durum, bul, pasif } = useEkip();
   const fam = useGezinti((d) => d.aile.fam), famId = fam || 'mia', c = bul(famId);
   const [form, setForm] = useState<'' | 'gorev' | 'finans'>('');
+  if (pasif) return <AilemPasif />;
   return (
     <View style={{ gap: 14, paddingRight: 76 }}>
       <SayfaBasligi ust="Kategoriler ve çalışanlar" baslik="Ailem" />
@@ -69,6 +80,36 @@ export function Ailem() {
       <AltPencere acik={!!form} kapat={() => setForm('')}>
         {form === 'gorev' && c ? <GorevFormu c={c} kapat={() => setForm('')} /> : form === 'finans' ? <FinansFormu kapat={() => setForm('')} /> : null}
       </AltPencere>
+    </View>
+  );
+}
+
+/** Ailem · pasif: kategoriler işlev simgeleriyle; çalışan rayı ve "Mesaj / Görev ver" yok */
+function AilemPasif() {
+  const fam = useGezinti((d) => d.aile.fam), sec = KAT.find((k) => k[0] === (fam || 'otto')) || KAT[0];
+  const [finans, setFinans] = useState(false);
+  return (
+    <View style={{ gap: 14 }}>
+      <SayfaBasligi ust="Bütçe, sağlık, menü, takvim" baslik="Ailem" />
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+        {KAT.map(([id, ad, , , renk]) => {
+          const on = sec[0] === id;
+          return (
+            <Pressable key={id} onPress={() => aileSec(id)} accessibilityRole="button" accessibilityState={{ selected: on }} accessibilityLabel={ad}
+              style={({ pressed }) => ({ width: '48%', flexGrow: 1, minHeight: 112, borderRadius: 20, padding: 14, gap: 8, borderWidth: 1, borderColor: on ? saydam(R.ana, 0.7) : 'rgba(255,255,255,0.10)', backgroundColor: on ? saydam(R.ana, 0.1) : 'rgba(255,255,255,0.05)', transform: [{ translateY: on ? -2 : 0 }, { scale: pressed ? 0.95 : 1 }] })}>
+              <View style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: renk, alignItems: 'center', justifyContent: 'center' }}><Ikon ad={SIMGE[id]} boy={19} renk="#1c1c1e" kalin={2.2} /></View>
+              <Text style={{ color: R.yazi, fontSize: 14, lineHeight: 18, fontWeight: '600' }}>{ad}</Text>
+              <Text numberOfLines={2} style={s.sub}>{PASIF_IS[id]}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      <KartK ad="aileKat" baslik={sec[1].toLocaleUpperCase('tr')} ozet={PASIF_IS[sec[0]]}>
+        <Text style={{ color: '#d2d2d7', fontSize: 13, lineHeight: 19 }}>{PASIF_IS[sec[0]]} Ayrıntılar bilgisayardaki Orvane’de Ailem › {sec[1]} sayfasında tutulur.</Text>
+        {sec[0] === 'otto' && <Dugme yazi="Gelir / gider ekle" ikon="kaydet" onPress={() => setFinans(true)} />}
+        <Dugme yazi="İzin / takvim girişi" ikon="izin" tur="ikinci" onPress={() => sekmeGit(2, { kayit: 'izin' })} />
+      </KartK>
+      <AltPencere acik={finans} kapat={() => setFinans(false)}>{finans ? <FinansFormu kapat={() => setFinans(false)} /> : null}</AltPencere>
     </View>
   );
 }

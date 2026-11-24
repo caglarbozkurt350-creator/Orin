@@ -1,2 +1,2 @@
 // Otomatik üretilir (npm run paylas): masaüstüyle aynı sürüm
-export const SURUM = '0.9.0';
+export const SURUM = '0.9.1';

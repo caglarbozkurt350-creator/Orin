@@ -438,6 +438,8 @@ ipcMain.handle('bulut:signup', wrap(o => bulut.signup(o)));
 ipcMain.handle('bulut:logout', wrap(() => bulut.logout()));
 ipcMain.handle('bulut:pull', wrap(s => bulut.pull(s)));
 ipcMain.handle('bulut:push', wrap(v => bulut.push(v)));
+ipcMain.handle('bulut:aileYayin', wrap(o => bulut.aileYayin(o)));
+ipcMain.handle('bulut:ailePull', wrap(s => bulut.ailePull(s)));
 // Yapay zekâ çalışanları (Claude API)
 const zeka = require('./zeka');
 ipcMain.handle('zeka:status', wrap(() => zeka.status()));

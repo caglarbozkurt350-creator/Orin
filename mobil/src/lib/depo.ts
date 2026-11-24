@@ -16,12 +16,30 @@ export type Kalem = [string, string, number, string?];
 export type Gun = { L: number | null; T: number; OT: number; D?: string; e: Kalem[] };
 /** Kişisel bütçenin bir ayı (masaüstü orv-telefon.js → OT9.butceAy). hg/hc: 5 haftanın gelir/gideri */
 export type ButceAy = { ay: string; gelir: number; gider: number; kat: Record<string, number>; hg: number[]; hc: number[] };
-export type Ilac = { id: string; ad: string; miktar: string; saat: string; tekrar: 'gun' | 'haftaici' | 'haftasonu'; actok?: string; not?: string; stok?: number | null; stokTs?: number; eklendi?: number };
+export type Ilac = { id: string; ad: string; miktar: string; saat: string; tekrar: 'gun' | 'haftaici' | 'haftasonu'; actok?: string; not?: string; stok?: number | null; stokTs?: number; eklendi?: number; /** kimin ilacı: cagla (varsayılan) | kubra (eşi) */ kim?: 'cagla' | 'kubra' };
 /** Masaüstünden gelen aile verisi: bütçe (bu ay + geçen ay), ilaç planı, alındı işaretleri ("YYYY-MM-DD|id"), sabah açlık şekeri */
 export type Aile = {
   fin: { bu: ButceAy; once: ButceAy; islem: [string, string, string, 0 | 1, number][] };
   ilac: Ilac[]; al: Record<string, 1>; seker: Record<string, number>;
   tcmb?: { tarih: string; usd: number; eur: number | null } | null;
+  ortak?: Ortak;
+};
+export type Kisi = 'cagla' | 'kubra';
+/** Takvim etkinliği ya da hastane randevusu. kim: ekleyen; kisi: kimin için (aile = herkes) */
+export type Etkinlik = { id: string; ad: string; tarih: string; saat?: string; tur?: 'etkinlik' | 'randevu'; yer?: string; not?: string; kim: Kisi; kisi?: Kisi | 'aile'; ts?: number };
+export type OzelGun = { id: string; ad: string; tarih: string; tur: 'dogum' | 'yildonumu' | 'diger'; kim: Kisi };
+export type CepDurum = { oran: number; har: number | null; harcanan: number; kal: number | null; gunluk: number | null };
+/** Ortak aile verisi (masaüstü orv-aile.js → OAI.ortak). Gelir ortak bütçeye girer; market/ev ortak bütçeden, kişisel harcama cep harçlığından.
+ *  hareket: [tarih, gelir?1:0, kategori, not, tutar, kasa o|c|e, ekleyen] · trend: [ay, gelir, gider] (6 ay) · izin: Çağlar'ın izin günleri */
+export type Ortak = {
+  ad: Record<Kisi, string>;
+  trend: [string, number, number][];
+  kasa: { ortak: number; c: number; e: number };
+  kat: Record<string, number>;
+  cep: { c?: CepDurum; e?: CepDurum; kalanGun?: number; bek?: number };
+  hareket: [string, 0 | 1, string, string, number, 'o' | 'c' | 'e', Kisi][];
+  odeme: { ad: string; tutar: number; tarih: string }[];
+  takvim: Etkinlik[]; ozel: OzelGun[]; izin: Record<string, string>;
 };
 export type Ozet = {
   v: 1; ts: number; olaySira: number;
@@ -30,12 +48,15 @@ export type Ozet = {
   /** yz: masaüstünde yapay zekâ çalışanları açık mı (manuel mod varsayılan; alan yoksa kapalı sayılır) */
   zeka?: { bagli: boolean; usd: number; butce: number; yz?: boolean };
   aile?: Aile;
+  /** 'es': eşin telefonu (masaüstünün orvane_aile özeti; iş/ekip verisi yok, Çağlar'ın verileri salt okunur) */
+  rol?: 'es';
 };
 export type Olay = { id: string; tur: string; veri: any; ts: number; sira?: number; gitti?: boolean };
 export type Durum = {
   ozet: Ozet | null;
   olaylar: Olay[];
-  ayar: { url: string; anahtar: string };
+  /** rol: bu telefonun profili (ben = Çağlar, es = eşi; eşitlemede kendiliğinden bulunur) · sahip: eşin bağlı olduğu hesap */
+  ayar: { url: string; anahtar: string; rol?: 'ben' | 'es'; sahip?: string };
   senk: { son?: number; hata?: string; calisiyor?: boolean };
 };
 

@@ -20,7 +20,7 @@ OT9.aile=function(){var a=OA.st(),f=typeof fnS=='function'?fnS():{kayit:[],piyas
   .map(function(k){return[k.tarih,k.kalem||'Diğer',String(k.not||'').slice(0,60),k.tur=='gelir'?1:0,+k.tutar||0]});
  var p=f.piyasa&&f.piyasa.tcmb;
  return{fin:{bu:OT9.butceAy(bu),once:OT9.butceAy(once),islem:islem},
-  ilac:(a.ilac||[]).map(function(i){return{id:i.id,ad:i.ad,miktar:i.miktar||'',saat:i.saat||'',tekrar:i.tekrar||'gun',actok:i.actok||'',not:i.not||'',stok:i.stok==null?null:+i.stok,stokTs:i.stokTs||0,eklendi:i.eklendi||0}}),
+  ilac:(a.ilac||[]).map(function(i){return{id:i.id,ad:i.ad,miktar:i.miktar||'',saat:i.saat||'',tekrar:i.tekrar||'gun',actok:i.actok||'',not:i.not||'',stok:i.stok==null?null:+i.stok,stokTs:i.stokTs||0,eklendi:i.eklendi||0,kim:i.kim||'cagla'}}),
   al:al,seker:sk,tcmb:p&&p.kur&&p.kur.usd?{tarih:p.tarih,usd:p.kur.usd.satis,eur:p.kur.eur?p.kur.eur.satis:null}:null}};
 
 // ---------- Özet: aile bloğu + kayıtların durum etiketi ----------

@@ -51,4 +51,8 @@ async function pull(sira) { const s = await erisim(); return istek('/rest/v1/orv
 // Güncel özeti yayınla (kullanıcı başına tek satır)
 async function push(veri) { const s = await erisim(); await istek('/rest/v1/orvane_durum?on_conflict=user_id', { method: 'POST', headers: { Authorization: 'Bearer ' + s.access, Prefer: 'resolution=merge-duplicates,return=minimal' }, body: { user_id: s.uid, veri, ts: new Date().toISOString() } }); return true; }
 
-module.exports = { status, setCfg, login, signup, logout, pull, push };
+// 0.9.1 · Aile paylaşımı: eşin okuyacağı özet (uyeler = izinli e-postalar) ve eşin yazdığı olaylar
+async function aileYayin({ veri, uyeler }) { const s = await erisim(); await istek('/rest/v1/orvane_aile?on_conflict=sahip', { method: 'POST', headers: { Authorization: 'Bearer ' + s.access, Prefer: 'resolution=merge-duplicates,return=minimal' }, body: { sahip: s.uid, uyeler: (uyeler || []).map((x) => String(x).trim().toLowerCase()).filter(Boolean), veri, ts: new Date().toISOString() } }); return true; }
+async function ailePull(sira) { const s = await erisim(); return istek('/rest/v1/orvane_aile_olay?select=id,tur,veri,ts,sira&sahip=eq.' + s.uid + '&sira=gt.' + (Number(sira) || 0) + '&order=sira.asc&limit=500', { headers: { Authorization: 'Bearer ' + s.access } }); }
+
+module.exports = { status, setCfg, login, signup, logout, pull, push, aileYayin, ailePull };

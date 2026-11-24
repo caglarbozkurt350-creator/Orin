@@ -9,6 +9,7 @@ import { guncelle, useDurum } from '@/lib/depo';
 import { gecisOnizle } from '@/lib/gezinti';
 import { guncellemeDenetle, yenidenBaslat } from '@/lib/guncelle';
 import { useEkip } from '@/lib/kullan';
+import { AD, useRol } from '@/lib/rol';
 import { cikis, esitle, girisYap, hataMetni, kayitOl, oturum, VARSAYILAN } from '@/lib/senk';
 import { acilisSec, CUBUKLAR, CubukAnahtari, cubukSec, GECISLER, gecisSec, R, saydam, TEMALAR, temaSec, useGorunumAyari } from '@/lib/tema';
 import { SURUM } from '@/veri/surum';
@@ -42,10 +43,21 @@ function CubukSecimi() {
 }
 
 export function AyarlarSayfasi() {
-  const g = useGorunumAyari(), { o } = useEkip(), senk = useDurum((d) => d.senk);
+  const g = useGorunumAyari(), { o } = useEkip(), senk = useDurum((d) => d.senk), rol = useRol(), es = rol === 'es';
+  const YETKI: [string, boolean][] = es
+    ? [['Ortak bütçe, gelir–gider ve grafikler', true], ['Kendi harcaman (cep harçlığı ya da ortak bütçe) ve gelir', true], ['Kendi ilaçların, randevuların, etkinliklerin, özel günlerin', true], [AD.cagla + '’ın izin günleri, ilaçları, şekeri (yalnız görüntüleme)', false], ['İş kayıtları, görevler, ekip', false]]
+    : [['Tüm iş kayıtları, izinler, görevler', true], ['Ortak bütçe, kendi cep harçlığın, ilaç ve şekerin', true], [AD.kubra + '’nın ilaç, randevu ve harcamaları (yalnız görüntüleme)', false]];
   return (
     <View style={{ gap: 14 }}>
       <SayfaBasligi ust="Profil · görünüm · eşitleme" baslik="Ayarlar" />
+      <KartK ad="profil" baslik="PROFİL" ozet={(es ? AD.kubra : AD.cagla) + (es ? ' · aile profili' : ' · ana profil')}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <View style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: es ? '#f472b6' : '#4ade80', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#1c1c1e', fontSize: 19, fontWeight: '800' }}>{es ? 'K' : 'Ç'}</Text></View>
+          <View style={{ flex: 1 }}><Text style={{ color: R.yazi, fontSize: 16, fontWeight: '700' }}>{es ? AD.kubra : AD.cagla}</Text><Text style={s.sub}>{es ? AD.cagla + '’ın aile verilerine bağlı' : 'Masaüstü Orvane hesabı'}</Text></View>
+        </View>
+        {YETKI.map(([y, ok]) => <View key={y} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><Ikon ad={ok ? 'kalem' : 'goz'} boy={14} renk={ok ? R.yesil : R.yazi2} kalin={2} /><Text style={[s.sub, { flex: 1, fontSize: 12.5, color: ok ? R.yazi : R.yazi2 }]}>{y}</Text></View>)}
+        <Text style={[s.sub, { fontSize: 11 }]}>{es ? 'Profil hesabından kendiliğinden bulunur. Herkes yalnız kendi eklediğini düzeltir ya da siler.' : 'Eşinin telefonu için: masaüstünde Ayarlar › Telefon › Aile paylaşımı’na onun e-postasını yaz.'}</Text>
+      </KartK>
       <KartK ad="cubuk" baslik="ALT ÇUBUK" ozet={CUBUKLAR[g.cubuk][0]}>
         <CubukSecimi />
         <Text style={[s.sub, { fontSize: 11.5 }]}>Seçim hemen uygulanır; yalnız bu telefonda saklanır.</Text>
@@ -144,7 +156,7 @@ function Esitleme() {
       {!kim && (
         <View style={{ gap: 8 }}>
           <Text style={{ color: R.yazi, fontSize: 14, fontWeight: '600' }}>Giriş</Text>
-          <Text style={s.soluk}>Masaüstü Orvane’da kullandığın e-posta ile gir. İlk kez kullanıyorsan “Hesap aç”a dokun; gelen onay e-postasındaki bağlantıya dokunduktan sonra giriş yap.</Text>
+          <Text style={s.soluk}>Masaüstü Orvane’da kullandığın e-posta ile gir. Aile profili için kendi e-postanla hesap aç; masaüstünde Aile paylaşımına eklenince aile verilerin gelir. İlk kez kullanıyorsan “Hesap aç”a dokun; gelen onay e-postasındaki bağlantıya dokunduktan sonra giriş yap.</Text>
           <View style={s.giris}><Text style={s.girisEt}>E-posta</Text><TextInput value={eposta} onChangeText={setEposta} keyboardType="email-address" autoCapitalize="none" autoComplete="email" style={s.girisY} /></View>
           <View style={s.giris}><Text style={s.girisEt}>Şifre</Text><TextInput value={sifre} onChangeText={setSifre} secureTextEntry autoComplete="password" style={s.girisY} /></View>
           <View style={{ flexDirection: 'row', gap: 8 }}>

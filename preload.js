@@ -78,7 +78,9 @@ contextBridge.exposeInMainWorld('api', {
     signup: o => ipcRenderer.invoke('bulut:signup', o),
     logout: () => ipcRenderer.invoke('bulut:logout'),
     pull: s => ipcRenderer.invoke('bulut:pull', s),
-    push: v => ipcRenderer.invoke('bulut:push', v)
+    push: v => ipcRenderer.invoke('bulut:push', v),
+    aileYayin: o => ipcRenderer.invoke('bulut:aileYayin', o),
+    ailePull: s => ipcRenderer.invoke('bulut:ailePull', s)
   },
   sheets: {
     status: () => ipcRenderer.invoke('sheets:status'),

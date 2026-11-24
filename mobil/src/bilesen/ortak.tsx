@@ -59,6 +59,7 @@ export const P: Record<string, string> = {
   link: 'M14 4h6v6M20 4l-9 9M18 14v5H5V6h5',
   grafik: 'M4 20V4M4 20h16M7 15l4-4 3 3 5-6',
   sessiz: 'M6 9a6 6 0 0 1 9.4-4.9M18 11c.2 4 2 5 2 5H8M10 20a2 2 0 0 0 4 0M3 3l18 18',
+  goz: 'M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
 };
 export function Ikon({ ad, boy = 22, renk = R.yazi2, kalin = 1.8 }: { ad: string; boy?: number; renk?: string; kalin?: number }) {
   return (

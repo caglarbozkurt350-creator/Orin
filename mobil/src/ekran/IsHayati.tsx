@@ -10,6 +10,7 @@ import { IZIN_AD, IzinAraligi, IzinGirisi } from '@/ekran/IzinGirisi';
 import { Kalem, olayEkle, useDurum } from '@/lib/depo';
 import { gunAnahtari, useGorunum } from '@/lib/ekip';
 import { etiketOku } from '@/lib/etiket';
+import { AD, useRol } from '@/lib/rol';
 import { esitleSonra } from '@/lib/senk';
 import { R, saydam } from '@/lib/tema';
 import { AY, GK, gunEkle, haftaBasi, kisaTarih, tarihOf, uzunTarih } from '@/lib/zaman';
@@ -42,7 +43,54 @@ function izinAraliklari(gun: Record<string, { D?: string }>): IzinAraligi[] {
   return r;
 }
 
-export function IsHayati() {
+/** Profil seçimi: eşte salt okunur izin görünümü, Çağlar’da kayıt ekranı */
+export function IsHayati() { return useRol() === 'es' ? <IsHayatiEs /> : <IsHayatiBen />; }
+
+/** Eş profili: Çağlar’ın izin günleri ay takviminde ve listede. Giriş, düzeltme, silme yok (yalnız Çağlar yapar). */
+function IsHayatiEs() {
+  const o = useGorunum(), bugunK = gunAnahtari(new Date()), [ay, setAy] = useState(0);
+  const izinler = useMemo(() => izinAraliklari(o.gun), [o.gun]);
+  const b0 = new Date(), bas = new Date(b0.getFullYear(), b0.getMonth() + ay, 1), son = new Date(bas.getFullYear(), bas.getMonth() + 1, 0);
+  const hucre: (Date | null)[] = []; for (let i = 0; i < (bas.getDay() + 6) % 7; i++) hucre.push(null); for (let d = 1; d <= son.getDate(); d++) hucre.push(new Date(bas.getFullYear(), bas.getMonth(), d));
+  const ayIzin = hucre.filter((d) => d && o.gun[gunAnahtari(d)]?.D).length;
+  const bugun = new Date(new Date().setHours(0, 0, 0, 0)), yak = izinler.filter((z) => tarihOf(z.s) >= bugun), gec = izinler.filter((z) => tarihOf(z.s) < bugun).reverse().slice(0, 4);
+  const Satir = ({ z, soluk }: { z: IzinAraligi; soluk?: boolean }) => { const n = Math.round((tarihOf(z.s).getTime() - tarihOf(z.b).getTime()) / 86400000) + 1; return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 44, paddingHorizontal: 12, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.05)', opacity: soluk ? 0.6 : 1 }}>
+      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: IZIN_RENK }} />
+      <Text style={{ flex: 1, color: R.yazi, fontSize: 13.5 }}>{IZIN_AD[z.t] || 'İzin'} · {kisaTarih(z.b)}{z.s !== z.b ? ' – ' + kisaTarih(z.s) : ''}</Text>
+      <Text style={s.sub}>{n > 1 ? n + ' gün' : '1 gün'}</Text>
+    </View>); };
+  return (
+    <View style={{ gap: 12 }}>
+      <SayfaBasligi ust={AD.cagla + '’ın izin ve tatil günleri'} baslik="İş Hayatı" />
+      <View style={[s.cam, { gap: 10 }]}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Yuvarlak ikon="sol" ad="Önceki ay" onPress={() => setAy((x) => x - 1)} kapali={ay <= -1} />
+          <View style={{ flex: 1, alignItems: 'center' }}><Text style={{ color: R.yazi, fontSize: 16, fontWeight: '700' }}>{AY[bas.getMonth()]} {bas.getFullYear()}</Text><Text style={s.sub}>{ayIzin ? ayIzin + ' izin günü' : 'izin yok'}</Text></View>
+          <Yuvarlak ikon="sag" ad="Sonraki ay" onPress={() => setAy((x) => x + 1)} kapali={ay >= 3} />
+        </View>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+          {['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'].map((x) => <Text key={x} style={[s.sub, { width: '14.28%', textAlign: 'center', fontSize: 11 }]}>{x}</Text>)}
+          {hucre.map((d, i) => { if (!d) return <View key={'b' + i} style={{ width: '14.28%', height: 46 }} />; const k = gunAnahtari(d), iz = o.gun[k]?.D; return (
+            <View key={k} style={{ width: '14.28%', padding: 2 }} accessible accessibilityLabel={uzunTarih(k) + (iz ? ', ' + (IZIN_AD[iz] || 'izin') : '')}>
+              <View style={{ height: 42, borderRadius: 10, alignItems: 'center', justifyContent: 'center', gap: 3, backgroundColor: iz ? saydam(IZIN_RENK, 0.18) : 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: k === bugunK ? R.ana : 'transparent' }}>
+                <Text style={{ color: d.getDay() % 6 === 0 ? R.yazi2 : R.yazi, fontSize: 13, fontWeight: '600' }}>{d.getDate()}</Text>
+                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: iz ? IZIN_RENK : 'transparent' }} />
+              </View>
+            </View>); })}
+        </View>
+        {!o.ts && <Bos yazi="Eşitlenince izin günleri burada görünür." ikon="izin" />}
+      </View>
+      <KartK ad="izinEs" baslik="İZİNLER" ozet={yak.length ? yak.length + ' yaklaşan' : 'yaklaşan yok'}>
+        {yak.length ? yak.map((z) => <Satir key={z.b + z.t} z={z} />) : <Text style={s.soluk}>Yaklaşan izin günü yok.</Text>}
+        {gec.length > 0 && <><Text style={s.sub}>Geçen 30 gün</Text>{gec.map((z) => <Satir key={z.b + z.t} z={z} soluk />)}</>}
+        <Text style={[s.sub, { fontSize: 11.5 }]}>İzinleri yalnız {AD.cagla} girer ve düzeltir; burada görüntülenir. Randevu ve etkinlikleri Ailem › Aile takvimi’ne ekleyebilirsin.</Text>
+      </KartK>
+    </View>
+  );
+}
+
+function IsHayatiBen() {
   const o = useGorunum(), olaylar = useDurum((d) => d.olaylar), bugunK = gunAnahtari(new Date());
   const [hof, setHof] = useState(0), [sec, setSec] = useState(bugunK);
   const [kod, setKod] = useState(''), [is, setIs] = useState(''), [dk, setDk] = useState(''), [du, setDu] = useState('devam');

@@ -11,8 +11,10 @@ import type { ButceAy, Ozet } from '@/lib/depo';
 import { KISA } from '@/lib/ekipMeta';
 import { SEKME_GOREV, sekmeGit } from '@/lib/gezinti';
 import { bugunYazi, useEkip } from '@/lib/kullan';
+import { IZIN_AD } from '@/ekran/IzinGirisi';
+import { AD, useRol } from '@/lib/rol';
 import { R, saydam } from '@/lib/tema';
-import { AY, ayaGore, ayin, ayinHaftalari, gunAnahtari, gunEkle, haftaBasi, tl } from '@/lib/zaman';
+import { AY, ayaGore, ayin, ayinHaftalari, GK, gunAnahtari, gunEkle, haftaBasi, kisaTarih, tarihOf, tl } from '@/lib/zaman';
 
 const Tumu = ({ git, yazi = 'Tümü' }: { git: () => void; yazi?: string }) => (
   <Pressable onPress={git} accessibilityRole="button" hitSlop={4} style={{ height: 32, paddingHorizontal: 12, borderRadius: 16, backgroundColor: saydam(R.ana, 0.16), justifyContent: 'center' }}><Text style={{ color: R.ana2, fontSize: 12, fontWeight: '600' }}>{yazi}</Text></Pressable>
@@ -139,8 +141,36 @@ function ButceKart({ o }: { o: Ozet }) {
   );
 }
 
+/** Eş profili · Anasayfa üst kartı: Çağlar’ın bu haftası (izin günleri) ve yaklaşan randevu / etkinlikler. Salt okunur. */
+function AileHaftaKart({ o }: { o: Ozet }) {
+  const b = new Date(); b.setHours(0, 0, 0, 0); const hb = haftaBasi(b), bk = gunAnahtari(b);
+  const gunler = [0, 1, 2, 3, 4, 5, 6].map((i) => { const d = gunEkle(hb, i), k = gunAnahtari(d); return { d, k, iz: o.gun[k]?.D }; });
+  const bugunIz = o.gun[bk]?.D, izinSay = gunler.filter((g) => g.iz).length;
+  const sonraki = Object.keys(o.gun).filter((k) => o.gun[k].D && tarihOf(k) > b).sort((x, y) => tarihOf(x).getTime() - tarihOf(y).getTime())[0];
+  const yak = (o.aile?.ortak?.takvim || []).filter((e) => tarihOf(e.tarih) >= b).sort((x, y) => (x.tarih + (x.saat || '')).localeCompare(y.tarih + (y.saat || ''))).slice(0, 3);
+  return (
+    <KartK ad="aileHafta" baslik="BU HAFTA" ozet={bugunIz ? AD.cagla + ' bugün izinli' : izinSay ? izinSay + ' izin günü' : 'izin yok'} sag={<Tumu git={() => sekmeGit(1)} yazi="Takvim" />}>
+      <View style={{ flexDirection: 'row', gap: 4 }}>
+        {gunler.map((g) => { const bu = g.k === bk; return (
+          <View key={g.k} accessible accessibilityLabel={GK[g.d.getDay()] + ' ' + g.d.getDate() + (g.iz ? ', ' + (IZIN_AD[g.iz] || 'izin') : '')} style={{ flex: 1, alignItems: 'center', gap: 4, paddingVertical: 8, borderRadius: 12, backgroundColor: g.iz ? 'rgba(95,224,245,0.16)' : bu ? saydam(R.ana, 0.14) : 'rgba(255,255,255,0.04)', borderWidth: bu ? 1 : 0, borderColor: R.ana }}>
+            <Text style={[s.sub, { fontSize: 10.5 }]}>{GK[g.d.getDay()]}</Text>
+            <Text style={{ color: R.yazi, fontSize: 14, fontWeight: '700' }}>{g.d.getDate()}</Text>
+            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: g.iz ? '#5fe0f5' : 'transparent' }} />
+          </View>); })}
+      </View>
+      <Text style={s.sub}>{bugunIz ? AD.cagla + ' bugün ' + (IZIN_AD[bugunIz] || 'izinli').toLocaleLowerCase('tr') + '.' : sonraki ? 'Sıradaki izin: ' + kisaTarih(sonraki) + ' · ' + (IZIN_AD[o.gun[sonraki].D!] || 'İzin') : 'Yaklaşan izin günü yok.'}</Text>
+      {yak.map((e) => (
+        <View key={e.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 44, paddingHorizontal: 10, borderRadius: 12, backgroundColor: e.tur === 'randevu' ? 'rgba(192,132,252,0.1)' : 'rgba(255,255,255,0.04)' }}>
+          <Ikon ad={e.tur === 'randevu' ? 'ilac' : 'gun'} boy={16} renk={e.tur === 'randevu' ? '#c084fc' : R.yazi2} kalin={2} />
+          <View style={{ flex: 1 }}><Text numberOfLines={1} style={{ color: R.yazi, fontSize: 13.5, fontWeight: '600' }}>{e.ad}</Text><Text numberOfLines={1} style={[s.sub, { fontSize: 11 }]}>{[kisaTarih(e.tarih), e.saat, e.yer].filter(Boolean).join(' · ')}</Text></View>
+        </View>
+      ))}
+    </KartK>
+  );
+}
+
 export function Anasayfa() {
-  const { o, hepsi, cevrim, senk, pasif } = useEkip();
+  const { o, hepsi, cevrim, senk, pasif } = useEkip(), es = useRol() === 'es';
   const g = isGunuOlcu(o), bH = (g.bg?.L || 0) + (g.bg?.OT || 0);
   const acik = o.ekip.gorev.filter((x) => x.durum !== 'bitti');
   const gorevler = acik.slice().sort((a, b) => Number(b.onc === 'acil') - Number(a.onc === 'acil') || b.ts - a.ts).slice(0, 2);
@@ -148,20 +178,20 @@ export function Anasayfa() {
   const bugunYazisi = !o.ts ? 'Masaüstü Orvane ile eşitlenince iş günü kayıtların burada görünür.' : g.bg?.D ? 'Bugün izin günü, tam gün sayılır.' : bH ? 'Bugün ' + (g.bg?.T || 0) + ' / ' + bH + ' dk girildi' + (g.eksik ? ' · bu ay ' + g.eksik + ' eksik gün' : '') : 'Bugün için iş süresi yok.';
   return (
     <View style={{ gap: 14 }}>
-      <SayfaBasligi ust={bugunYazi()} baslik="Merhaba Çağlar" sag={<View style={{ marginBottom: 4 }}><Hap yazi={senk.calisiyor ? 'Eşitleniyor' : cevrim ? 'Çevrimiçi' : 'Çevrimdışı'} t={cevrim ? 'g' : 'o'} /></View>} />
+      <SayfaBasligi ust={bugunYazi()} baslik={'Merhaba ' + (es ? AD.kubra : AD.cagla)} sag={<View style={{ marginBottom: 4 }}><Hap yazi={senk.calisiyor ? 'Eşitleniyor' : cevrim ? 'Çevrimiçi' : 'Çevrimdışı'} t={cevrim ? 'g' : 'o'} /></View>} />
 
-      <KartK ad="isgunu" baslik="İŞ GÜNÜ" ozet={g.dolu + '/' + g.isg + ' gün · ' + g.hi + '/' + g.hn + '. hafta'} sag={<Tumu git={() => sekmeGit(2)} yazi="Kayıt gir" />}>
+      {es ? <AileHaftaKart o={o} /> : <KartK ad="isgunu" baslik="İŞ GÜNÜ" ozet={g.dolu + '/' + g.isg + ' gün · ' + g.hi + '/' + g.hn + '. hafta'} sag={<Tumu git={() => sekmeGit(2)} yazi="Kayıt gir" />}>
         <View style={{ flexDirection: 'row', gap: 4 }}>
           <Olcu ust="Bu hafta" deger={g.dolu + '/' + g.isg} alt="dolu iş günü" oran={g.dolu / g.isg} renk={R.yesil} />
           <Olcu ust="Ayın haftası" deger={g.hi + '/' + g.hn} alt={AY[new Date().getMonth()]} oran={g.hi / g.hn} renk={R.ana2} />
           <Olcu ust="Bu ay" deger={g.toplam ? '%' + Math.round((g.girilen / g.toplam) * 100) : '—'} alt={g.girilen.toLocaleString('tr-TR') + ' / ' + g.toplam.toLocaleString('tr-TR') + ' dk'} oran={g.toplam ? g.girilen / g.toplam : 0} renk={R.ana} />
         </View>
         <Text style={s.sub}>{bugunYazisi}</Text>
-      </KartK>
+      </KartK>}
 
       <ButceKart o={o} />
 
-      <KartK ad="gorev" baslik="BUGÜNKÜ GÖREVLER" ozet={acik.length + ' açık görev'} sag={<Tumu git={() => sekmeGit(SEKME_GOREV, { gorev: 'gorev' })} />}>
+      {!es && <KartK ad="gorev" baslik="BUGÜNKÜ GÖREVLER" ozet={acik.length + ' açık görev'} sag={<Tumu git={() => sekmeGit(SEKME_GOREV, { gorev: 'gorev' })} />}>
         {gorevler.length ? gorevler.map((x) => (
           <View key={x.id} style={s.satir}>
             <View style={{ width: 36, height: 36, borderRadius: 11, backgroundColor: 'rgba(255,255,255,0.07)', alignItems: 'center', justifyContent: 'center' }}><Ikon ad="gorev" boy={18} renk={R.yazi2} kalin={2} /></View>
@@ -170,10 +200,10 @@ export function Anasayfa() {
           </View>
         )) : <Bos yazi="Açık görev yok." ikon="gorev" />}
         {acik.length > 2 && <Text style={s.sub}>+{acik.length - 2} görev daha · Tümü’nde</Text>}
-      </KartK>
+      </KartK>}
 
-      <KartK ad="ilac" baslik="GÜNLÜK İLAÇ TAKİBİ" ozet={ilac.length ? alinan + '/' + ilac.length + ' alındı' : 'ilaç yok'} sag={<Tumu git={() => sekmeGit(3)} yazi="İlaçlarım" />}>
-        {ilac.length ? ilac.map((i) => <IlacSatiri key={i.id} o={o} i={i} />) : <Text style={s.soluk}>Bugün alınacak ilaç yok. Bana Özel › İlaçlarım’dan eklenir.</Text>}
+      <KartK ad="ilac" baslik="GÜNLÜK İLAÇ TAKİBİ" ozet={ilac.length ? alinan + '/' + ilac.length + ' alındı' : 'ilaç yok'} sag={<Tumu git={() => sekmeGit(3)} yazi={es ? 'Sağlık' : 'İlaçlarım'} />}>
+        {ilac.length ? ilac.map((i) => <IlacSatiri key={i.id} o={o} i={i} />) : <Text style={s.soluk}>Bugün alınacak ilaç yok. Bana Özel › İlaçlar’dan eklenir.</Text>}
         <SekerSatiri key={o.ts + '|' + (o.aile?.seker[Object.keys(o.aile?.seker || {}).sort().pop() || ''] ?? '')} o={o} />
       </KartK>
       {!o.ts && <Text style={[s.sub, { textAlign: 'center' }]}>Son eşitleme yok · veriler masaüstünden gelir · Ayarlar › Eşitleme</Text>}

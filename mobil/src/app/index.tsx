@@ -18,6 +18,7 @@ import { IsHayati } from '@/ekran/IsHayati';
 import { useBildirimler } from '@/lib/bildirim';
 import { menuAc, menuKapat, SEKME_AYAR, sekmeGit, useGezinti } from '@/lib/gezinti';
 import { useEkip } from '@/lib/kullan';
+import { useRol } from '@/lib/rol';
 import { R, useGorunumAyari } from '@/lib/tema';
 
 /** Alt menüde olmayan sayfalar (Görevler, Ayarlar, Ekip): üstte geri bağlantısı */
@@ -35,7 +36,7 @@ function GeriSayfa({ don, ad, children }: { don: number; ad: string; children: R
 let ACILDI = false; // açılış ekranı uygulama başına bir kez
 
 function Ust({ pasif, cevrim }: { pasif: boolean; cevrim: boolean }) {
-  const ust = useSafeAreaInsets().top;
+  const ust = useSafeAreaInsets().top, es = useRol() === 'es';
   return (
     <View style={{ position: 'absolute', left: 12, right: 12, top: ust + 8, height: 60, borderRadius: 22, flexDirection: 'row', alignItems: 'center', gap: 10, paddingLeft: 14, paddingRight: 8, backgroundColor: 'rgba(40,40,44,0.94)', borderWidth: 1, borderColor: R.camKenar, zIndex: 3 }}>
       <Logo boy={32} />
@@ -44,7 +45,7 @@ function Ust({ pasif, cevrim }: { pasif: boolean; cevrim: boolean }) {
         <Ikon ad="ekip" boy={20} renk="#e9e9ec" kalin={2} />
       </Pressable>}
       <Pressable onPress={() => sekmeGit(SEKME_AYAR)} accessibilityRole="button" accessibilityLabel="Profil ve ayarlar" style={({ pressed }) => ({ width: 44, height: 44, borderRadius: 22, padding: 2, backgroundColor: R.ana, transform: [{ scale: pressed ? 0.93 : 1 }] })}>
-        <View style={{ flex: 1, borderRadius: 22, backgroundColor: '#26262a', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: R.ana2, fontSize: 17, fontWeight: '800' }}>Ç</Text></View>
+        <View style={{ flex: 1, borderRadius: 22, backgroundColor: '#26262a', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: R.ana2, fontSize: 17, fontWeight: '800' }}>{es ? 'K' : 'Ç'}</Text></View>
         <View style={{ position: 'absolute', right: 0, bottom: 0, width: 12, height: 12, borderRadius: 6, backgroundColor: cevrim ? R.yesil : R.bosta, borderWidth: 2, borderColor: '#28282c' }} />
       </Pressable>
     </View>

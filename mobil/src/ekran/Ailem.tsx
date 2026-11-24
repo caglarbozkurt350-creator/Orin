@@ -6,12 +6,14 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AltPencere, FinansFormu, GorevFormu } from '@/bilesen/formlar';
+import { OrtakBolum } from '@/bilesen/AileOrtak';
 import { PdfDugme } from '@/bilesen/Pdf';
 import { Avatar, Dugme, Foto, Ikon, KartK, SayfaBasligi, s } from '@/bilesen/ortak';
 import { aciklama } from '@/lib/ekip';
 import { KISA } from '@/lib/ekipMeta';
 import { aileSec, rayDegis, sekmeGit, useGezinti } from '@/lib/gezinti';
 import { useEkip } from '@/lib/kullan';
+import { useRol } from '@/lib/rol';
 import { R, saydam } from '@/lib/tema';
 
 const KAT: [string, string, string, string, string][] = [
@@ -45,11 +47,13 @@ const PASIF_IS: Record<string, string> = {
 export function Ailem() {
   const { o, hepsi, durum, bul, pasif } = useEkip();
   const fam = useGezinti((d) => d.aile.fam), famId = fam || 'mia', c = bul(famId);
-  const [form, setForm] = useState<'' | 'gorev' | 'finans'>('');
+  const [form, setForm] = useState<'' | 'gorev' | 'finans'>(''), rol = useRol();
+  if (rol === 'es') return <AilemEs />;
   if (pasif) return <AilemPasif />;
   return (
     <View style={{ gap: 14, paddingRight: 76 }}>
       <SayfaBasligi ust="Kategoriler ve çalışanlar" baslik="Ailem" sag={<View style={{ marginBottom: 4 }}><PdfDugme tur="butce" yazi="Bütçe PDF" /></View>} />
+      <OrtakBolum />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
         {KAT.map(([id, ad, alt, harf, renk]) => {
           const k = bul(id), on = famId === id;
@@ -92,6 +96,7 @@ function AilemPasif() {
   return (
     <View style={{ gap: 14 }}>
       <SayfaBasligi ust="Bütçe, sağlık, menü, takvim" baslik="Ailem" sag={<View style={{ marginBottom: 4 }}><PdfDugme tur="butce" yazi="Bütçe PDF" /></View>} />
+      <OrtakBolum />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
         {KAT.map(([id, ad, , , renk]) => {
           const on = sec[0] === id;
@@ -111,6 +116,16 @@ function AilemPasif() {
         <Dugme yazi="İzin / takvim girişi" ikon="izin" tur="ikinci" onPress={() => sekmeGit(2, { kayit: 'izin' })} />
       </KartK>
       <AltPencere acik={finans} kapat={() => setFinans(false)}>{finans ? <FinansFormu kapat={() => setFinans(false)} /> : null}</AltPencere>
+    </View>
+  );
+}
+
+/** Ailem · eş profili: yalnız ortak bölüm (bütçe, aile takvimi, randevular, özel günler) */
+function AilemEs() {
+  return (
+    <View style={{ gap: 14 }}>
+      <SayfaBasligi ust="Ortak bütçe, takvim ve özel günler" baslik="Ailem" sag={<View style={{ marginBottom: 4 }}><PdfDugme tur="butce" yazi="Bütçe PDF" /></View>} />
+      <OrtakBolum />
     </View>
   );
 }

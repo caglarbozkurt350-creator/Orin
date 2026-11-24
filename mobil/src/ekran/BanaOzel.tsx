@@ -8,11 +8,12 @@ import Svg, { Circle, Polyline, Rect } from 'react-native-svg';
 import { AltPencere, Bos } from '@/bilesen/formlar';
 import { Dugme, Hap, Ikon, KartK, SayfaBasligi, s } from '@/bilesen/ortak';
 import { PdfDugme } from '@/bilesen/Pdf';
-import { SEKER_RENK, SekerSatiri } from '@/bilesen/Saglik';
+import { alindiMi, SEKER_RENK, SekerSatiri } from '@/bilesen/Saglik';
 import { Ilac, olayEkle, Ozet, uid } from '@/lib/depo';
 import { kalanGun, oyunYenile, takipDegis, useDis, useDisYenile, zilDegis } from '@/lib/dis';
 import { useGorunum } from '@/lib/ekip';
 import { kalanStok } from '@/lib/pdf';
+import { AD, benKimim, ilacTur, Rol, useRol } from '@/lib/rol';
 import { esitleSonra } from '@/lib/senk';
 import { R, saydam } from '@/lib/tema';
 import { gunEkle, tamAnahtar } from '@/lib/zaman';
@@ -21,13 +22,13 @@ const TEKRAR: [Ilac['tekrar'], string][] = [['gun', 'Her gün'], ['haftaici', 'H
 const ACTOK: [string, string][] = [['', 'Fark etmez'], ['ac', 'Aç karnına'], ['tok', 'Tok karnına']];
 const gecerli = (t: string, d: Date) => (t === 'haftaici' ? d.getDay() % 6 !== 0 : t === 'haftasonu' ? d.getDay() % 6 === 0 : true);
 
-function saglikOzet(o: Ozet) {
+function saglikOzet(o: Ozet, liste: Ilac[]) {
   const b = new Date(), sk: (number | null)[] = [], a = o.aile;
   let ger = 0, al = 0;
   for (let i = 6; i >= 0; i--) {
     const d = gunEkle(b, -i), k = tamAnahtar(d); sk.push(a?.seker[k] ?? null);
     if (i === 0) continue; // bugün henüz bitmedi
-    (a?.ilac || []).forEach((m) => { if (m.eklendi && new Date(m.eklendi).setHours(0, 0, 0, 0) > d.getTime()) return; if (!gecerli(m.tekrar, d)) return; ger++; if (a?.al[k + '|' + m.id]) al++; });
+    liste.forEach((m) => { if (m.eklendi && new Date(m.eklendi).setHours(0, 0, 0, 0) > d.getTime()) return; if (!gecerli(m.tekrar, d)) return; ger++; if (a?.al[k + '|' + m.id]) al++; });
   }
   const v = sk.filter((x): x is number => x != null);
   return { sk, ort: v.length ? Math.round(v.reduce((x, y) => x + y, 0) / v.length) : null, olcum: v.length, uyum: ger ? Math.round((al / ger) * 100) : null, al, ger };
@@ -46,7 +47,7 @@ function SekerMini({ sk }: { sk: (number | null)[] }) {
   );
 }
 
-function IlacFormu({ i, kapat }: { i: Ilac | null; kapat: () => void }) {
+function IlacFormu({ i, kapat, rol }: { i: Ilac | null; kapat: () => void; rol: Rol }) {
   const [ad, setAd] = useState(i?.ad || ''), [miktar, setMiktar] = useState(i?.miktar || '1 tablet'), [saat, setSaat] = useState(i?.saat || '08:00');
   const [tekrar, setTekrar] = useState<Ilac['tekrar']>(i?.tekrar || 'gun'), [actok, setActok] = useState(i?.actok || ''), [not, setNot] = useState(i?.not || '');
   const ks = i ? kalanStok(i) : null, [stok, setStok] = useState(ks == null ? '' : String(ks)), [hata, setHata] = useState(''), [silOnay, setSilOnay] = useState(false);
@@ -56,9 +57,9 @@ function IlacFormu({ i, kapat }: { i: Ilac | null; kapat: () => void }) {
     const st = stok.trim() === '' ? null : parseInt(stok, 10); if (st != null && (isNaN(st) || st < 0)) return setHata('Stok bir sayı olmalı');
     const v: any = { id: i?.id || 'm' + uid(), ad: ad.trim(), miktar: miktar.trim(), saat: m[1].padStart(2, '0') + ':' + m[2], tekrar, actok, not: not.trim() };
     if (st != null && st !== ks) v.stok = st; // stok yalnız değiştiyse gönderilir (stokTs yenilenir)
-    olayEkle('ilac_kaydet', v); esitleSonra(); kapat();
+    olayEkle(ilacTur(rol, 'ilac_kaydet'), v); esitleSonra(); kapat();
   };
-  const sil = () => { if (!i) return; if (!silOnay) return setSilOnay(true); olayEkle('ilac_sil', { id: i.id }); esitleSonra(); kapat(); };
+  const sil = () => { if (!i) return; if (!silOnay) return setSilOnay(true); olayEkle(ilacTur(rol, 'ilac_sil'), { id: i.id }); esitleSonra(); kapat(); };
   const Alan = ({ et, v, d, ph, k, w }: { et: string; v: string; d: (x: string) => void; ph?: string; k?: 'number-pad' | 'numbers-and-punctuation'; w?: number }) => (
     <View style={[s.giris, w ? { width: w } : { flex: 1 }]}><Text style={s.girisEt}>{et}</Text><TextInput value={v} onChangeText={d} placeholder={ph} placeholderTextColor={R.solukk} keyboardType={k} style={s.girisY} /></View>
   );
@@ -110,7 +111,9 @@ export function BanaOzel() {
   const o = useGorunum(); useDisYenile(['oyun']);
   const oyun = useDis((d) => d.oyun), takip = useDis((d) => d.tercih.takip);
   const [form, setForm] = useState<{ i: Ilac | null } | null>(null), [n, setN] = useState(0);
-  const so = saglikOzet(o), ilac = o.aile?.ilac || [];
+  const rol = useRol(), ben = benKimim(rol), es = rol === 'es', tum = o.aile?.ilac || [];
+  const ilac = tum.filter((i) => (i.kim || 'cagla') === ben), diger = tum.filter((i) => (i.kim || 'cagla') !== ben), digerAd = es ? AD.cagla : AD.kubra;
+  const so = saglikOzet(o, ilac);
   const azalan = ilac.map((i) => ({ i, k: kalanStok(i) })).filter((x) => x.k != null && x.k <= 7);
   const takipL = Object.entries(takip).map(([id, t]) => ({ id, ...t, kg: kalanGun(t.ts) })).sort((a, b) => (a.kg ?? 9999) - (b.kg ?? 9999));
   return (
@@ -119,13 +122,13 @@ export function BanaOzel() {
 
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <View style={[s.cam, { flex: 1, gap: 6, padding: 14 }]}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><Ikon ad="damla" boy={15} renk={SEKER_RENK} kalin={2.2} /><Text style={[s.sub, { fontSize: 12 }]}>Şeker · 7 gün</Text></View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><Ikon ad="damla" boy={15} renk={SEKER_RENK} kalin={2.2} /><Text style={[s.sub, { fontSize: 12 }]}>{es ? AD.cagla + ' · şeker' : 'Şeker · 7 gün'}</Text></View>
           <Text style={{ color: R.yazi, fontSize: 22, fontWeight: '700' }}>{so.ort ?? '—'}<Text style={{ fontSize: 11.5, color: R.yazi2, fontWeight: '500' }}> mg/dL ort.</Text></Text>
           <SekerMini sk={so.sk} />
           <Text style={[s.sub, { fontSize: 11 }]}>{so.olcum} ölçüm · hedef 80–130</Text>
         </View>
         <View style={[s.cam, { flex: 1, gap: 6, padding: 14 }]}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><Ikon ad="ilac" boy={15} renk={R.yesil} kalin={2.2} /><Text style={[s.sub, { fontSize: 12 }]}>İlaç uyumu · 6 gün</Text></View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><Ikon ad="ilac" boy={15} renk={R.yesil} kalin={2.2} /><Text style={[s.sub, { fontSize: 12 }]}>{es ? 'İlaçlarım · 6 gün' : 'İlaç uyumu · 6 gün'}</Text></View>
           <Text style={{ color: R.yazi, fontSize: 22, fontWeight: '700' }}>{so.uyum == null ? '—' : '%' + so.uyum}</Text>
           <View style={{ height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}><View style={{ width: (so.uyum || 0) + '%', height: '100%', backgroundColor: R.yesil, borderRadius: 4 }} /></View>
           <Text style={[s.sub, { fontSize: 11 }]}>{so.al} / {so.ger} doz alındı</Text>
@@ -133,7 +136,7 @@ export function BanaOzel() {
         </View>
       </View>
 
-      <KartK ad="ilaclarim" baslik="İLAÇLARIM" ozet={ilac.length + ' ilaç' + (azalan.length ? ' · ' + azalan.length + ' stok uyarısı' : '')} sag={<PdfDugme tur="ilac" yazi="PDF" />}>
+      <KartK ad="ilaclarim" baslik="İLAÇLARIM" ozet={ilac.length + ' ilaç' + (azalan.length ? ' · ' + azalan.length + ' stok uyarısı' : '')} sag={es ? undefined : <PdfDugme tur="ilac" yazi="PDF" />}>
         {azalan.map(({ i, k }) => (
           <View key={'u' + i.id} style={{ flexDirection: 'row', gap: 8, alignItems: 'center', padding: 10, borderRadius: 12, backgroundColor: 'rgba(245,165,36,0.12)' }}>
             <Ikon ad="bilgi" boy={16} renk="#f7bd55" kalin={2.1} /><Text style={{ flex: 1, color: '#f7bd55', fontSize: 12.5 }}>{i.ad} {k === 0 ? 'bitti' : 'yaklaşık ' + k + ' gün sonra bitiyor'} · stok ekle</Text>
@@ -149,10 +152,22 @@ export function BanaOzel() {
             </View>
             {k != null && <Text style={{ color: k <= 7 ? '#f7bd55' : R.yazi2, fontSize: 12.5, fontWeight: '600' }}>{k} gün</Text>}
             <Ikon ad="kalem" boy={15} renk={R.yazi2} kalin={2} />
-          </Pressable>); }) : <Bos yazi={o.ts ? 'Kayıtlı ilaç yok. Ekle ile başla; masaüstündeki İlaç Planı ile eşitlenir.' : 'Masaüstü ile eşitlenince ilaç planın burada görünür.'} ikon="ilac" />}
+          </Pressable>); }) : <Bos yazi={o.ts ? (es ? 'Henüz ilacın yok. Ekle ile başla; günlük işaretlerin Anasayfa’da görünür, ' + AD.cagla + ' da görür.' : 'Kayıtlı ilaç yok. Ekle ile başla; masaüstündeki İlaç Planı ile eşitlenir.') : 'Masaüstü ile eşitlenince ilaç planın burada görünür.'} ikon="ilac" />}
         <Dugme yazi="İlaç ekle" ikon="arti" tur="ikinci" onPress={() => { setForm({ i: null }); setN((x) => x + 1); }} />
-        <SekerSatiri key={'sk' + o.ts} o={o} />
+        {!es && <SekerSatiri key={'sk' + o.ts} o={o} />}
       </KartK>
+
+      {(diger.length > 0 || es) && <KartK ad="digerIlac" baslik={digerAd.toLocaleUpperCase('tr') + ' · İLAÇLAR'} ozet={diger.length + ' ilaç · ' + diger.filter((i) => alindiMi(o, i)).length + ' bugün alındı'}>
+        {diger.slice().sort((a, b) => a.saat.localeCompare(b.saat)).map((i) => { const ok = alindiMi(o, i); return (
+          <View key={i.id} accessible accessibilityLabel={i.ad + ' ' + i.saat + (ok ? ', bugün alındı' : '')} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 50, paddingHorizontal: 12, borderRadius: 16, backgroundColor: ok ? 'rgba(62,207,90,0.08)' : 'rgba(255,255,255,0.04)' }}>
+            <Ikon ad="ilac" boy={17} renk={ok ? R.yesil : R.yazi2} kalin={2.1} />
+            <View style={{ flex: 1, gap: 1 }}><Text style={{ color: R.yazi, fontSize: 14, fontWeight: '600' }}>{i.ad}</Text><Text style={s.sub}>{[i.miktar, i.saat, TEKRAR.find((t) => t[0] === i.tekrar)?.[1]].filter(Boolean).join(' · ')}</Text></View>
+            <Text style={{ color: ok ? R.yesil : R.yazi2, fontSize: 12.5, fontWeight: '600' }}>{ok ? 'Alındı' : 'Bekliyor'}</Text>
+          </View>); })}
+        {!diger.length && <Text style={s.soluk}>{digerAd} için kayıtlı ilaç yok.</Text>}
+        {es && <SekerSatiri key={'sk' + o.ts} o={o} />}
+        <Text style={[s.sub, { fontSize: 11.5 }]}>Yalnız görüntülenir; bu ilaçları {digerAd} ekler ve işaretler.</Text>
+      </KartK>}
 
       <KartK ad="hobi" baslik="TAKİP ETTİĞİM OYUNLAR" ozet={takipL.length + ' oyun'}>
         {takipL.length ? takipL.map((t) => (
@@ -171,7 +186,7 @@ export function BanaOzel() {
         {!!oyun.ts && <Text style={[s.sub, { fontSize: 11 }]}>Steam “popüler, yakında” listesi · {new Date(oyun.ts).toLocaleString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} güncellendi</Text>}
       </KartK>
 
-      <AltPencere acik={!!form} kapat={() => setForm(null)}>{form && <IlacFormu key={n} i={form.i} kapat={() => setForm(null)} />}</AltPencere>
+      <AltPencere acik={!!form} kapat={() => setForm(null)}>{form && <IlacFormu key={n} i={form.i} rol={rol} kapat={() => setForm(null)} />}</AltPencere>
     </View>
   );
 }

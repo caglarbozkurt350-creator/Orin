@@ -2,7 +2,7 @@
 // Masaüstündeki renderer/js/team.js ile aynı kurallar. Birini değiştirirken ötekini de güncelle.
 import { useMemo } from 'react';
 import C0 from '@/veri/calisanlar.json';
-import { Aile, Beceri, ButceAy, Durum, Gelisim, Gorev, Hafiza, Mesaj, Olay, Ozet, uid, useDurum } from '@/lib/depo';
+import { Aile, Beceri, ButceAy, Durum, Etkinlik, Gelisim, Gorev, Hafiza, Kisi, Mesaj, Olay, Ortak, Ozet, uid, useDurum } from '@/lib/depo';
 
 export type Calisan = { id: string; ad: string; grup: string; gorev: string; bagli: string; renk: string; foto?: string; kart?: string; aciklama?: string; hikaye?: string; yeni?: 1 };
 export const LVL = ['', 'Başlangıç', 'Gelişiyor', 'Yetkin', 'Usta', 'Uzman'];
@@ -74,15 +74,18 @@ export function uygula(o: Ozet, e: Olay) {
       const k = gunAnahtari(d), g = o.gun[k];
       if (g?.D && (!v.t || g.D === v.t || (v.t === 'rapor13' && g.D === 'rapor4'))) { const y = { ...g }; delete y.D; o.gun[k] = y; }
     }
-  } else if (e.tur === 'ilac_al' || e.tur === 'ilac_kaydet' || e.tur === 'ilac_sil' || e.tur === 'seker') {
+  } else if (/^(etkinlik|etkinlik_sil|ozel_gun|ozel_gun_sil|es_harcama|es_gelir|finans_kayit)$/.test(e.tur)) {
+    aileUygula(o, e);
+  } else if (/^es_ilac_(al|kaydet|sil)$/.test(e.tur) || e.tur === 'ilac_al' || e.tur === 'ilac_kaydet' || e.tur === 'ilac_sil' || e.tur === 'seker') {
     const a = (o.aile = o.aile || bosAile());
-    if (e.tur === 'ilac_al') { const k = v.k + '|' + v.id; if (v.al) a.al[k] = 1; else delete a.al[k]; }
-    else if (e.tur === 'ilac_sil') a.ilac = a.ilac.filter((x) => x.id !== v.id);
+    if (e.tur.startsWith('es_') && a.ilac.some((x) => x.id === v.id && x.kim !== 'kubra')) return; // eş yalnız kendi ilacını değiştirir
+    if (e.tur === 'ilac_al' || e.tur === 'es_ilac_al') { const k = v.k + '|' + v.id; if (v.al) a.al[k] = 1; else delete a.al[k]; }
+    else if (e.tur === 'ilac_sil' || e.tur === 'es_ilac_sil') a.ilac = a.ilac.filter((x) => x.id !== v.id);
     else if (e.tur === 'seker') { const n = Math.round(+v.v); if (n >= 20 && n <= 600) a.seker[v.k] = n; else delete a.seker[v.k]; }
     else {
       const y: any = { ad: v.ad, miktar: v.miktar || '', saat: v.saat || '08:00', tekrar: v.tekrar || 'gun', actok: v.actok || '', not: v.not || '' };
       if (v.stok != null && v.stok !== '') { y.stok = Math.max(0, Math.round(+v.stok) || 0); y.stokTs = e.ts; }
-      const m = a.ilac.find((x) => x.id === v.id); if (m) Object.assign(m, y); else a.ilac.push({ id: v.id, eklendi: e.ts, ...y });
+      const m = a.ilac.find((x) => x.id === v.id); if (m) Object.assign(m, y); else a.ilac.push({ id: v.id, eklendi: e.ts, kim: e.tur === 'es_ilac_kaydet' ? 'kubra' : 'cagla', ...y });
     }
   } else if (e.tur === 'izin') {
     // masaüstündeki OB.izKaydet ile aynı: yalnız iş günleri; başka türle dolu gün atlanır
@@ -95,6 +98,37 @@ export function uygula(o: Ozet, e: Olay) {
     }
   }
 }
+/** Aile olayları (masaüstü orv-aile.js → OAI.uygula ile aynı kurallar): takvim, randevu, özel gün, harcama / gelir */
+function aileUygula(o: Ozet, e: Olay) {
+  const v = e.veri || {}, a = (o.aile = o.aile || bosAile()), es = o.rol === 'es', kim: Kisi = es ? 'kubra' : 'cagla';
+  const O = (a.ortak = a.ortak || bosOrtak());
+  if (e.tur === 'etkinlik') {
+    const m = O.takvim.find((x) => x.id === v.id); if (m && es && m.kim !== 'kubra') return;
+    const y: Partial<Etkinlik> = { ad: v.ad, tarih: v.tarih, saat: v.saat || '', tur: v.tur === 'randevu' ? 'randevu' : 'etkinlik', yer: v.yer || '', not: v.not || '', kisi: v.kisi || kim };
+    if (m) Object.assign(m, y); else O.takvim.push({ id: v.id, kim, ts: e.ts, ...(y as any) });
+    O.takvim.sort((x, z) => (x.tarih + (x.saat || '')).localeCompare(z.tarih + (z.saat || '')));
+  } else if (e.tur === 'etkinlik_sil') O.takvim = O.takvim.filter((x) => x.id !== v.id || (es && x.kim !== 'kubra'));
+  else if (e.tur === 'ozel_gun') {
+    const m = O.ozel.find((x) => x.id === v.id); if (m && es && m.kim !== 'kubra') return;
+    const y = { ad: v.ad, tarih: v.tarih, tur: v.tur || 'diger' }; if (m) Object.assign(m, y); else O.ozel.push({ id: v.id, kim, ...y });
+  } else if (e.tur === 'ozel_gun_sil') O.ozel = O.ozel.filter((x) => x.id !== v.id || (es && x.kim !== 'kubra'));
+  else {
+    // Harcama / gelir: es_harcama {tutar, ad, kasa cep|ortak, kat} · es_gelir · finans_kayit {tur, kim, tutar, kalem, tarih, hk?}
+    if (e.tur === 'finans_kayit' && v.kim === 'sirket') return;
+    const gelir = e.tur === 'es_gelir' || (e.tur === 'finans_kayit' && v.tur === 'gelir'), tutar = Math.round((+String(v.tutar).replace(',', '.') || 0) * 100) / 100; if (!(tutar > 0)) return;
+    const kasa: 'o' | 'c' | 'e' = gelir ? 'o' : e.tur === 'es_harcama' ? (v.kasa === 'cep' ? 'e' : 'o') : v.hk === 'c' ? 'c' : 'o';
+    const kat = gelir ? v.kat || v.kalem || 'Gelir' : kasa === 'e' ? 'Cep harçlığı · Eşi' : e.tur === 'es_harcama' ? v.kat || 'Diğer' : v.kalem || 'Diğer';
+    const d = new Date(e.ts), tarih = v.tarih || d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    O.hareket.unshift([tarih, gelir ? 1 : 0, kat, e.tur === 'finans_kayit' ? v.not || '' : v.ad || '', tutar, kasa, kim]);
+    const ay = new Date(); if (tarih.slice(0, 7) !== ay.getFullYear() + '-' + String(ay.getMonth() + 1).padStart(2, '0')) return;
+    const tr = O.trend[O.trend.length - 1]; if (tr) tr[gelir ? 1 : 2] += tutar;
+    if (gelir) { a.fin.bu.gelir += tutar; return; }
+    a.fin.bu.gider += tutar; a.fin.bu.kat[kat] = (a.fin.bu.kat[kat] || 0) + tutar;
+    if (kasa === 'o') { O.kasa.ortak += tutar; O.kat[kat] = (O.kat[kat] || 0) + tutar; }
+    else { O.kasa[kasa] += tutar; const c = O.cep[kasa]; if (c) { c.harcanan += tutar; if (c.kal != null) { c.kal -= tutar; c.gunluk = O.cep.kalanGun ? Math.max(0, Math.round(c.kal / O.cep.kalanGun)) : c.gunluk; } } }
+  }
+}
+export function bosOrtak(): Ortak { return { ad: { cagla: 'Çağlar', kubra: 'Kübra' }, trend: [], kasa: { ortak: 0, c: 0, e: 0 }, kat: {}, cep: {}, hareket: [], odeme: [], takvim: [], ozel: [], izin: {} }; }
 function gelisimUygula(o: Ozet, g: Gelisim, ts: number) {
   const m = (o.ekip.m[g.kim] = o.ekip.m[g.kim] || {});
   const b: Beceri[] = (m.bec || beceriler(g.kim, o)).map((x) => ({ ...x }));

@@ -9,7 +9,8 @@ import { esitleSonra } from '@/lib/senk';
 import { R, saydam } from '@/lib/tema';
 
 export const IZIN_TURLERI: [string, string][] = [['yillik', 'Yıllık izin'], ['mazeret', 'Mazeret izni'], ['rapor13', 'Rapor'], ['refakat', 'Refakat izni'], ['ucretsiz', 'Ücretsiz izin'], ['sevk', 'İş yeri sevki']];
-const AD: Record<string, string> = { ...Object.fromEntries(IZIN_TURLERI), rapor4: 'Rapor' };
+export const IZIN_AD: Record<string, string> = { ...Object.fromEntries(IZIN_TURLERI), rapor4: 'Rapor' };
+const AD = IZIN_AD;
 const GN = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
 const AY = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
 
@@ -47,13 +48,15 @@ function GunSec({ etiket, deger, degis, en }: { etiket: string; deger: string; d
   );
 }
 
-export function IzinGirisi() {
+export type IzinAraligi = { t: string; b: string; s: string };
+/** duzelt verilirse form o izinle dolar; Kaydet önce eski aralığı kaldırır (izin_sil), sonra yenisini yazar */
+export function IzinGirisi({ duzelt, bitti }: { duzelt?: IzinAraligi | null; bitti?: () => void } = {}) {
   const o = useGorunum(), olaylar = useDurum((d) => d.olaylar);
   const bugun = gunAnahtari(new Date());
-  const [tur, setTur] = useState('yillik'), [b, setB] = useState(bugun), [son, setSon] = useState(bugun), [not, setNot] = useState('');
+  const [tur, setTur] = useState(duzelt ? (duzelt.t === 'rapor4' ? 'rapor13' : duzelt.t) : 'yillik'), [b, setB] = useState(duzelt?.b || bugun), [son, setSon] = useState(duzelt?.s || bugun), [not, setNot] = useState('');
   const [hata, setHata] = useState(''), [ok, setOk] = useState('');
   const bit = once(son, b) ? b : son, gunler = izinGunleri(b, bit);
-  const isGunu = gunler.filter((k) => { const g = o.gun[k]; if (g) return !!g.L && (!g.D || g.D === tur); const d = tarihOf(k).getDay(); return d !== 0 && d !== 6; });
+  const isGunu = gunler.filter((k) => { const g = o.gun[k]; if (g) return !!g.L && (!g.D || g.D === tur || (!!duzelt && g.D === duzelt.t)); const d = tarihOf(k).getDay(); return d !== 0 && d !== 6; });
   const bekleyen = olaylar.filter((e) => e.tur === 'izin' && !e.gitti);
 
   const basDegis = (k: string) => { setB(k); if (once(son, k)) setSon(k); setHata(''); setOk(''); };
@@ -61,9 +64,11 @@ export function IzinGirisi() {
     setOk('');
     if (gunler.length > 31) return setHata('En fazla 31 gün girilebilir');
     if (!isGunu.length) return setHata('Bu aralıkta izin yazılacak iş günü yok (hafta sonu, tatil ya da dolu)');
+    if (duzelt) olayEkle('izin_sil', { t: duzelt.t, b: duzelt.b, s: duzelt.s });
     olayEkle('izin', { t: tur, b, s: bit, a: not.trim() });
     esitleSonra(); setHata(''); setNot('');
-    setOk(isGunu.length + ' iş günü ' + AD[tur].toLocaleLowerCase('tr') + ' olarak gönderildi');
+    setOk(isGunu.length + ' iş günü ' + AD[tur].toLocaleLowerCase('tr') + (duzelt ? ' olarak düzeltildi' : ' olarak gönderildi'));
+    bitti?.();
   };
 
   return (
@@ -90,7 +95,10 @@ export function IzinGirisi() {
           style={{ color: '#fff', fontSize: 15, backgroundColor: '#252528', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12 }} />
         {!!hata && <Text style={{ color: R.kirmizi, fontSize: 13 }}>{hata}</Text>}
         {!!ok && <Text style={{ color: R.yesil, fontSize: 13 }}>{ok}</Text>}
-        <Dugme yazi="İzni kaydet" ikon="kaydet" onPress={kaydet} />
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          {duzelt && bitti && <Dugme yazi="Vazgeç" tur="ikinci" onPress={bitti} stil={{ flex: 1 }} />}
+          <Dugme yazi={duzelt ? 'Güncelle' : 'İzni kaydet'} ikon="kaydet" onPress={kaydet} stil={{ flex: 1 }} />
+        </View>
         <Text style={{ color: R.soluk, fontSize: 12.5 }}>Hafta sonu, resmî tatil ve başka türle dolu günler atlanır. Bilgisayardaki Orvane’de İzinler’e işlenir.</Text>
       </View>
       {bekleyen.length > 0 && (

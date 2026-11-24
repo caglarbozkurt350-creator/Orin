@@ -14,6 +14,9 @@ export const TEMALAR = {
 export type TemaAnahtari = keyof typeof TEMALAR;
 export const GECISLER = { akiskan: 'Akışkan', kaydir: 'Kaydır', yakinlas: 'Yakınlaş', sol: 'Solma', yok: 'Kapalı' } as const;
 export type GecisAnahtari = keyof typeof GECISLER;
+/** Alt çubuk stilleri (tasarım: Android › Alt çubuk seçenekleri). Ayarlar’dan seçilir. */
+export const CUBUKLAR = { centik: ['Çentik', 'Seçili simge kabarcıkta'], kemer: ['Kemer', 'Işıklı çizgi kemer olur'], spot: ['Spot', 'Seçiliye üstten ışık'], hap: ['Hap', 'Arkada kayan renkli hap'] } as const;
+export type CubukAnahtari = keyof typeof CUBUKLAR;
 
 /** Renkler. `ana` / `ana2` / `bilgi` tema rengine göre değişir (uygulaTema), gerisi sabittir. */
 export const R = {
@@ -33,13 +36,13 @@ export function saydam(hex: string, a: number) {
   return hex.length === 7 ? hex + h : hex;
 }
 
-type Gorunum = { tema: TemaAnahtari; gecis: GecisAnahtari; acilis: boolean };
+type Gorunum = { tema: TemaAnahtari; gecis: GecisAnahtari; acilis: boolean; cubuk: CubukAnahtari };
 const ANAHTAR = 'orvane-gorunum-v1';
 function yukle(): Gorunum {
-  const v: Gorunum = { tema: 'turuncu', gecis: 'akiskan', acilis: true };
+  const v: Gorunum = { tema: 'turuncu', gecis: 'akiskan', acilis: true, cubuk: 'centik' };
   try {
     const s = Storage.getItemSync(ANAHTAR);
-    if (s) { const d = JSON.parse(s); if (d.tema in TEMALAR) v.tema = d.tema; if (d.gecis in GECISLER) v.gecis = d.gecis; if (typeof d.acilis === 'boolean') v.acilis = d.acilis; }
+    if (s) { const d = JSON.parse(s); if (d.tema in TEMALAR) v.tema = d.tema; if (d.gecis in GECISLER) v.gecis = d.gecis; if (typeof d.acilis === 'boolean') v.acilis = d.acilis; if (d.cubuk in CUBUKLAR) v.cubuk = d.cubuk; }
   } catch {}
   return v;
 }
@@ -55,5 +58,6 @@ function degistir(y: Partial<Gorunum>) {
 export const temaSec = (k: TemaAnahtari) => degistir({ tema: k });
 export const gecisSec = (k: GecisAnahtari) => degistir({ gecis: k });
 export const acilisSec = (b: boolean) => degistir({ acilis: b });
+export const cubukSec = (k: CubukAnahtari) => degistir({ cubuk: k });
 export const gorunum = () => G;
 export function useGorunumAyari() { return useSyncExternalStore((cb) => { dinleyenler.add(cb); return () => { dinleyenler.delete(cb); }; }, () => G); }

@@ -49,6 +49,16 @@ export const P: Record<string, string> = {
   izin: 'M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
   gorsel: 'M5 4h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM9 10a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM21 17l-5-5-9 8',
   yenile: 'M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7',
+  // 0.9.0
+  kalem: 'M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4',
+  pdf: 'M6 3h9l4 4v14H6zM14 3v5h5M12 11v6M9.5 14.5L12 17l2.5-2.5',
+  damla: 'M12 3s6 6.6 6 11a6 6 0 0 1-12 0c0-4.4 6-11 6-11z',
+  oyun: 'M7 9h10a4 4 0 0 1 4 4v1a3 3 0 0 1-5.4 1.8L14.5 14h-5l-1.1 1.8A3 3 0 0 1 3 14v-1a4 4 0 0 1 4-4zM8 11v3M6.5 12.5h3M15.5 12h.01M17.5 13.5h.01',
+  ilac: 'M10.5 20.5a5 5 0 0 1-7-7l6-6a5 5 0 0 1 7 7zM7 10l7 7',
+  alarm: 'M12 21a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM12 9v4l2.5 2M4 4l3-2M20 4l-3-2',
+  link: 'M14 4h6v6M20 4l-9 9M18 14v5H5V6h5',
+  grafik: 'M4 20V4M4 20h16M7 15l4-4 3 3 5-6',
+  sessiz: 'M6 9a6 6 0 0 1 9.4-4.9M18 11c.2 4 2 5 2 5H8M10 20a2 2 0 0 0 4 0M3 3l18 18',
 };
 export function Ikon({ ad, boy = 22, renk = R.yazi2, kalin = 1.8 }: { ad: string; boy?: number; renk?: string; kalin?: number }) {
   return (

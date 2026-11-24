@@ -38,8 +38,8 @@ function EkipIzgara() {
         {onay > 0 ? <Pressable onPress={() => sekmeGit(5, { gorev: 'onay' })} accessibilityLabel={onay + ' onay bekliyor'} hitSlop={8}><Hap yazi={onay + ' onay bekliyor'} t="o" /></Pressable> : <Hap yazi={String(hepsi.length)} />}
       </Pressable>
       {!o.ts && (
-        <Pressable onPress={() => sekmeGit(4, { merkez: '' })} style={{ flexDirection: 'row', gap: 10, alignItems: 'center', backgroundColor: saydam(R.ana, 0.08), borderWidth: 1, borderColor: saydam(R.ana, 0.3), borderRadius: 14, padding: 12 }}>
-          <Ikon ad="bilgi" boy={18} renk={R.bilgi} /><Text style={{ flex: 1, color: R.bilgi, fontSize: 13, lineHeight: 18 }}>Masaüstü Orvane ile henüz eşitlenmedi. Merkez › Eşitleme’den giriş yap; görevler, sohbetler ve iş günü kayıtları buraya gelir.</Text>
+        <Pressable onPress={() => sekmeGit(6)} style={{ flexDirection: 'row', gap: 10, alignItems: 'center', backgroundColor: saydam(R.ana, 0.08), borderWidth: 1, borderColor: saydam(R.ana, 0.3), borderRadius: 14, padding: 12 }}>
+          <Ikon ad="bilgi" boy={18} renk={R.bilgi} /><Text style={{ flex: 1, color: R.bilgi, fontSize: 13, lineHeight: 18 }}>Masaüstü Orvane ile henüz eşitlenmedi. Ayarlar › Eşitleme’den giriş yap; görevler, sohbetler ve iş günü kayıtları buraya gelir.</Text>
         </Pressable>
       )}
       {pasif ? (

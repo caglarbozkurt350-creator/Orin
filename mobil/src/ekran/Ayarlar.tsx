@@ -1,79 +1,56 @@
-// Merkez sekmesi: İş Günleri, İzinler, Bildirimler, Eşitleme ve Güncellemeler, Ayarlar (tema + geçiş).
-// Önceki Ayarlar ekranının tüm içeriği (giriş, eşitleme, bağlantı adresi, güncelleme, yapay zekâ, sürüm) burada korunur.
+// Ayarlar (0.9.0 · üstteki “Ç” profil düğmesi): alt çubuk stili, tema, sekme geçişi, açılış ekranı,
+// masaüstüyle eşitleme, uygulama güncellemesi ve sürüm. Önceki Merkez sekmesinin ayar ve eşitleme bölümleri buraya taşındı.
 import * as Updates from 'expo-updates';
 import { useEffect, useState } from 'react';
 import { Animated, Pressable, Switch, Text, TextInput, View } from 'react-native';
-import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
-import { Dugme, Foto, Hap, Ikon, KartK, Nokta, SayfaBasligi, s } from '@/bilesen/ortak';
-import { IsGunu } from '@/ekran/IsGunu';
-import { Izinler } from '@/ekran/Izinler';
-import { okunduYap, useBildirimler } from '@/lib/bildirim';
+import Svg, { Defs, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
+import { Dugme, Hap, Ikon, KartK, SayfaBasligi, s } from '@/bilesen/ortak';
 import { guncelle, useDurum } from '@/lib/depo';
-import { gecisOnizle, merkezAlt as altGit, useGezinti } from '@/lib/gezinti';
+import { gecisOnizle } from '@/lib/gezinti';
 import { guncellemeDenetle, yenidenBaslat } from '@/lib/guncelle';
 import { useEkip } from '@/lib/kullan';
 import { cikis, esitle, girisYap, hataMetni, kayitOl, oturum, VARSAYILAN } from '@/lib/senk';
-import { acilisSec, GECISLER, gecisSec, R, saydam, TEMALAR, temaSec, useGorunumAyari } from '@/lib/tema';
+import { acilisSec, CUBUKLAR, CubukAnahtari, cubukSec, GECISLER, gecisSec, R, saydam, TEMALAR, temaSec, useGorunumAyari } from '@/lib/tema';
 import { SURUM } from '@/veri/surum';
 
-export function MerkezSekmesi() {
-  const alt = useGezinti((d) => d.merkezAlt);
-  if (alt) {
-    return (
-      <View style={{ gap: 14 }}>
-        <Pressable onPress={() => altGit('')} accessibilityRole="button" accessibilityLabel="Merkeze dön" style={{ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44, alignSelf: 'flex-start', paddingRight: 12 }}>
-          <Ikon ad="sol" boy={20} renk={R.yazi} kalin={2.2} /><Text style={{ color: R.yazi, fontSize: 14, fontWeight: '600' }}>Merkez</Text>
-        </Pressable>
-        <SayfaBasligi ust={alt === 'gun' ? 'Günlük · kayıt · etiket' : 'Yıllık · mazeret · rapor'} baslik={alt === 'gun' ? 'İş Günleri' : 'İzinler'} />
-        {alt === 'gun' ? <IsGunu /> : <Izinler />}
-      </View>
-    );
-  }
-  return <MerkezAna />;
-}
-
-function Satir({ ikon, renk, ad, alt, onPress }: { ikon: string; renk: string; ad: string; alt: string; onPress: () => void }) {
+/** Alt çubuk stilinin küçük çizimi (Ayarlar kartı) */
+const ORNEK: Record<CubukAnahtari, string> = {
+  centik: 'M0 8 H44 C50 8 50 22 60 22 C70 22 70 8 76 8 H120 V26 H0 Z',
+  kemer: 'M0 10 H44 Q60 22 76 10 H120',
+  spot: 'M44 2 H76 L92 26 H28 Z',
+  hap: 'M40 13 a9 9 0 0 1 9 -9 H71 a9 9 0 0 1 0 18 H49 a9 9 0 0 1 -9 -9 Z',
+};
+function CubukSecimi() {
+  const g = useGorunumAyari();
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 14, minHeight: 56, paddingHorizontal: 14, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.05)', transform: [{ scale: pressed ? 0.97 : 1 }] })}>
-      <View style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: saydam(renk, 0.16), alignItems: 'center', justifyContent: 'center' }}><Ikon ad={ikon} boy={20} renk={renk} kalin={2} /></View>
-      <View style={{ flex: 1 }}><Text style={{ color: R.yazi, fontSize: 15, fontWeight: '500' }}>{ad}</Text><Text style={s.sub}>{alt}</Text></View>
-      <Ikon ad="sag" boy={16} renk="#8e8e95" kalin={2} />
-    </Pressable>
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+      {(Object.keys(CUBUKLAR) as CubukAnahtari[]).map((k) => {
+        const on = k === g.cubuk, [ad, acik] = CUBUKLAR[k];
+        return (
+          <Pressable key={k} onPress={() => cubukSec(k)} accessibilityRole="radio" accessibilityState={{ selected: on }} accessibilityLabel={ad + ' alt çubuk, ' + acik}
+            style={({ pressed }) => ({ width: '48.5%', gap: 6, padding: 12, borderRadius: 16, borderWidth: 1.5, borderColor: on ? R.ana : 'rgba(255,255,255,0.1)', backgroundColor: on ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.03)', transform: [{ scale: pressed ? 0.97 : 1 }] })}>
+            <Svg width="100%" height={26} viewBox="0 0 120 26" preserveAspectRatio="none">
+              <Path d={ORNEK[k]} fill={k === 'kemer' ? 'none' : k === 'spot' ? saydam(R.ana, 0.2) : k === 'hap' ? saydam(R.ana, 0.33) : 'rgba(255,255,255,0.08)'} stroke={k === 'kemer' ? R.ana : k === 'centik' ? 'rgba(255,255,255,0.2)' : 'none'} strokeWidth={1.6} />
+            </Svg>
+            <Text style={{ color: R.yazi, fontSize: 14, fontWeight: '700' }}>{ad}</Text>
+            <Text style={[s.sub, { fontSize: 11.5 }]}>{acik}</Text>
+          </Pressable>
+        );
+      })}
+    </View>
   );
 }
 
-function MerkezAna() {
-  const { liste, okundu, okunmamis } = useBildirimler(), g = useGorunumAyari(), { o, hepsi } = useEkip(), senk = useDurum((d) => d.senk);
+export function AyarlarSayfasi() {
+  const g = useGorunumAyari(), { o } = useEkip(), senk = useDurum((d) => d.senk);
   return (
     <View style={{ gap: 14 }}>
-      <SayfaBasligi ust="İş günü, sistem ve bildirimler" baslik="Merkez" />
-      <KartK ad="mgunu" baslik="İŞ GÜNÜ" ozet="İş Günleri · İzinler" duz>
-        <Satir ikon="gun" renk="#6fe1f5" ad="İş Günleri" alt="Günlük · Projeler · Özet" onPress={() => altGit('gun')} />
-        <Satir ikon="izin" renk="#6be585" ad="İzinler" alt="Yıllık · Mazeret" onPress={() => altGit('izin')} />
+      <SayfaBasligi ust="Profil · görünüm · eşitleme" baslik="Ayarlar" />
+      <KartK ad="cubuk" baslik="ALT ÇUBUK" ozet={CUBUKLAR[g.cubuk][0]}>
+        <CubukSecimi />
+        <Text style={[s.sub, { fontSize: 11.5 }]}>Seçim hemen uygulanır; yalnız bu telefonda saklanır.</Text>
       </KartK>
-
-      <KartK ad="bild" baslik="BİLDİRİMLER" ozet={okunmamis ? okunmamis + ' yeni' : liste.length ? 'Hepsi okundu' : 'Bildirim yok'} sag={okunmamis > 0 ? <Pressable onPress={() => okunduYap(liste.map((b) => b.id))} accessibilityRole="button" style={{ height: 32, paddingHorizontal: 12, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.08)', justifyContent: 'center' }}><Text style={{ color: '#c4c4c9', fontSize: 11.5, fontWeight: '600' }}>Tümünü okundu say</Text></Pressable> : undefined}>
-        {liste.length ? liste.map((b) => {
-          const c = hepsi.find((x) => x.id === b.kim), yeni = !okundu[b.id];
-          return (
-            <Pressable key={b.id} onPress={() => okunduYap([b.id])} accessibilityRole="button" accessibilityLabel={b.kanal + ': ' + b.baslik + (yeni ? ', okunmadı' : '')} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48, paddingVertical: 4 }}>
-              {c ? <Foto c={c} boy={36} halka={false} /> : <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: R.kart2, alignItems: 'center', justifyContent: 'center' }}><Ikon ad="bilgi" boy={18} /></View>}
-              <View style={{ flex: 1, gap: 2 }}>
-                <Text numberOfLines={1} style={{ color: yeni ? R.yazi : R.yazi2, fontSize: 13.5, fontWeight: '600' }}>{b.baslik}</Text>
-                <Text numberOfLines={2} style={s.sub}>{b.alt}</Text>
-              </View>
-              <Hap yazi={b.kanal} t={b.kanal === 'Onay' ? 'o' : b.kanal === 'Sistem' ? 'n' : 'g'} />
-              {yeni && <Nokta d="bz" boy={8} />}
-            </Pressable>
-          );
-        }) : <Text style={s.soluk}>Yeni bildirim yok. Onay bekleyenler, biten görevler ve çalışan cevapları burada görünür.</Text>}
-      </KartK>
-
-      <KartK ad="esit" baslik="EŞİTLEME VE GÜNCELLEMELER" ozet={senk.hata ? 'Bağlantı yok' : senk.son ? 'Eşitlendi' : o.ts ? 'Bağlı' : 'Giriş gerekli'}>
-        <Esitleme />
-      </KartK>
-
-      <KartK ad="ayar" baslik="AYARLAR" ozet={TEMALAR[g.tema].ad + ' · ' + GECISLER[g.gecis]}>
+      <KartK ad="ayar" baslik="TEMA VE GEÇİŞ" ozet={TEMALAR[g.tema].ad + ' · ' + GECISLER[g.gecis]}>
         <Text style={s.sub}>Tema rengi · görünüm aynı kalır</Text>
         <View style={{ flexDirection: 'row', gap: 6 }}>
           {(Object.keys(TEMALAR) as (keyof typeof TEMALAR)[]).map((k) => {
@@ -109,6 +86,9 @@ function MerkezAna() {
           <Switch value={g.acilis} onValueChange={acilisSec} trackColor={{ false: '#4a4a50', true: saydam(R.ana, 0.6) }} thumbColor={g.acilis ? R.ana : '#c9c9cf'} accessibilityLabel="Açılış ekranı" />
         </View>
         <Text style={[s.sub, { fontSize: 11.5 }]}>Tema ve geçiş yalnız bu telefonda saklanır; masaüstüyle eşitlenmez.</Text>
+      </KartK>
+      <KartK ad="esit" baslik="EŞİTLEME VE GÜNCELLEMELER" ozet={senk.hata ? 'Bağlantı yok' : senk.son ? 'Eşitlendi' : o.ts ? 'Bağlı' : 'Giriş gerekli'}>
+        <Esitleme />
       </KartK>
       <Text style={[s.soluk, { textAlign: 'center', marginTop: 4 }]}>ORVANE · sürüm {SURUM} · masaüstüyle aynı sürüm</Text>
     </View>

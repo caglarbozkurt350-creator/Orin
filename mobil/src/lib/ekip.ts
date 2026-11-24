@@ -2,7 +2,7 @@
 // Masaüstündeki renderer/js/team.js ile aynı kurallar. Birini değiştirirken ötekini de güncelle.
 import { useMemo } from 'react';
 import C0 from '@/veri/calisanlar.json';
-import { Beceri, Durum, Gelisim, Gorev, Hafiza, Mesaj, Olay, Ozet, uid, useDurum } from '@/lib/depo';
+import { Aile, Beceri, ButceAy, Durum, Gelisim, Gorev, Hafiza, Mesaj, Olay, Ozet, uid, useDurum } from '@/lib/depo';
 
 export type Calisan = { id: string; ad: string; grup: string; gorev: string; bagli: string; renk: string; foto?: string; kart?: string; aciklama?: string; hikaye?: string; yeni?: 1 };
 export const LVL = ['', 'Başlangıç', 'Gelişiyor', 'Yetkin', 'Usta', 'Uzman'];
@@ -19,6 +19,8 @@ const BEC0: Record<string, [string, number, string][]> = {
 };
 const DESC0: Record<string, string> = { orin: 'şirketi yönetir, görevleri dağıtır, gelişimleri onaylar', orla: 'ekibi koordine eder, işleri sıraya koyar', nika: 'çalışan kartlarını hazırlar, beceri ve hafızaları geliştirir', echo: 'iş günü kayıtlarını toplar ve raporlar', otto: 'gelir-gider kaydını tutar, yaklaşan ödemeleri hatırlatır' };
 
+const bosAy = (ay: string): ButceAy => ({ ay, gelir: 0, gider: 0, kat: {}, hg: [0, 0, 0, 0, 0], hc: [0, 0, 0, 0, 0] });
+export function bosAile(): Aile { return { fin: { bu: bosAy(''), once: bosAy(''), islem: [] }, ilac: [], al: {}, seker: {}, tcmb: null }; }
 export function bosOzet(): Ozet {
   return { v: 1, ts: 0, olaySira: 0, ekip: { m: {}, gorev: [], gel: [], sohbet: {} }, gun: {}, proj: [], ayar: { w1: 525, w2: 435 } };
 }
@@ -54,7 +56,34 @@ export function uygula(o: Ozet, e: Olay) {
   else if (e.tur === 'sohbet_temizle') { const a = E.sohbet[v.kim]; if (a) E.sohbet[v.kim] = a.filter((m) => m.ts > e.ts);
   } else if (e.tur === 'kayit') {
     const d = (o.gun[v.k] = o.gun[v.k] || { L: null, T: 0, OT: 0, e: [] });
-    d.e.push([v.kod, v.is, v.dk]); d.T += v.dk;
+    d.e.push(v.du ? [v.kod, v.is, v.dk, v.du] : [v.kod, v.is, v.dk]); d.T += v.dk;
+  } else if (e.tur === 'kayit_duzelt' || e.tur === 'kayit_sil') {
+    // masaüstündeki orv-telefon.js → OT9.bul ile aynı: önce verilen sıra, eşleşmezse ilk aynı kayıt
+    const d = o.gun[v.k]; if (!d || !v.eski) return;
+    const es = (x: any[]) => x && x[0] === v.eski[0] && x[1] === v.eski[1] && +x[2] === +v.eski[2];
+    let i = v.n != null && es(d.e[v.n]) ? v.n : d.e.findIndex(es); if (i < 0) return;
+    const x = d.e[i]; d.T -= +x[2] || 0;
+    if (e.tur === 'kayit_sil') { d.e.splice(i, 1); return; }
+    const y = v.yeni || {}, du = y.du === '' ? undefined : y.du || x[3];
+    const n: any[] = [y.kod || x[0], y.is != null ? y.is : x[1], +y.dk > 0 ? +y.dk : x[2]]; if (du) n.push(du);
+    d.e[i] = n as any; d.T += +n[2];
+  } else if (e.tur === 'izin_sil') {
+    const pa = (k: string) => { const a = k.split('-').map(Number); return new Date(a[0], a[1] - 1, a[2]); };
+    const son = pa(v.s || v.b);
+    for (let d = pa(v.b), n = 0; d <= son && n < 31; d.setDate(d.getDate() + 1), n++) {
+      const k = gunAnahtari(d), g = o.gun[k];
+      if (g?.D && (!v.t || g.D === v.t || (v.t === 'rapor13' && g.D === 'rapor4'))) { const y = { ...g }; delete y.D; o.gun[k] = y; }
+    }
+  } else if (e.tur === 'ilac_al' || e.tur === 'ilac_kaydet' || e.tur === 'ilac_sil' || e.tur === 'seker') {
+    const a = (o.aile = o.aile || bosAile());
+    if (e.tur === 'ilac_al') { const k = v.k + '|' + v.id; if (v.al) a.al[k] = 1; else delete a.al[k]; }
+    else if (e.tur === 'ilac_sil') a.ilac = a.ilac.filter((x) => x.id !== v.id);
+    else if (e.tur === 'seker') { const n = Math.round(+v.v); if (n >= 20 && n <= 600) a.seker[v.k] = n; else delete a.seker[v.k]; }
+    else {
+      const y: any = { ad: v.ad, miktar: v.miktar || '', saat: v.saat || '08:00', tekrar: v.tekrar || 'gun', actok: v.actok || '', not: v.not || '' };
+      if (v.stok != null && v.stok !== '') { y.stok = Math.max(0, Math.round(+v.stok) || 0); y.stokTs = e.ts; }
+      const m = a.ilac.find((x) => x.id === v.id); if (m) Object.assign(m, y); else a.ilac.push({ id: v.id, eklendi: e.ts, ...y });
+    }
   } else if (e.tur === 'izin') {
     // masaüstündeki OB.izKaydet ile aynı: yalnız iş günleri; başka türle dolu gün atlanır
     const pa = (k: string) => { const a = k.split('-').map(Number); return new Date(a[0], a[1] - 1, a[2]); };

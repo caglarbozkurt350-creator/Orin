@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AltPencere, FinansFormu, GorevFormu } from '@/bilesen/formlar';
+import { PdfDugme } from '@/bilesen/Pdf';
 import { Avatar, Dugme, Foto, Ikon, KartK, SayfaBasligi, s } from '@/bilesen/ortak';
 import { aciklama } from '@/lib/ekip';
 import { KISA } from '@/lib/ekipMeta';
@@ -48,7 +49,7 @@ export function Ailem() {
   if (pasif) return <AilemPasif />;
   return (
     <View style={{ gap: 14, paddingRight: 76 }}>
-      <SayfaBasligi ust="Kategoriler ve çalışanlar" baslik="Ailem" />
+      <SayfaBasligi ust="Kategoriler ve çalışanlar" baslik="Ailem" sag={<View style={{ marginBottom: 4 }}><PdfDugme tur="butce" yazi="Bütçe PDF" /></View>} />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
         {KAT.map(([id, ad, alt, harf, renk]) => {
           const k = bul(id), on = famId === id;
@@ -90,7 +91,7 @@ function AilemPasif() {
   const [finans, setFinans] = useState(false);
   return (
     <View style={{ gap: 14 }}>
-      <SayfaBasligi ust="Bütçe, sağlık, menü, takvim" baslik="Ailem" />
+      <SayfaBasligi ust="Bütçe, sağlık, menü, takvim" baslik="Ailem" sag={<View style={{ marginBottom: 4 }}><PdfDugme tur="butce" yazi="Bütçe PDF" /></View>} />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
         {KAT.map(([id, ad, , , renk]) => {
           const on = sec[0] === id;

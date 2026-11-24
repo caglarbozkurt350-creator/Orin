@@ -11,13 +11,25 @@ export type Gelisim = { id: string; kim: string; tur: 'beceri' | 'seviye' | 'haf
 export type Beceri = { ad: string; sv: number; not?: string };
 export type Hafiza = { id: string; metin: string; kaynak: string; ts: number };
 export type Uye = { ad?: string; gorev?: string; renk?: string; aciklama?: string; hikaye?: string; grup?: string; bagli?: string; yeni?: 1; sil?: 1; bec?: Beceri[]; haf?: Hafiza[] };
-export type Gun = { L: number | null; T: number; OT: number; D?: string; e: [string, string, number][] };
+/** e: [proje kodu, iş, dakika, durum?] · durum: baslanacak | devam | bitti | beklemede */
+export type Kalem = [string, string, number, string?];
+export type Gun = { L: number | null; T: number; OT: number; D?: string; e: Kalem[] };
+/** Kişisel bütçenin bir ayı (masaüstü orv-telefon.js → OT9.butceAy). hg/hc: 5 haftanın gelir/gideri */
+export type ButceAy = { ay: string; gelir: number; gider: number; kat: Record<string, number>; hg: number[]; hc: number[] };
+export type Ilac = { id: string; ad: string; miktar: string; saat: string; tekrar: 'gun' | 'haftaici' | 'haftasonu'; actok?: string; not?: string; stok?: number | null; stokTs?: number; eklendi?: number };
+/** Masaüstünden gelen aile verisi: bütçe (bu ay + geçen ay), ilaç planı, alındı işaretleri ("YYYY-MM-DD|id"), sabah açlık şekeri */
+export type Aile = {
+  fin: { bu: ButceAy; once: ButceAy; islem: [string, string, string, 0 | 1, number][] };
+  ilac: Ilac[]; al: Record<string, 1>; seker: Record<string, number>;
+  tcmb?: { tarih: string; usd: number; eur: number | null } | null;
+};
 export type Ozet = {
   v: 1; ts: number; olaySira: number;
   ekip: { m: Record<string, Uye>; gorev: Gorev[]; gel: Gelisim[]; sohbet: Record<string, Mesaj[]> };
   gun: Record<string, Gun>; proj: string[]; ayar: { w1: number; w2: number }; bugun?: string;
   /** yz: masaüstünde yapay zekâ çalışanları açık mı (manuel mod varsayılan; alan yoksa kapalı sayılır) */
   zeka?: { bagli: boolean; usd: number; butce: number; yz?: boolean };
+  aile?: Aile;
 };
 export type Olay = { id: string; tur: string; veri: any; ts: number; sira?: number; gitti?: boolean };
 export type Durum = {

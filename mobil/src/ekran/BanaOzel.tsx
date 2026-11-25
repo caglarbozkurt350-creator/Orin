@@ -8,7 +8,7 @@ import Svg, { Circle, Polyline, Rect } from 'react-native-svg';
 import { AltPencere, Bos } from '@/bilesen/formlar';
 import { Dugme, Hap, Ikon, KartK, SayfaBasligi, s } from '@/bilesen/ortak';
 import { PdfDugme } from '@/bilesen/Pdf';
-import { alindiMi, SEKER_RENK, SekerSatiri } from '@/bilesen/Saglik';
+import { alindiMi, IlacSatiri, SEKER_RENK, SekerSatiri } from '@/bilesen/Saglik';
 import { Ilac, olayEkle, Ozet, uid } from '@/lib/depo';
 import { kalanGun, oyunYenile, takipDegis, useDis, useDisYenile, zilDegis } from '@/lib/dis';
 import { useGorunum } from '@/lib/ekip';
@@ -142,17 +142,8 @@ export function BanaOzel() {
             <Ikon ad="bilgi" boy={16} renk="#f7bd55" kalin={2.1} /><Text style={{ flex: 1, color: '#f7bd55', fontSize: 12.5 }}>{i.ad} {k === 0 ? 'bitti' : 'yaklaşık ' + k + ' gün sonra bitiyor'} · stok ekle</Text>
           </View>
         ))}
-        {ilac.length ? ilac.slice().sort((a, b) => a.saat.localeCompare(b.saat)).map((i) => { const k = kalanStok(i); return (
-          <Pressable key={i.id} onPress={() => { setForm({ i }); setN((x) => x + 1); }} accessibilityRole="button" accessibilityLabel={i.ad + ' düzelt'}
-            style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, paddingHorizontal: 12, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.05)', transform: [{ scale: pressed ? 0.98 : 1 }] })}>
-            <View style={{ width: 36, height: 36, borderRadius: 11, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(62,207,90,0.14)' }}><Ikon ad="ilac" boy={18} renk="#6be585" kalin={2.1} /></View>
-            <View style={{ flex: 1, gap: 1 }}>
-              <Text style={{ color: R.yazi, fontSize: 14.5, fontWeight: '600' }}>{i.ad}</Text>
-              <Text style={s.sub}>{[i.miktar, i.saat, TEKRAR.find((t) => t[0] === i.tekrar)?.[1], ACTOK.find((t) => t[0] === i.actok && t[0])?.[1]].filter(Boolean).join(' · ')}</Text>
-            </View>
-            {k != null && <Text style={{ color: k <= 7 ? '#f7bd55' : R.yazi2, fontSize: 12.5, fontWeight: '600' }}>{k} gün</Text>}
-            <Ikon ad="kalem" boy={15} renk={R.yazi2} kalin={2} />
-          </Pressable>); }) : <Bos yazi={o.ts ? (es ? 'Henüz ilacın yok. Ekle ile başla; günlük işaretlerin Anasayfa’da görünür, ' + AD.cagla + ' da görür.' : 'Kayıtlı ilaç yok. Ekle ile başla; masaüstündeki İlaç Planı ile eşitlenir.') : 'Masaüstü ile eşitlenince ilaç planın burada görünür.'} ikon="ilac" />}
+        {ilac.length ? ilac.slice().sort((a, b) => a.saat.localeCompare(b.saat)).map((i, n) => { const k = kalanStok(i); return (
+          <IlacSatiri key={i.id} o={o} i={i} no={n + 1} ek={k != null ? 'stok ' + k + ' gün' : undefined} duzenle={() => { setForm({ i }); setN((x) => x + 1); }} />); }) : <Bos yazi={o.ts ? (es ? 'Henüz ilacın yok. Ekle ile başla; günlük işaretlerin Anasayfa’da görünür, ' + AD.cagla + ' da görür.' : 'Kayıtlı ilaç yok. Ekle ile başla; masaüstündeki İlaç Planı ile eşitlenir.') : 'Masaüstü ile eşitlenince ilaç planın burada görünür.'} ikon="ilac" />}
         <Dugme yazi="İlaç ekle" ikon="arti" tur="ikinci" onPress={() => { setForm({ i: null }); setN((x) => x + 1); }} />
         {!es && <SekerSatiri key={'sk' + o.ts} o={o} />}
       </KartK>

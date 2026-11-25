@@ -1,7 +1,7 @@
 // Orvane 0.9.0 · Telefon eşitleme eki smoke testleri (yalnız `electron . --smoke`). Durum geri alınır.
 window.__telefon09Test=function(){var R=[];
  function t(n,c,m){try{var ok=typeof c=='function'?c():c;R.push({n:n,ok:!!ok,m:ok?'':String(m||'beklenmeyen sonuç')})}catch(e){R.push({n:n,ok:false,m:e.message})}}
- var a=OA.st(),il0=JSON.stringify(a.ilac),al0=JSON.stringify(a.ilacAl),sk0=a.seker?JSON.stringify(a.seker):null,fn0=S.finans?JSON.stringify(S.finans):null;
+ var a=OA.st(),il0=JSON.stringify(a.ilac),al0=JSON.stringify(a.ilacAl),sk0=a.seker?JSON.stringify(a.seker):null,ss0=a.sekerSaat?JSON.stringify(a.sekerSaat):null,fn0=S.finans?JSON.stringify(S.finans):null;
  var gk=null,d=new Date();d.setDate(d.getDate()+2);for(var i=0;i<12&&!gk;i++){var k=key(d);if(lim(k)&&!D[k]&&!(E[k]||[]).length)gk=k;d.setDate(d.getDate()+1)}
  var E0=gk?E[gk]:undefined;
  try{
@@ -23,7 +23,8 @@ window.__telefon09Test=function(){var R=[];
   t('İlaç: Alındı işareti telefondan gelir ve özete döner',!!a.ilacAl[bk+'|t9ilac']&&bulutOzet().aile.al[bk+'|t9ilac']==1);
   bulutUygula({id:'t9-a2',tur:'ilac_al',ts:Date.now(),veri:{k:bk,id:'t9ilac',al:0}});t('İlaç: işaret geri alınır',!a.ilacAl[bk+'|t9ilac']);
   bulutUygula({id:'t9-s1',tur:'seker',ts:Date.now(),veri:{k:bk,v:104}});t('Şeker: sabah değeri saklanır ve özete gider',a.seker[bk]==104&&bulutOzet().aile.seker[bk]==104);
-  bulutUygula({id:'t9-s2',tur:'seker',ts:Date.now(),veri:{k:bk,v:5}});t('Şeker: geçersiz değer kaydı siler',a.seker[bk]==null);
+  bulutUygula({id:'t9-s3',tur:'seker',ts:Date.now(),veri:{k:bk,v:118,s:'06:12'}});t('Şeker: yazıldığı saat saklanır ve özete gider',a.seker[bk]==118&&a.sekerSaat[bk]=='06:12'&&bulutOzet().aile.sekerSaat[bk]=='06:12');
+  bulutUygula({id:'t9-s2',tur:'seker',ts:Date.now(),veri:{k:bk,v:5}});t('Şeker: geçersiz değer kaydı ve saatini siler',a.seker[bk]==null&&!a.sekerSaat[bk]);
   bulutUygula({id:'t9-i3',tur:'ilac_sil',ts:Date.now(),veri:{id:'t9ilac'}});t('İlaç: telefondan kaldırılır',!a.ilac.some(function(x){return x.id=='t9ilac'}));
   // İş kaydı: durum, düzelt, sil
   if(gk){
@@ -39,7 +40,7 @@ window.__telefon09Test=function(){var R=[];
    t('İzin: telefondan kaldırılır',vardi&&!D[gk]);
   }else t('Kayıt testleri için boş iş günü bulunamadı',true);
  }catch(e){t('Telefon eki testi',false,e.stack)}
- finally{a.ilac=JSON.parse(il0);a.ilacAl=JSON.parse(al0);if(sk0)a.seker=JSON.parse(sk0);else delete a.seker;if(fn0)S.finans=JSON.parse(fn0);else delete S.finans;
+ finally{a.ilac=JSON.parse(il0);a.ilacAl=JSON.parse(al0);if(sk0)a.seker=JSON.parse(sk0);else delete a.seker;if(ss0)a.sekerSaat=JSON.parse(ss0);else delete a.sekerSaat;if(fn0)S.finans=JSON.parse(fn0);else delete S.finans;
   if(gk){if(E0)E[gk]=E0;else delete E[gk];if(D[gk])delete D[gk]}}
  return R};
 (function(){var a=window.__asyncTest;window.__asyncTest=function(){return (a?a():Promise.resolve([])).then(function(x){var y;try{y=window.__telefon09Test()}catch(e){y=[{n:'Telefon 0.9: test çöktü',ok:false,m:e.message}]}return x.concat(y)})}})();

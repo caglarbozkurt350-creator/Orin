@@ -20,7 +20,7 @@ export type Ilac = { id: string; ad: string; miktar: string; saat: string; tekra
 /** Masaüstünden gelen aile verisi: bütçe (bu ay + geçen ay), ilaç planı, alındı işaretleri ("YYYY-MM-DD|id"), sabah açlık şekeri */
 export type Aile = {
   fin: { bu: ButceAy; once: ButceAy; islem: [string, string, string, 0 | 1, number][] };
-  ilac: Ilac[]; al: Record<string, 1>; seker: Record<string, number>;
+  ilac: Ilac[]; al: Record<string, 1>; seker: Record<string, number>; /** şekerin yazıldığı saat (gün → "HH:MM") */ sekerSaat?: Record<string, string>;
   tcmb?: { tarih: string; usd: number; eur: number | null } | null;
   ortak?: Ortak;
 };

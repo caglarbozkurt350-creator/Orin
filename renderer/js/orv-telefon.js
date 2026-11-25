@@ -2,7 +2,7 @@
 // Orvane 0.9.0 · Telefonun yeni 5 sekmeli arayüzü için eşitleme eki.
 // Telefona giden özete `aile` bloğu eklenir: bu ay ve geçen ayın kişisel bütçesi (S.finans, Şirket hariç),
 // ilaç planı ve alındı işaretleri (S.orvA.ilac / ilacAl), sabah açlık şekeri (S.orvA.seker), TCMB kuru.
-// Telefondan gelen yeni olaylar: kayit_duzelt, kayit_sil, izin_sil, ilac_al, ilac_kaydet, ilac_sil, seker.
+// Telefondan gelen yeni olaylar: kayit_duzelt, kayit_sil, izin_sil, ilac_al, ilac_kaydet, ilac_sil, seker {k, v, s} (s: yazıldığı saat → S.orvA.sekerSaat).
 // Telefondaki karşılığı: mobil/src/lib/ekip.ts → uygula(). Birini değiştirirken ötekini de güncelle.
 // ========================================================================
 var OT9={DUR:{baslanacak:1,devam:1,bitti:1,beklemede:1}};
@@ -13,15 +13,15 @@ OT9.butceAy=function(ay){var f=typeof fnS=='function'?fnS():{kayit:[]},r={ay:ay,
  f.kayit.forEach(function(k){if(k.kim=='sirket'||String(k.tarih||'').slice(0,7)!=ay)return;var t=+k.tutar||0,w=Math.min(4,Math.floor(((+String(k.tarih).slice(8,10)||1)-1)/7));
   if(k.tur=='gelir'){r.gelir+=t;r.hg[w]+=t}else{r.gider+=t;r.hc[w]+=t;r.kat[k.kalem||'Diğer']=(r.kat[k.kalem||'Diğer']||0)+t}});
  return r};
-OT9.aile=function(){var a=OA.st(),f=typeof fnS=='function'?fnS():{kayit:[],piyasa:{}},bu=OT9.ay(0),once=OT9.ay(1),sin=OT9.pad(new Date(Date.now()-62*864e5)),al={},sk={};
+OT9.aile=function(){var a=OA.st(),f=typeof fnS=='function'?fnS():{kayit:[],piyasa:{}},bu=OT9.ay(0),once=OT9.ay(1),sin=OT9.pad(new Date(Date.now()-62*864e5)),al={},sk={},ss={};
  Object.keys(a.ilacAl||{}).forEach(function(k){if(k.slice(0,10)>=sin)al[k]=1});
- Object.keys(a.seker||{}).forEach(function(k){if(k>=sin)sk[k]=a.seker[k]});
+ Object.keys(a.seker||{}).forEach(function(k){if(k>=sin){sk[k]=a.seker[k];if(a.sekerSaat&&a.sekerSaat[k])ss[k]=a.sekerSaat[k]}});
  var islem=f.kayit.filter(function(k){var y=String(k.tarih||'').slice(0,7);return k.kim!='sirket'&&(y==bu||y==once)}).sort(function(x,y){return x.tarih<y.tarih?1:x.tarih>y.tarih?-1:(y.ts||0)-(x.ts||0)}).slice(0,60)
   .map(function(k){return[k.tarih,k.kalem||'Diğer',String(k.not||'').slice(0,60),k.tur=='gelir'?1:0,+k.tutar||0]});
  var p=f.piyasa&&f.piyasa.tcmb;
  return{fin:{bu:OT9.butceAy(bu),once:OT9.butceAy(once),islem:islem},
   ilac:(a.ilac||[]).map(function(i){return{id:i.id,ad:i.ad,miktar:i.miktar||'',saat:i.saat||'',tekrar:i.tekrar||'gun',actok:i.actok||'',not:i.not||'',stok:i.stok==null?null:+i.stok,stokTs:i.stokTs||0,eklendi:i.eklendi||0,kim:i.kim||'cagla'}}),
-  al:al,seker:sk,tcmb:p&&p.kur&&p.kur.usd?{tarih:p.tarih,usd:p.kur.usd.satis,eur:p.kur.eur?p.kur.eur.satis:null}:null}};
+  al:al,seker:sk,sekerSaat:ss,tcmb:p&&p.kur&&p.kur.usd?{tarih:p.tarih,usd:p.kur.usd.satis,eur:p.kur.eur?p.kur.eur.satis:null}:null}};
 
 // ---------- Özet: aile bloğu + kayıtların durum etiketi ----------
 var _ot9Oz=bulutOzet;bulutOzet=function(){var oz=_ot9Oz();try{
@@ -42,5 +42,5 @@ var _ot9Bu=bulutUygula;bulutUygula=function(e){var v=e.veri||{},a=OA.st();
   if(v.stok!=null&&v.stok!==''){o.stok=Math.max(0,Math.round(+v.stok)||0);o.stokTs=e.ts||Date.now()}
   var m=a.ilac.filter(function(z){return z.id==v.id})[0];if(m)Object.assign(m,o);else{o.id=v.id;o.eklendi=e.ts||Date.now();a.ilac.push(o)}OA.kaydet();return}
  if(e.tur=='ilac_sil'){a.ilac=a.ilac.filter(function(z){return z.id!=v.id});OA.kaydet();return}
- if(e.tur=='seker'){if(!/^\d{4}-\d{2}-\d{2}$/.test(v.k||''))return;a.seker=a.seker||{};var sv=Math.round(+v.v);if(sv>=20&&sv<=600)a.seker[v.k]=sv;else delete a.seker[v.k];OA.kaydet();return}
+ if(e.tur=='seker'){if(!/^\d{4}-\d{2}-\d{2}$/.test(v.k||''))return;a.seker=a.seker||{};a.sekerSaat=a.sekerSaat||{};var sv=Math.round(+v.v);if(sv>=20&&sv<=600){a.seker[v.k]=sv;if(/^\d{2}:\d{2}$/.test(v.s||''))a.sekerSaat[v.k]=v.s}else{delete a.seker[v.k];delete a.sekerSaat[v.k]}OA.kaydet();return}
  return _ot9Bu(e)};

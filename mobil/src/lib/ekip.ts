@@ -81,7 +81,7 @@ export function uygula(o: Ozet, e: Olay) {
     if (e.tur.startsWith('es_') && a.ilac.some((x) => x.id === v.id && x.kim !== 'kubra')) return; // eş yalnız kendi ilacını değiştirir
     if (e.tur === 'ilac_al' || e.tur === 'es_ilac_al') { const k = v.k + '|' + v.id; if (v.al) a.al[k] = 1; else delete a.al[k]; }
     else if (e.tur === 'ilac_sil' || e.tur === 'es_ilac_sil') a.ilac = a.ilac.filter((x) => x.id !== v.id);
-    else if (e.tur === 'seker') { const n = Math.round(+v.v); if (n >= 20 && n <= 600) a.seker[v.k] = n; else delete a.seker[v.k]; }
+    else if (e.tur === 'seker') { const n = Math.round(+v.v); a.sekerSaat = { ...(a.sekerSaat || {}) }; if (n >= 20 && n <= 600) { a.seker[v.k] = n; if (/^\d{2}:\d{2}$/.test(v.s || '')) a.sekerSaat[v.k] = v.s; } else { delete a.seker[v.k]; delete a.sekerSaat[v.k]; } }
     else {
       const y: any = { ad: v.ad, miktar: v.miktar || '', saat: v.saat || '08:00', tekrar: v.tekrar || 'gun', actok: v.actok || '', not: v.not || '' };
       if (v.stok != null && v.stok !== '') { y.stok = Math.max(0, Math.round(+v.stok) || 0); y.stokTs = e.ts; }

@@ -91,14 +91,15 @@ ${veriYok ? `<span style="color:#9a9aa2;font-size:8px">${veriYok} gün için tel
 // ---------- 2 · İLAÇ TAKİBİ + ŞEKER ----------
 const gecerli = (tekrar: string, d: Date) => tekrar === 'haftaici' ? d.getDay() % 6 !== 0 : tekrar === 'haftasonu' ? d.getDay() % 6 === 0 : true;
 export function kalanStok(i: { stok?: number | null; stokTs?: number }) { if (i.stok == null) return null; return Math.max(0, i.stok - (i.stokTs ? Math.floor((Date.now() - i.stokTs) / GUN) : 0)); }
+const donemAd = (saat: string) => { const h = parseInt(saat, 10); return isNaN(h) ? '' : h < 11 ? 'Sabah' : h < 16 ? 'Öğlen' : 'Akşam'; };
 export function ilacHtml(o: Ozet, ay: Date) {
   const A = R.ana, a = o.aile, b0 = bugun0(), gl = gunleri(ay), N = gl.length;
-  const ilac = a?.ilac || [], al = a?.al || {}, seker = a?.seker || {};
+  const ilac = (a?.ilac || []).slice().sort((x, y) => x.saat.localeCompare(y.saat)), al = a?.al || {}, seker = a?.seker || {}, sekerSaat = a?.sekerSaat || {};
   let bas = `<th style="width:72px">İlaç</th>`; gl.forEach((d) => { bas += `<th style="padding:0 0 4px;text-align:center;font-size:7px;${d.getTime() === b0.getTime() ? `color:${A}` : ''}">${d.getDate()}</th>`; }); bas += `<th class="n" style="width:40px">Uyum</th>`;
   let izg = '', alinan = 0, gereken = 0; const kac: [string, number][] = [], hafta = [0, 0, 0, 0, 0].map(() => [0, 0]), satirlar: [string, number, number][] = [];
   const kutu = (bg: string, r: string, y: string) => `<span style="display:block;height:13px;border-radius:3px;background:${bg};color:${r};font-size:8px;font-weight:700;text-align:center;line-height:13px">${y}</span>`;
   ilac.forEach((m) => {
-    let r = `<tr><td style="padding:4px 6px"><b>${esc(m.ad)}</b></td>`, ok = 0, ger = 0;
+    let r = `<tr><td style="padding:4px 6px;line-height:1.15"><b>${esc(m.ad)}</b><br><span style="color:#8a8a92;font-size:7px">${esc(m.saat)}</span></td>`, ok = 0, ger = 0;
     const ekl = m.eklendi ? new Date(m.eklendi).setHours(0, 0, 0, 0) : 0;
     gl.forEach((d) => {
       let h = ''; const w = Math.min(4, Math.floor((d.getDate() - 1) / 7));
@@ -122,6 +123,9 @@ export function ilacHtml(o: Ozet, ay: Date) {
   SK.forEach((v, i) => { const x = sx(i + 1); if (v == null) return; const d = v > 130 || v < 80; sk += `<circle cx="${x}" cy="${sy(v)}" r="${d ? 3.2 : 2.3}" fill="${d ? '#f59e0b' : '#e11d48'}" stroke="#fff" stroke-width="1"/><text x="${x}" y="${sy(v) - 5}" font-size="6.5" text-anchor="middle" fill="${d ? '#b45309' : '#55555c'}" font-weight="${d ? 700 : 400}">${v}</text>`; });
   gl.forEach((d) => { sk += `<text x="${sx(d.getDate())}" y="${SH + 22}" font-size="6.5" text-anchor="middle" fill="${d.getTime() === b0.getTime() ? A : d > b0 ? '#c8c8ce' : '#9a9aa2'}">${d.getDate()}</text>`; });
   sk += '</svg>';
+  // Ölçüm kayıtları: gün · yazıldığı saat · değer
+  const olcum = gl.map((d) => ({ d, k: tamAnahtar(d) })).filter((x) => seker[x.k] != null).map(({ d, k }) => { const v = seker[k], dd = v > 130 || v < 80;
+    return `<span style="display:inline-flex;gap:5px;align-items:baseline;padding:3px 7px;border-radius:5px;background:${dd ? '#fff4e0' : '#f6f6f8'};font-size:8px"><b style="color:#1d1d22">${d.getDate()} ${AY[d.getMonth()].slice(0, 3)}</b><span style="color:#6b6b73">${sekerSaat[k] ? 'saat ' + esc(sekerSaat[k]) : 'saat —'}</span><b style="color:${dd ? '#b45309' : '#e11d48'}">${v}</b></span>`; }).join('');
   const enCok = kac.filter((x) => x[1] > 0).sort((x, y) => y[1] - x[1])[0];
   const stoklu = ilac.map((m) => ({ m, k: kalanStok(m) })), azalan = stoklu.filter((x) => x.k != null && x.k <= 7);
   const bitis = (k: number | null) => (k == null ? '—' : new Date(Date.now() + k * GUN).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' }));
@@ -131,10 +135,11 @@ ${kpi([['Uyum', gereken ? '%' + Math.round((alinan / gereken) * 100) : '—', al
 <table style="table-layout:fixed"><tr>${bas}</tr>${izg}</table>
 <div class="lej"><span><b style="color:#1f7a35">✓</b> alındı</span><span><b style="color:#c0392b">×</b> kaçırıldı</span><span>gri: gelmedi ya da o gün alınmıyor</span></div></div>
 <div class="blok" style="gap:4px"><h2>Şeker takip çizelgesi · sabah açlık · <span style="text-transform:none">mg/dL</span></h2>${sk}
-<div class="lej"><span><span style="display:inline-block;width:14px;height:7px;background:#e9f8ee;border:1px dashed #9fd9b0;vertical-align:-1px"></span> hedef aralık 80–130</span>${SKx.length ? `<span>Ort. <b style="color:#1d1d22">${ort}</b></span><span>En düşük <b style="color:#1d1d22">${Math.min(...SKx)}</b> · en yüksek <b style="color:#b45309">${Math.max(...SKx)}</b></span>` : '<span>Bu ay ölçüm yok</span>'}${dis.length ? `<span><b style="color:#b45309">●</b> hedef dışı: ${dis.join(', ')} ${AY[ay.getMonth()]}</span>` : ''}</div></div>
+<div class="lej"><span><span style="display:inline-block;width:14px;height:7px;background:#e9f8ee;border:1px dashed #9fd9b0;vertical-align:-1px"></span> hedef aralık 80–130</span>${SKx.length ? `<span>Ort. <b style="color:#1d1d22">${ort}</b></span><span>En düşük <b style="color:#1d1d22">${Math.min(...SKx)}</b> · en yüksek <b style="color:#b45309">${Math.max(...SKx)}</b></span>` : '<span>Bu ay ölçüm yok</span>'}${dis.length ? `<span><b style="color:#b45309">●</b> hedef dışı: ${dis.join(', ')} ${AY[ay.getMonth()]}</span>` : ''}</div>
+${olcum ? `<div style="font-size:8.5px;font-weight:700;color:#55555c;margin-top:2px">Ölçüm kayıtları · gün · yazıldığı saat · mg/dL</div><div style="display:flex;flex-wrap:wrap;gap:4px">${olcum}</div>` : ''}</div>
 <div class="alt2"><div class="blok" style="flex:1.3"><h2>İlaç listesi ve stok</h2>
-<table><tr><th>İlaç</th><th>Doz · saat</th><th class="n">Alınan</th><th class="n">Stok</th><th class="n">Tahmini bitiş</th></tr>
-${stoklu.map(({ m, k }) => { const s = satirlar.find((x) => x[0] === m.id); return `<tr><td><b>${esc(m.ad)}</b></td><td>${esc([m.miktar, m.saat].filter(Boolean).join(' · '))}</td><td class="n">${s ? s[1] + ' / ' + s[2] : '—'}</td><td class="n" style="${k != null && k <= 7 ? `color:${A};font-weight:700` : ''}">${k == null ? '—' : k + ' gün'}</td><td class="n">${bitis(k)}</td></tr>`; }).join('')}</table></div>
+<table><tr><th>İlaç</th><th>Doz · zaman · saat</th><th class="n">Alınan</th><th class="n">Stok</th><th class="n">Tahmini bitiş</th></tr>
+${stoklu.map(({ m, k }) => { const s = satirlar.find((x) => x[0] === m.id); return `<tr><td><b>${esc(m.ad)}</b></td><td>${esc([m.miktar, donemAd(m.saat), m.actok === 'ac' ? 'Aç' : m.actok === 'tok' ? 'Tok' : '', m.saat].filter(Boolean).join(' · '))}</td><td class="n">${s ? s[1] + ' / ' + s[2] : '—'}</td><td class="n" style="${k != null && k <= 7 ? `color:${A};font-weight:700` : ''}">${k == null ? '—' : k + ' gün'}</td><td class="n">${bitis(k)}</td></tr>`; }).join('')}</table></div>
 <div class="blok" style="flex:1"><h2>Haftalık uyum</h2>
 ${hafta.filter((h) => h[1]).map((h, i) => `<div style="display:flex;align-items:center;gap:8px"><span style="width:44px">${i + 1}. hafta</span><div class="bar" style="flex:1"><i style="width:${Math.round((h[0] / h[1]) * 100)}%;background:#3ecf5a"></i></div><b style="width:40px;text-align:right">${h[0]} / ${h[1]}</b></div>`).join('') || '<span style="color:#9a9aa2">—</span>'}</div></div>
 ${azalan.length ? `<div class="uyari"><b>Stok</b><span>${azalan.map((x) => esc(x.m.ad) + ' yaklaşık ' + x.k + ' gün sonra (' + bitis(x.k) + ') bitiyor').join('; ')}.</span></div>` : ''}

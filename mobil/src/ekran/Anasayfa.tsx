@@ -203,7 +203,7 @@ export function Anasayfa() {
       </KartK>}
 
       <KartK ad="ilac" baslik="GÜNLÜK İLAÇ TAKİBİ" ozet={ilac.length ? alinan + '/' + ilac.length + ' alındı' : 'ilaç yok'} sag={<Tumu git={() => sekmeGit(3)} yazi={es ? 'Sağlık' : 'İlaçlarım'} />}>
-        {ilac.length ? ilac.map((i) => <IlacSatiri key={i.id} o={o} i={i} />) : <Text style={s.soluk}>Bugün alınacak ilaç yok. Bana Özel › İlaçlar’dan eklenir.</Text>}
+        {ilac.length ? ilac.map((i, n) => <IlacSatiri key={i.id} o={o} i={i} no={n + 1} />) : <Text style={s.soluk}>Bugün alınacak ilaç yok. Bana Özel › İlaçlar’dan eklenir.</Text>}
         <SekerSatiri key={o.ts + '|' + (o.aile?.seker[Object.keys(o.aile?.seker || {}).sort().pop() || ''] ?? '')} o={o} />
       </KartK>
       {!o.ts && <Text style={[s.sub, { textAlign: 'center' }]}>Son eşitleme yok · veriler masaüstünden gelir · Ayarlar › Eşitleme</Text>}

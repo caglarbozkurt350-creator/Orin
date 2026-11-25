@@ -20,6 +20,7 @@ import { menuAc, menuKapat, SEKME_AYAR, sekmeGit, useGezinti } from '@/lib/gezin
 import { useEkip } from '@/lib/kullan';
 import { useRol } from '@/lib/rol';
 import { R, useGorunumAyari } from '@/lib/tema';
+import { useKlavyeKaydir } from '@/lib/klavye';
 
 /** Alt menüde olmayan sayfalar (Görevler, Ayarlar, Ekip): üstte geri bağlantısı */
 function GeriSayfa({ don, ad, children }: { don: number; ad: string; children: React.ReactNode }) {
@@ -66,7 +67,7 @@ function KenarOku() {
 
 export default function Kabuk() {
   const sekme = useGezinti((d) => d.sekme), yon = useGezinti((d) => d.yon), onizle = useGezinti((d) => d.onizle), menuAcik = useGezinti((d) => d.menu.acik);
-  const g = useGorunumAyari(), { pasif, cevrim } = useEkip(), { okunmamis } = useBildirimler(), ins = useSafeAreaInsets();
+  const g = useGorunumAyari(), { pasif, cevrim } = useEkip(), { okunmamis } = useBildirimler(), ins = useSafeAreaInsets(), kb = useKlavyeKaydir();
   const [splash, setSplash] = useState(() => g.acilis && !ACILDI);
   const giris = useRef(new Animated.Value(1)).current;
 
@@ -96,11 +97,11 @@ export default function Kabuk() {
   return (
     <View style={{ flex: 1, backgroundColor: R.zemin }}>
       {/* tema değişince bütün görünüm yeni vurgu rengiyle yeniden kurulur; sekme ve menü durumu gezinti deposunda korunur */}
-      <View key={g.tema} style={{ flex: 1 }}>
+      <View key={g.tema} ref={kb.kap} style={{ flex: 1 }}>
         <View pointerEvents="none" style={{ position: 'absolute', left: -140, top: -120, width: 420, height: 420, borderRadius: 210, backgroundColor: 'rgba(110,90,80,0.14)' }} />
         <View pointerEvents="none" style={{ position: 'absolute', right: -160, bottom: -140, width: 420, height: 420, borderRadius: 210, backgroundColor: 'rgba(70,90,115,0.14)' }} />
         <Animated.View style={[{ flex: 1 }, stil]}>
-          <ScrollView key={sekme} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: ins.top + 8 + 60 + 14, paddingHorizontal: 16, paddingBottom: 130 + ins.bottom }}>
+          <ScrollView key={sekme} ref={kb.sc} onScroll={kb.kaydir} scrollEventThrottle={32} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: ins.top + 8 + 60 + 14, paddingHorizontal: 16, paddingBottom: kb.ortu ? kb.ortu + 40 : 130 + ins.bottom }}>
             {SEKMELER[sekme]}
           </ScrollView>
         </Animated.View>

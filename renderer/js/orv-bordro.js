@@ -17,6 +17,14 @@ BR.YAS=[['smDevir','Sigorta Matrahı Devir','t',''],['sm','Sigorta Matrahı','t'
  ['yTop','Yasal Kesinti Toplamı','t','-',2,'k'],['-'],['ilkNet','İlk Net','t','+',2,'k'],['-'],['smBakiye','Sigorta Matrahı Bakiye','t','',0]];
 BR.OZL=[['avans','Ücret Avansı','t','-'],['sendika','Sendika Aidatı','t','-'],['yemekB','Yemek Bedeli','t','-'],['personel','Personel Borcu','t','-'],['borcT','Borç Taksidi','t','-'],['borcK','Borç Kes.','t','-'],['nafaka','Nafaka','t','-'],['icra','İcra','t','-'],['icraB','İcra Bakiyesi','t',''],['ceza','Ceza','t','-'],['ozelSig','Özel Sigorta','t','-'],['kes1','Kesinti 1','t','-'],['kes2','Kesinti 2','t','-'],['indBes','İndirilen Isv. Payı BES','t',''],['indSag','İndirilen Isv. Payı Sağlık','t',''],['isvInd','Isv. Pay. İndirilemeyen','t',''],['dusulen','Düşülen Sigorta','t',''],['bes','BES Otomatik Katılım','t','-'],['oYasam','Yaşam Sigortası','t','-'],['oAyni','Ayni Yardım','t','-'],['-'],
  ['oTop','Özel Kesinti Top.','t','-',2,'k'],['agi','A.G.İ','t','+'],['-'],['kesTop','Kesinti Top.','t','-',2,'k'],['-'],['net','Net Ödenen','t','+',2,'n']];
+// 0.9.6: Raporlu dönemde SGK'nın ayrıca ödediği geçici iş göremezlik ödeneği (işveren bordrosunda yer almaz, elle girilir)
+BR.SGK=[['raporGun','Raporlu Gün','t','',0],['sgkOdenek','SGK Rapor Ödeneği','t','+']];
+BR.TOPF=['elToplam','Net + SGK Ödeneği','t','+',2,'n'];
+BR.elToplam=function(m){if(!m||!m.v||m.v.sgkOdenek==null)return undefined;return Math.round(((+m.v.net||0)+(+m.v.sgkOdenek||0))*100)/100};
+BR.sgkBlok=function(m,o){var f=BR.TOPF,t=BR.elToplam(m),ot=BR.elToplam(o),sat='';
+ if(t!==undefined)sat='<div class="br-ay"></div><div class="br-sr n" data-id="elToplam"><span class="br-et">'+esc(f[1])+'</span><span class="br-dg"><span class="br-c">'+BR.kutu(f,{v:{elToplam:t}},ot===undefined?null:{ay:o.ay,v:{elToplam:ot}},0)+'</span></span><span class="br-bt"></span></div>';
+ return '<section class="br-su br-sgk"><div class="br-sb">SGK RAPOR ÖDENEĞİ</div>'+BR.SGK.map(function(x){return BR.satir(x,m,o)}).join('')+sat+
+  '<span class="oa-sub" style="padding:8px 4px 2px">Raporlu olduğun günler için SGK\'nın hesabına yatırdığı ödenek. Bordroda görünmez; ✎ ile elle gir. Net Ödenen ile toplanır.</span></section>'};
 BR.BAS=[['tip','Bordro Tipi'],['lokasyon','Lokasyon'],['engel','Engel Derecesi'],['sicil','Sicil No'],['ad','Adı Soyadı'],['lider','Ekip Lideri'],['pozisyon','Pozisyon'],['medeni','Medeni Durum'],['cocuk','Çocuk Adedi'],['gorev','Görevi'],['birim','Birim Ücreti']];
 BR.AYLAR=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 BR.ui={ay:'',duz:'',bas:false,er:'',ok:''};
@@ -57,27 +65,42 @@ BR.sayfa=function(){var L=BR.st().aylar,i=BR.secili(),U=BR.ui;
  if(!m)return h+OA.kart('','<div class="oa-hd"><span class="oa-tl">Bordro kaydı yok</span></div><span class="oa-sub">Bordroyu "İçe aktar" ile bir JSON dosyasından yükleyebilir ya da "Yeni ay" ile boş bir ay açıp satırları ✎ ile doldurabilirsin. Veriler yalnız bu bilgisayarda tutulur.</span>',0)+'</div>';
  h+=BR.basBlok(m)+'<div class="br-grid">'+
   BR.sutun('KAZANÇLAR',BR.KAZ,m,o,'<div class="br-sr br-kb"><span class="br-et"></span><span class="br-dg"><span class="br-c oa-sub">Birim</span><span class="br-c oa-sub">Tutar</span></span><span class="br-bt"></span></div>')+
-  BR.sutun('YASAL KESİNTİLER',BR.YAS,m,o)+BR.sutun('ÖZEL KESİNTİLER',BR.OZL,m,o)+'</div>'+
+  BR.sutun('YASAL KESİNTİLER',BR.YAS,m,o)+BR.sutun('ÖZEL KESİNTİLER',BR.OZL,m,o)+BR.sgkBlok(m,o)+'</div>'+BR.butceSatir(m)+
   '<div class="br-alt"><span class="oa-sub">Veriler yalnız bu bilgisayarda (durum dosyası) tutulur; buluta ve telefona gönderilmez. ✎ ile düzeltilen satırlar • işaretiyle gösterilir. Toplamlar bordrodaki gibi saklanır, otomatik yeniden hesaplanmaz.</span><button type="button" class="oa-btn sm ghost br-sil" onclick="BR.sil()">'+(U.silOnay==m.ay?'Emin misin? '+esc(BR.ayAd(m.ay))+' silinsin':'Bu ayı sil')+'</button></div>';
  return h+'</div>'};
 BR.git=function(d){var L=BR.st().aylar,i=BR.secili()+d;if(i<0||i>=L.length)return;BR.ui.ay=L[i].ay;BR.ui.duz='';BR.ui.bas=false;BR.ui.silOnay='';ORV.yenile()};
-BR.alan=function(id){var r=null;[BR.KAZ,BR.YAS,BR.OZL].forEach(function(L){L.forEach(function(f){if(f[0]==id)r=f})});return r};
+BR.alan=function(id){var r=null;[BR.KAZ,BR.YAS,BR.OZL,BR.SGK].forEach(function(L){L.forEach(function(f){if(f[0]==id)r=f})});return r};
 BR.duzenle=function(id){BR.ui.duz=id;BR.ui.er='';BR.ui.ok='';ORV.yenile();setTimeout(function(){var e=document.getElementById('brIn0');if(e){e.focus();e.select()}},30)};
 BR.vazgec=function(){BR.ui.duz='';BR.ui.er='';ORV.yenile()};
 BR.kaydet=function(){var id=BR.ui.duz,f=BR.alan(id),L=BR.st().aylar,m=L[BR.secili()];if(!f||!m)return false;
  var a=BR.oku((document.getElementById('brIn0')||{}).value),b=f[2]=='t'?null:BR.oku((document.getElementById('brIn1')||{}).value);
  if((a!==null&&isNaN(a))||(b!==null&&isNaN(b))){BR.ui.er='Geçerli bir sayı yaz (ör. 1.234,56)';ORV.yenile();return false}
  m.v=m.v||{};if(f[2]=='t'){if(a===null)delete m.v[id];else m.v[id]=a}else{if(a===null&&b===null)delete m.v[id];else m.v[id]=[a||0,b||0]}
- m.duz=m.duz||{};m.duz[id]=Date.now();BR.ui.duz='';BR.ui.er='';BR.ui.ok=f[1]+' düzeltildi';save();ORV.yenile();return true};
+ m.duz=m.duz||{};m.duz[id]=Date.now();BR.ui.duz='';BR.ui.er='';BR.ui.ok=f[1]+' düzeltildi';if(id=='net'&&BR.butceEkle(m))BR.ui.ok+=' · Aile Bütçesi güncellendi';save();ORV.yenile();return true};
 BR.basKaydet=function(){var m=BR.st().aylar[BR.secili()];if(!m)return;m.h=m.h||{};Array.prototype.forEach.call(document.querySelectorAll('.br-hin'),function(e){var k=e.getAttribute('data-k'),v=e.value.trim();if(k=='birim'){var n=BR.oku(v);m.h.birim=n===null||isNaN(n)?m.h.birim:n}else if(k=='cocuk')m.h.cocuk=v===''?'':(+v||0);else m.h[k]=v});BR.ui.bas=false;BR.ui.ok='Bordro bilgileri güncellendi';save();ORV.yenile()};
 BR.yeniAy=function(){var L=BR.st().aylar,son=L[L.length-1],ay;if(son){var p=son.ay.split('-'),y=+p[0],a=+p[1]+1;if(a>12){a=1;y++}ay=y+'-'+(a<10?'0':'')+a}else{var t=pk(TODAY);ay=t.getFullYear()+'-'+(t.getMonth()<9?'0':'')+(t.getMonth()+1)}
  L.push({ay:ay,h:son?JSON.parse(JSON.stringify(son.h||{})):{tip:'NORMAL'},v:{},duz:{}});BR.sirala();BR.ui.ay=ay;BR.ui.ok=BR.ayAd(ay)+' açıldı · satırları ✎ ile doldur';BR.ui.er='';save();ORV.yenile()};
 BR.sil=function(){var L=BR.st().aylar,i=BR.secili();if(i<0)return;var m=L[i];if(BR.ui.silOnay!=m.ay){BR.ui.silOnay=m.ay;ORV.yenile();return}L.splice(i,1);BR.ui.silOnay='';BR.ui.ay=L.length?L[Math.max(0,i-1)].ay:'';BR.ui.ok=BR.ayAd(m.ay)+' silindi';save();ORV.yenile()};
 // İçe aktarma: {aylar:[{ay:'2026-09',h:{...},v:{...}}]} · aynı ay varsa üzerine yazar, elle düzeltilmiş satırları korur
 BR.yukle=function(o){if(!o||!Array.isArray(o.aylar))throw new Error('Bordro dosyası tanınmadı');var L=BR.st().aylar,n=0;
- o.aylar.forEach(function(x){if(!x||!/^\d{4}-\d{2}$/.test(x.ay)||!x.v)return;var i=BR.bul(x.ay),y={ay:x.ay,h:x.h||{},v:x.v,duz:{}};if(i>=0){var e=L[i];Object.keys(e.duz||{}).forEach(function(k){y.v[k]=e.v[k];y.duz[k]=e.duz[k]});L[i]=y}else L.push(y);n++});
- if(!n)throw new Error('Dosyada geçerli ay yok');BR.sirala();BR.ui.ay=L[L.length-1].ay;save();return n};
-BR.iceAl=function(){var e=document.getElementById('brDosya');if(e){e.value='';e.click()}};
+ o.aylar.forEach(function(x){if(!x||!/^\d{4}-\d{2}$/.test(x.ay)||!x.v)return;var i=BR.bul(x.ay),y={ay:x.ay,h:x.h||{},v:x.v,duz:{}};if(i>=0){var e=L[i];if(e.butce)y.butce=e.butce;Object.keys(e.duz||{}).forEach(function(k){y.v[k]=e.v[k];y.duz[k]=e.duz[k]});L[i]=y}else L.push(y);n++});
+ if(!n)throw new Error('Dosyada geçerli ay yok');BR.sirala();BR.ui.ay=L[L.length-1].ay;L.forEach(function(m){BR.butceEkle(m)});save();return n};
+// 0.9.6: Net Ödenen Aile Bütçesine otomatik eklenir: gelir kaydı (Maaş · Ay Yıl) + Çağlar güncel bakiyesi artar.
+// Otomatik yalnız bu ay ve geçen ayın bordrosu için (eski ayların toplu içe aktarılması bakiyeyi şişirmesin); eski aylar düğmeyle eklenir.
+// Net sonradan düzeltilirse gelir kaydı ve bakiye farkı kadar güncellenir. Bağlantı m.butce = {t, id, ts}.
+BR.otoAy=function(ay){var d=new Date(),b=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');d.setDate(1);d.setMonth(d.getMonth()-1);var g=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');return ay==b||ay==g};
+BR.butceEkle=function(m,zorla){if(!m||!m.v||typeof fnS!='function')return false;var net=Math.round((+m.v.net||0)*100)/100,a=OA.st(),bk=a.bak&&a.bak.cagla;
+ if(m.butce){var fark=Math.round((net-m.butce.t)*100)/100;if(!fark||!(net>0))return false;var r=fnS().kayit.filter(function(x){return x.id==m.butce.id})[0];if(r){r.tutar=net;r.ts=Date.now()}
+  if(bk&&m.butce.bak){bk.t=Math.round((bk.t+fark)*100)/100;bk.ts=Date.now()}m.butce.t=net;m.butce.ts=Date.now();return true}
+ if(!(net>0)||(!zorla&&!BR.otoAy(m.ay)))return false;var id='br'+m.ay,k=fnS().kayit.filter(function(x){return x.id==id})[0];
+ if(!k)k=fnKaydet({tur:'gelir',kim:'cagla',tutar:String(net),kalem:'Maaş · '+BR.ayAd(m.ay),not:'Bordrodan otomatik (Net Ödenen)'},id);if(!k)return false;
+ if(bk){bk.t=Math.round((bk.t+net)*100)/100;bk.ts=Date.now()}m.butce={t:net,id:k.id,ts:Date.now(),bak:bk?1:0};return true};
+BR.butceSatir=function(m){var net=+(m.v&&m.v.net)||0,b=m.butce;if(b)return '<div class="br-butce"><span class="oa-sub">✓ Net Ödenen Aile Bütçesine eklendi · '+BR.fmt(b.t)+' ₺ · '+OA.tarihSaat(b.ts)+(b.bak?' · Çağlar bakiyesine işlendi':' · gelir kaydı olarak (bakiye bildirilmemişti)')+'</span></div>';
+ if(!(net>0))return '';return '<div class="br-butce"><span class="oa-sub">Net Ödenen ('+BR.fmt(net)+' ₺) Aile Bütçesinde yok.</span><button type="button" class="oa-btn sm ghost" onclick="BR.butceDugme()">Aile Bütçesine ekle</button></div>'};
+BR.butceDugme=function(){var m=BR.st().aylar[BR.secili()];if(BR.butceEkle(m,true)){BR.ui.er='';BR.ui.ok=BR.ayAd(m.ay)+' maaşı Aile Bütçesine eklendi';save()}ORV.yenile()};
+BR.iceAl=function(){if(typeof API!='undefined'&&API&&API.bordro&&API.bordro.sec){var st=BR.st();
+ API.bordro.sec(st.yol||'').then(function(o){if(!o)return;st.yol=o.klasor;try{var n=BR.yukle(JSON.parse(o.metin));BR.ui.er='';BR.ui.ok=n+' ay içe aktarıldı ('+o.ad+')'}catch(e){BR.ui.ok='';BR.ui.er='İçe aktarılamadı: '+e.message}if(typeof save=='function')save();ORV.yenile()},function(e){BR.ui.ok='';BR.ui.er='Dosya açılamadı: '+(e&&e.message||e);ORV.yenile()});return}
+ var e=document.getElementById('brDosya');if(e){e.value='';e.click()}};
 BR.dosya=function(inp){var f=inp.files&&inp.files[0];if(!f)return;var r=new FileReader();r.onload=function(){try{var n=BR.yukle(JSON.parse(r.result));BR.ui.er='';BR.ui.ok=n+' ay içe aktarıldı'}catch(e){BR.ui.ok='';BR.ui.er='İçe aktarılamadı: '+e.message}ORV.yenile()};r.readAsText(f,'utf-8')};
 // İlk açılışta Belgeler\Orin\Bordro-gecici\bordro.json varsa bir kez kendiliğinden içe aktar
 BR.otoDene=function(){if(BR._oto||!window.API||!API.bordro||BR.st().aylar.length)return;BR._oto=true;API.bordro.oku().then(function(o){if(!o)return;try{var n=BR.yukle(o);BR.ui.ok=n+' ay bordrodan içe aktarıldı (Belgeler › Orin › Bordro-gecici). Bu klasörü artık silebilirsin.';if(typeof pg!='undefined'&&pg=='bordro')ORV.yenile()}catch(e){}},function(){})};

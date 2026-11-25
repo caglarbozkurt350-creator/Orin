@@ -10,6 +10,17 @@ window.__bordroTest=function(){var R=[];
   var ornek={aylar:[{ay:'2030-02',h:{tip:'NORMAL',ad:'Örnek Kişi',birim:100},v:{gun:[30,30],normal:[100,1000],top:2000,ssk:140,net:1500,gvOI:[10.5,2.25],kesTop:500}},
    {ay:'2030-01',h:{tip:'NORMAL',ad:'Örnek Kişi',birim:100},v:{gun:[28,28],normal:[90,900],top:2100,ssk:150,net:1500,gvOI:[9.5,2.25],kesTop:600}}]};
   t('Bordro: içe aktarma 2 ay, sıralı',BR.yukle(ornek)==2&&S.bordro.aylar[0].ay=='2030-01'&&BR.ui.ay=='2030-02');
+  t('Bordro: SGK rapor ödeneği elle girilir, Net + SGK toplamı gösterilir',function(){BR.ui.ay='2030-02';var h0=BR.sayfa();if(!/SGK RAPOR ÖDENEĞİ/.test(h0)||/Net \+ SGK/.test(h0))return false;
+   BR.duzenle('sgkOdenek');var e=document.createElement('input');e.id='brIn0';e.value='2.500,50';document.body.insertBefore(e,document.body.firstChild);var ok=BR.kaydet();e.remove();
+   var m=S.bordro.aylar[BR.bul('2030-02')],h=BR.sayfa();return ok&&m.v.sgkOdenek==2500.5&&BR.elToplam(m)==4000.5&&/Net \+ SGK/.test(h)&&/4\.000,50/.test(h)});
+  t('Bordro: Net Ödenen Aile Bütçesine eklenir (gelir + Çağlar bakiyesi), düzeltilince fark işlenir, eski ay otomatik eklenmez',function(){var a=OA.st(),f=fnS(),k0=f.kayit.slice(),b0=a.bak.cagla,ok;
+   try{a.bak.cagla={t:1000,ts:1};var m=S.bordro.aylar[BR.bul('2030-02')];delete m.butce;var oto=BR.butceEkle(m);var el=BR.butceEkle(m,true);
+    var r=f.kayit.filter(function(x){return x.id=='br2030-02'})[0];var a1=a.bak.cagla.t,t1=r&&r.tutar;m.v.net=1600;BR.butceEkle(m);
+    ok=!oto&&el&&r&&r.tur=='gelir'&&t1==1500&&a1==2500&&r.tutar==1600&&a.bak.cagla.t==2600&&!BR.butceEkle(m,true)&&/Aile Bütçesine eklendi/.test(BR.sayfa());m.v.net=1500;delete m.butce}
+   finally{f.kayit=k0;if(b0)a.bak.cagla=b0;else delete a.bak.cagla}return ok});
+  t('Bordro: içe aktarma penceresi son klasörde açılır, seçilen dosyanın klasörü kaydedilir',function(){var A0=API,ist=null,o;S.bordro.yol='C:\\Eski';
+   API=Object.assign({},A0,{bordro:{sec:function(y){ist=y;return{then:function(f){f({klasor:'C:\\Bordro\\2030',ad:'b.json',metin:JSON.stringify(ornek)})}}}}});
+   try{BR.iceAl();o=ist=='C:\\Eski'&&S.bordro.yol=='C:\\Bordro\\2030'&&/b\.json/.test(BR.ui.ok)}finally{API=A0}return o});
   var h=BR.sayfa();
   t('Bordro: üç sütun birebir (KAZANÇLAR · YASAL KESİNTİLER · ÖZEL KESİNTİLER)',/KAZANÇLAR/.test(h)&&/YASAL KESİNTİLER/.test(h)&&/ÖZEL KESİNTİLER/.test(h)&&/İŞVEREN/.test(h)&&/ÇALIŞAN/.test(h));
   t('Bordro: kâğıttaki tüm satırlar',['T. Çalışma Günü','Fazla Çalışma %150','Yemek+Tahsil Yardımı','TİS Avans','Isv.Pay-Damga Vergisi B','Topl. Gelir Vergisi Matrahı','Asgari Ücret Kmltf. Matrah','Gelir Vrg. Orj./İstisna','Sigorta Matrahı Bakiye','İcra Bakiyesi','Düşülen Sigorta','BES Otomatik Katılım','A.G.İ','Net Ödenen','Aylık Bordro Bilgileri','Birim Ücreti'].every(function(x){return h.indexOf(esc(x))>=0}));

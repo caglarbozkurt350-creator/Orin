@@ -269,6 +269,14 @@ let YZ_ACIK = null;
 function yzAcik() { if (YZ_ACIK === null) { const c = readJSON(YZ_FILE(), null); YZ_ACIK = c && typeof c.acik === 'boolean' ? c.acik : !!SMOKE; } return YZ_ACIK; }
 const yzGerek = fn => (a, e) => { if (!yzAcik()) throw new Error('Yapay zekâ kapalı (Merkez › Ayarlar › Yapay zekâ)'); return fn(a, e); };
 // 0.8.3: Bordro ilk içe aktarma — yalnız Belgeler\Orin\Bordro-gecici\bordro.json okunur (smoke'ta okunmaz)
+// 0.9.6: Bordro içe aktarma penceresi son kullanılan klasörde açılır (yol renderer'da S.bordro.yol'da saklanır)
+ipcMain.handle('bordro:sec', async (e, yol) => {
+  const d = yol && fs.existsSync(yol) ? yol : path.join(app.getPath('documents'), 'Orin', 'Belgelerim', 'Finans', 'Maaş Bordroları');
+  const r = await dialog.showOpenDialog(BrowserWindow.fromWebContents(e.sender), { title: 'Bordro dosyası', defaultPath: fs.existsSync(d) ? d : undefined, filters: [{ name: 'Bordro (JSON)', extensions: ['json'] }], properties: ['openFile'] });
+  if (r.canceled || !r.filePaths[0]) return null;
+  const f = r.filePaths[0];
+  return { klasor: path.dirname(f), ad: path.basename(f), metin: fs.readFileSync(f, 'utf8') };
+});
 ipcMain.handle('bordro:oku', () => { if (SMOKE) return null; try { const p = path.join(app.getPath('documents'), 'Orin', 'Bordro-gecici', 'bordro.json'); return fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, 'utf8')) : null; } catch (e) { return null; } });
 ipcMain.handle('yz:durum', wrap(() => ({ acik: yzAcik() })));
 ipcMain.handle('yz:ayar', wrap(o => { YZ_ACIK = !!(o && o.acik); if (!SMOKE) fs.writeFileSync(YZ_FILE(), JSON.stringify({ acik: YZ_ACIK })); return { acik: YZ_ACIK }; }));

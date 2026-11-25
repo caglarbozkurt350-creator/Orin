@@ -67,7 +67,8 @@ OAI.uygula=function(e,kaynak){var v=e.veri||{},a=OAI.st(),es=kaynak=='es',kim=es
   var r=fnKaydet({tur:gelir?'gelir':'gider',kim:'cagla',tutar:t,kalem:kat,tarih:OAI.tarihOk(v.tarih)?v.tarih:OT9.pad(new Date(e.ts||Date.now())),not:OAI.metin(v.ad,60),kaynak:'es-telefon'},'fn'+e.id);
   if(r&&cep)r.hk='e';
   // 0.9.7: Kübra'nın cep harçlığı %0 iken bütün harcamaları Aile Bütçesinden düşer
-  if(r&&!gelir&&typeof OA!='undefined'&&OA.aileden&&OA.aileden('e')){var AB=OA.st().bak.aile;AB.t=Math.round((AB.t-t)*100)/100;AB.ts=Date.now();r.bakDus='aile'}
+  // 0.9.10: Aile Bütçesi toplam kasa: eşin cep harcaması kendi bakiyesinden ve Aile Bütçesinden, ortak harcama/gelir Aile Bütçesinden işlenir
+  if(r&&typeof OA!='undefined'&&OA.bakIsle){var hk2=cep&&!OA.aileden('e')?'kubra':OA.st().bak.aile?'aile':null;if(hk2&&OA.bakIsle(hk2,gelir?t:-t).length)r.bakDus=hk2}
   if(r)save();return !!r}
  if(e.tur=='es_ilac_kaydet'){if(!v.id||!OAI.metin(v.ad,1))return false;var il=(a.ilac||[]).filter(function(x){return x.id==v.id})[0];if(il&&il.kim!=OAI.ES)return false;
   var o2={ad:OAI.metin(v.ad,40),miktar:OAI.metin(v.miktar,40),saat:/^\d{1,2}:\d{2}$/.test(v.saat||'')?v.saat:'08:00',tekrar:['gun','haftaici','haftasonu'].indexOf(v.tekrar)>=0?v.tekrar:'gun',actok:['ac','tok'].indexOf(v.actok)>=0?v.actok:'',not:OAI.metin(v.not,80)};

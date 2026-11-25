@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
 import Svg, { Circle, Polyline, Rect } from 'react-native-svg';
 import { AltPencere, Bos } from '@/bilesen/formlar';
-import { Dugme, Hap, Ikon, KartK, SayfaBasligi, s } from '@/bilesen/ortak';
+import { Bolumler, Dugme, Hap, Ikon, KartK, SayfaBasligi, s } from '@/bilesen/ortak';
 import { PdfDugme } from '@/bilesen/Pdf';
 import { alindiMi, IlacSatiri, SEKER_RENK, SekerSatiri } from '@/bilesen/Saglik';
 import { Ilac, olayEkle, Ozet, uid } from '@/lib/depo';
@@ -111,25 +111,32 @@ function OyunKarti({ x }: { x: { id: string; ad: string; tur: string; tarih: str
 export function BanaOzel() {
   const o = useGorunum(); useDisYenile(['oyun']);
   const oyun = useDis((d) => d.oyun), takip = useDis((d) => d.tercih.takip);
-  const [form, setForm] = useState<{ i: Ilac | null } | null>(null), [n, setN] = useState(0);
+  const [form, setForm] = useState<{ i: Ilac | null } | null>(null), [n, setN] = useState(0), [sekme, setSekme] = useState<'ben' | 'esim'>('ben');
   const rol = useRol(), ben = benKimim(rol), es = rol === 'es', tum = o.aile?.ilac || [], bugun = useBugun(); // bugun: 00:00'da ekran yeni güne geçer
   const ilac = tum.filter((i) => (i.kim || 'cagla') === ben), diger = tum.filter((i) => (i.kim || 'cagla') !== ben), digerAd = es ? AD.cagla : AD.kubra;
   const so = saglikOzet(o, ilac);
   const azalan = ilac.map((i) => ({ i, k: kalanStok(i) })).filter((x) => x.k != null && x.k <= 7);
   const takipL = Object.entries(takip).map(([id, t]) => ({ id, ...t, kg: kalanGun(t.ts) })).sort((a, b) => (a.kg ?? 9999) - (b.kg ?? 9999));
+  // 0.9.9: Ben sekmesinde yalnız kendi veriler; Eşim sekmesinde eşin verileri gösterge olarak.
+  // Eş profilinde Çağlar'ın ilaçları hiç gelmez (masaüstü OAI.esOzet); Eşim sekmesinde yalnız şeker göstergesi görünür. Oyunlar yalnız ana profilde.
+  const sekerKutu = (baslik: string) => (
+    <View style={[s.cam, { flex: 1, gap: 6, padding: 14 }]}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><Ikon ad="damla" boy={15} renk={SEKER_RENK} kalin={2.2} /><Text style={[s.sub, { fontSize: 12 }]}>{baslik}</Text></View>
+      <Text style={{ color: R.yazi, fontSize: 22, fontWeight: '700' }}>{so.ort ?? '—'}<Text style={{ fontSize: 11.5, color: R.yazi2, fontWeight: '500' }}> mg/dL ort.</Text></Text>
+      <SekerMini sk={so.sk} />
+      <Text style={[s.sub, { fontSize: 11 }]}>{so.olcum} ölçüm · hedef 80–130</Text>
+    </View>
+  );
   return (
     <View style={{ gap: 14 }}>
-      <SayfaBasligi ust="Sağlık · hobi" baslik="Bana Özel" />
+      <SayfaBasligi ust={es ? 'Sağlık' : 'Sağlık · hobi'} baslik="Bana Özel" />
+      <Bolumler secenek={[['ben', 'Ben'], ['esim', 'Eşim']]} deger={sekme} sec={setSekme} />
 
+      {sekme === 'ben' && <>
       <View style={{ flexDirection: 'row', gap: 10 }}>
+        {!es && sekerKutu('Şeker · 7 gün')}
         <View style={[s.cam, { flex: 1, gap: 6, padding: 14 }]}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><Ikon ad="damla" boy={15} renk={SEKER_RENK} kalin={2.2} /><Text style={[s.sub, { fontSize: 12 }]}>{es ? AD.cagla + ' · şeker' : 'Şeker · 7 gün'}</Text></View>
-          <Text style={{ color: R.yazi, fontSize: 22, fontWeight: '700' }}>{so.ort ?? '—'}<Text style={{ fontSize: 11.5, color: R.yazi2, fontWeight: '500' }}> mg/dL ort.</Text></Text>
-          <SekerMini sk={so.sk} />
-          <Text style={[s.sub, { fontSize: 11 }]}>{so.olcum} ölçüm · hedef 80–130</Text>
-        </View>
-        <View style={[s.cam, { flex: 1, gap: 6, padding: 14 }]}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><Ikon ad="ilac" boy={15} renk={R.yesil} kalin={2.2} /><Text style={[s.sub, { fontSize: 12 }]}>{es ? 'İlaçlarım · 6 gün' : 'İlaç uyumu · 6 gün'}</Text></View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><Ikon ad="ilac" boy={15} renk={R.yesil} kalin={2.2} /><Text style={[s.sub, { fontSize: 12 }]}>İlaç uyumu · 6 gün</Text></View>
           <Text style={{ color: R.yazi, fontSize: 22, fontWeight: '700' }}>{so.uyum == null ? '—' : '%' + so.uyum}</Text>
           <View style={{ height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}><View style={{ width: (so.uyum || 0) + '%', height: '100%', backgroundColor: R.yesil, borderRadius: 4 }} /></View>
           <Text style={[s.sub, { fontSize: 11 }]}>{so.al} / {so.ger} doz alındı</Text>
@@ -144,24 +151,12 @@ export function BanaOzel() {
           </View>
         ))}
         {ilac.length ? ilac.slice().sort((a, b) => a.saat.localeCompare(b.saat)).map((i, n) => { const k = kalanStok(i); return (
-          <IlacSatiri key={i.id} o={o} i={i} no={n + 1} ek={k != null ? 'stok ' + k + ' gün' : undefined} duzenle={() => { setForm({ i }); setN((x) => x + 1); }} />); }) : <Bos yazi={o.ts ? (es ? 'Henüz ilacın yok. Ekle ile başla; günlük işaretlerin Anasayfa’da görünür, ' + AD.cagla + ' da görür.' : 'Kayıtlı ilaç yok. Ekle ile başla; masaüstündeki İlaç Planı ile eşitlenir.') : 'Masaüstü ile eşitlenince ilaç planın burada görünür.'} ikon="ilac" />}
+          <IlacSatiri key={i.id} o={o} i={i} no={n + 1} ek={k != null ? 'stok ' + k + ' gün' : undefined} duzenle={() => { setForm({ i }); setN((x) => x + 1); }} />); }) : <Bos yazi={o.ts ? (es ? 'Henüz ilacın yok. Ekle ile başla; günlük işaretlerin Anasayfa’da görünür.' : 'Kayıtlı ilaç yok. Ekle ile başla; masaüstündeki İlaç Planı ile eşitlenir.') : 'Masaüstü ile eşitlenince ilaç planın burada görünür.'} ikon="ilac" />}
         <Dugme yazi="İlaç ekle" ikon="arti" tur="ikinci" onPress={() => { setForm({ i: null }); setN((x) => x + 1); }} />
         {!es && <SekerSatiri key={'sk' + o.ts} o={o} />}
       </KartK>
 
-      {(diger.length > 0 || es) && <KartK ad="digerIlac" baslik={digerAd.toLocaleUpperCase('tr') + ' · İLAÇLAR'} ozet={diger.length + ' ilaç · ' + diger.filter((i) => alindiMi(o, i, bugun)).length + ' bugün alındı'}>
-        {diger.slice().sort((a, b) => a.saat.localeCompare(b.saat)).map((i) => { const ok = alindiMi(o, i, bugun); return (
-          <View key={i.id} accessible accessibilityLabel={i.ad + ' ' + i.saat + (ok ? ', bugün alındı' : '')} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 50, paddingHorizontal: 12, borderRadius: 16, backgroundColor: ok ? 'rgba(62,207,90,0.08)' : 'rgba(255,255,255,0.04)' }}>
-            <Ikon ad="ilac" boy={17} renk={ok ? R.yesil : R.yazi2} kalin={2.1} />
-            <View style={{ flex: 1, gap: 1 }}><Text style={{ color: R.yazi, fontSize: 14, fontWeight: '600' }}>{i.ad}</Text><Text style={s.sub}>{[i.miktar, i.saat, TEKRAR.find((t) => t[0] === i.tekrar)?.[1]].filter(Boolean).join(' · ')}</Text></View>
-            <Text style={{ color: ok ? R.yesil : R.yazi2, fontSize: 12.5, fontWeight: '600' }}>{ok ? 'Alındı' : 'Bekliyor'}</Text>
-          </View>); })}
-        {!diger.length && <Text style={s.soluk}>{digerAd} için kayıtlı ilaç yok.</Text>}
-        {es && <SekerSatiri key={'sk' + o.ts} o={o} />}
-        <Text style={[s.sub, { fontSize: 11.5 }]}>Yalnız görüntülenir; bu ilaçları {digerAd} ekler ve işaretler.</Text>
-      </KartK>}
-
-      <KartK ad="hobi" baslik="TAKİP ETTİĞİM OYUNLAR" ozet={takipL.length + ' oyun'}>
+      {!es && <KartK ad="hobi" baslik="TAKİP ETTİĞİM OYUNLAR" ozet={takipL.length + ' oyun'}>
         {takipL.length ? takipL.map((t) => (
           <View key={t.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 44, paddingHorizontal: 12, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.05)' }}>
             <Ikon ad="oyun" boy={18} renk={R.ana2} kalin={2} />
@@ -170,13 +165,28 @@ export function BanaOzel() {
             <Text style={{ color: t.kg != null && t.kg <= 7 ? R.ana2 : R.yazi2, fontSize: 12.5, fontWeight: '700' }}>{t.kg == null ? 'tarih yok' : t.kg === 0 ? 'bugün' : t.kg + ' gün'}</Text>
           </View>
         )) : <Text style={s.soluk}>Henüz takip ettiğin oyun yok. Aşağıdan Takip et’e dokun; çıkışa kalan gün burada sayılır.</Text>}
-      </KartK>
+      </KartK>}
 
-      <KartK ad="oyunlar" baslik="YENİ ÇIKACAK OYUNLAR" ozet={oyun.liste.length + ' oyun · Steam'} sag={<Pressable onPress={() => oyunYenile(true)} accessibilityRole="button" accessibilityLabel="Listeyi yenile" hitSlop={6} style={{ width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.06)' }}><Ikon ad="yenile" boy={16} renk={R.yazi} kalin={2.1} /></Pressable>}>
+      {!es && <KartK ad="oyunlar" baslik="YENİ ÇIKACAK OYUNLAR" ozet={oyun.liste.length + ' oyun · Steam'} sag={<Pressable onPress={() => oyunYenile(true)} accessibilityRole="button" accessibilityLabel="Listeyi yenile" hitSlop={6} style={{ width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.06)' }}><Ikon ad="yenile" boy={16} renk={R.yazi} kalin={2.1} /></Pressable>}>
         {oyun.liste.length ? oyun.liste.map((x) => <OyunKarti key={x.id} x={x} />)
           : oyun.hata ? <Text style={{ color: '#f4a3a3', fontSize: 13 }}>{oyun.hata}</Text> : <ActivityIndicator color={R.ana2} />}
         {!!oyun.ts && <Text style={[s.sub, { fontSize: 11 }]}>Steam “popüler, yakında” listesi · {new Date(oyun.ts).toLocaleString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} güncellendi</Text>}
-      </KartK>
+      </KartK>}
+      </>}
+
+      {sekme === 'esim' && (es ? <>
+        <View style={{ flexDirection: 'row' }}>{sekerKutu(AD.cagla + ' · şeker · 7 gün')}</View>
+        <Text style={[s.sub, { fontSize: 11.5 }]}>Yalnız görüntülenir; şekeri {AD.cagla} kendi telefonundan yazar.</Text>
+      </> : <KartK ad="digerIlac" baslik={digerAd.toLocaleUpperCase('tr') + ' · İLAÇLAR'} ozet={diger.length + ' ilaç · ' + diger.filter((i) => alindiMi(o, i, bugun)).length + ' bugün alındı'}>
+        {diger.slice().sort((a, b) => a.saat.localeCompare(b.saat)).map((i) => { const ok = alindiMi(o, i, bugun); return (
+          <View key={i.id} accessible accessibilityLabel={i.ad + ' ' + i.saat + (ok ? ', bugün alındı' : '')} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 50, paddingHorizontal: 12, borderRadius: 16, backgroundColor: ok ? 'rgba(62,207,90,0.08)' : 'rgba(255,255,255,0.04)' }}>
+            <Ikon ad="ilac" boy={17} renk={ok ? R.yesil : R.yazi2} kalin={2.1} />
+            <View style={{ flex: 1, gap: 1 }}><Text style={{ color: R.yazi, fontSize: 14, fontWeight: '600' }}>{i.ad}</Text><Text style={s.sub}>{[i.miktar, i.saat, TEKRAR.find((t) => t[0] === i.tekrar)?.[1]].filter(Boolean).join(' · ')}</Text></View>
+            <Text style={{ color: ok ? R.yesil : R.yazi2, fontSize: 12.5, fontWeight: '600' }}>{ok ? 'Alındı' : 'Bekliyor'}</Text>
+          </View>); })}
+        {!diger.length && <Text style={s.soluk}>{digerAd} için kayıtlı ilaç yok.</Text>}
+        <Text style={[s.sub, { fontSize: 11.5 }]}>Yalnız görüntülenir; bu ilaçları {digerAd} ekler ve işaretler.</Text>
+      </KartK>)}
 
       <AltPencere acik={!!form} kapat={() => setForm(null)}>{form && <IlacFormu key={n} i={form.i} rol={rol} kapat={() => setForm(null)} />}</AltPencere>
     </View>

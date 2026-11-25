@@ -33,7 +33,7 @@ export type EvIsi = { id: string; ad: string; kim: string; bitti: boolean };
 export type Kisi = 'cagla' | 'kubra';
 /** Takvim etkinliği ya da hastane randevusu. kim: ekleyen; kisi: kimin için (aile = herkes) */
 export type Etkinlik = { id: string; ad: string; tarih: string; saat?: string; tur?: 'etkinlik' | 'randevu'; yer?: string; not?: string; kim: Kisi; kisi?: Kisi | 'aile'; ts?: number };
-export type OzelGun = { id: string; ad: string; tarih: string; tur: 'dogum' | 'yildonumu' | 'diger'; kim: Kisi };
+export type OzelGun = { id: string; ad: string; tarih: string; tur: 'dogum' | 'yildonumu' | 'diger'; kim: Kisi; /** 0.9.9 kimin günü (yoksa genel) */ kisi?: Kisi };
 export type CepDurum = { oran: number; har: number | null; harcanan: number; kal: number | null; gunluk: number | null };
 /** Ortak aile verisi (masaüstü orv-aile.js → OAI.ortak). Gelir ortak bütçeye girer; market/ev ortak bütçeden, kişisel harcama cep harçlığından.
  *  hareket: [tarih, gelir?1:0, kategori, not, tutar, kasa o|c|e, ekleyen] · trend: [ay, gelir, gider] (6 ay) · izin: Çağlar'ın izin günleri */

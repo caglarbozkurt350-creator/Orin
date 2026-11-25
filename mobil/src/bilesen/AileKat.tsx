@@ -97,12 +97,12 @@ function Butce({ o }: { o: Ozet }) {
 
 // ---------- Sağlık ----------
 function Saglik({ o }: { o: Ozet }) {
-  const L = bugunIlac(o, useBugun());
+  const es = useRol() === 'es', L = bugunIlac(o, useBugun(), es ? 'kubra' : 'cagla');
   return (
     <>
       <Text style={s.sub}>Bugünkü ilaçlar · içtiğinde düğmeyi aç</Text>
       {L.length ? L.map((i, n) => <IlacSatiri key={i.id} o={o} i={i} no={n + 1} />) : <Bos yazi={(o.aile?.ilac || []).length ? 'Bugün için ilaç yok.' : 'İlaç planı boş. Bana Özel › Sağlık’tan ilaç ekleyebilirsin.'} ikon="ilac" />}
-      <SekerSatiri o={o} />
+      {!es && <SekerSatiri o={o} />}
       <Dugme yazi="İlaç planını düzenle" ikon="ilac" tur="ikinci" onPress={() => sekmeGit(3)} />
     </>
   );

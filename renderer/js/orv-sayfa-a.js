@@ -200,6 +200,7 @@ OA.anasayfa=function(){
  else{ozet.push('Giderler geçen aya göre <b style="color:'+(dGi!=null&&dGi<=0?'#6be585':'#fca5a5')+'">'+(dGi==null?'karşılaştırılamıyor':(dGi<=0?'%'+Math.abs(Math.round(dGi))+' azaldı':'%'+Math.round(dGi)+' arttı'))+'</b>.');
   var dg=d.getDate(),ayGun=new Date(d.getFullYear(),d.getMonth()+1,0).getDate(),tahmin=dg>0?F.bu.gider/dg*ayGun:0;ozet.push('Ay sonu tahmini toplam gider <b>'+OA.tl(Math.max(tahmin,F.bu.gider+C.bek))+'</b>.');
   ozet.push('Beklenen ödemelerden sonra kalan: <b>'+OA.tl(C.kalan)+'</b>.');
+  var kdA=typeof OT9!='undefined'&&OT9.butceAy?OT9.butceAy(OA.bugunKey().slice(0,7)):null;if(kdA&&kdA.kd)ozet.push('Bu ay kayıt dışı harcama <b style="color:#fca5a5">'+OA.tl(kdA.kd)+'</b> (bakiye bildirimlerinden).');
   ozet.push('Cep harçlıkları kalanın <b>%'+C.toplam+'</b>’i; birikime <b>%'+Math.max(0,100-C.toplam)+'</b> kalıyor.')}
  ozet.push('Kur tahminlerim günde 1 kez (00:00) yenilenir, 6 ay saklanır; gerçekleşenle karşılaştırıp kendimi düzeltirim.');
  h+=OA.kart(OA.hd(OA.imgAv('otto','oa-av'),'Otto’nun özeti',OA.kp('Finans U.','n')),'<ul class="oa-lis">'+ozet.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul><span style="font-size:11px;color:var(--yazi3);margin-top:auto">Kur tahminleri bilgi amaçlıdır, yatırım tavsiyesi değildir.</span>',gec+=.06);

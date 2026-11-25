@@ -94,7 +94,7 @@ BR.butceEkle=function(m,zorla){if(!m||!m.v||typeof fnS!='function')return false;
   if(bk&&m.butce.bak){bk.t=Math.round((bk.t+fark)*100)/100;bk.ts=Date.now()}m.butce.t=net;m.butce.ts=Date.now();return true}
  if(!(net>0)||(!zorla&&(!BR.otoAy(m.ay)||(a.butceBas&&m.ay<=a.butceBas))))return false;var id='br'+m.ay,k=fnS().kayit.filter(function(x){return x.id==id})[0];
  if(!k)k=fnKaydet({tur:'gelir',kim:'cagla',tutar:String(net),kalem:'Maaş · '+BR.ayAd(m.ay),not:'Bordrodan otomatik (Net Ödenen)'},id);if(!k)return false;
- if(bk){bk.t=Math.round((bk.t+net)*100)/100;bk.ts=Date.now()}m.butce={t:net,id:k.id,ts:Date.now(),bak:bk?1:0,k:hk};return true};
+ if(bk){bk.t=Math.round((bk.t+net)*100)/100;bk.ts=Date.now();k.bakEk=hk}m.butce={t:net,id:k.id,ts:Date.now(),bak:bk?1:0,k:hk};return true};
 BR.butceSatir=function(m){var net=+(m.v&&m.v.net)||0,b=m.butce;if(b)return '<div class="br-butce"><span class="oa-sub">✓ Net Ödenen Aile Bütçesine eklendi · '+BR.fmt(b.t)+' ₺ · '+OA.tarihSaat(b.ts)+(b.bak?(b.k=='aile'?' · ortak kasaya işlendi':' · Çağlar bakiyesine işlendi'):' · gelir kaydı olarak (bakiye bildirilmemişti)')+'</span></div>';
  if(!(net>0))return '';return '<div class="br-butce"><span class="oa-sub">Net Ödenen ('+BR.fmt(net)+' ₺) Aile Bütçesinde yok.</span><button type="button" class="oa-btn sm ghost" onclick="BR.butceDugme()">Aile Bütçesine ekle</button></div>'};
 BR.butceDugme=function(){var m=BR.st().aylar[BR.secili()];if(BR.butceEkle(m,true)){BR.ui.er='';BR.ui.ok=BR.ayAd(m.ay)+' maaşı Aile Bütçesine eklendi';save()}ORV.yenile()};

@@ -15,7 +15,7 @@ export type Uye = { ad?: string; gorev?: string; renk?: string; aciklama?: strin
 export type Kalem = [string, string, number, string?];
 export type Gun = { L: number | null; T: number; OT: number; D?: string; e: Kalem[] };
 /** Kişisel bütçenin bir ayı (masaüstü orv-telefon.js → OT9.butceAy). hg/hc: 5 haftanın gelir/gideri */
-export type ButceAy = { ay: string; gelir: number; gider: number; kat: Record<string, number>; hg: number[]; hc: number[] };
+export type ButceAy = { ay: string; gelir: number; gider: number; kat: Record<string, number>; hg: number[]; hc: number[]; /** 0.9.8 bakiye bildiriminden çıkan kayıt dışı harcama / gelir */ kd?: number; kdg?: number };
 export type Ilac = { id: string; ad: string; miktar: string; saat: string; tekrar: 'gun' | 'haftaici' | 'haftasonu'; actok?: string; not?: string; stok?: number | null; stokTs?: number; eklendi?: number; /** kimin ilacı: cagla (varsayılan) | kubra (eşi) */ kim?: 'cagla' | 'kubra' };
 /** Masaüstünden gelen aile verisi: bütçe (bu ay + geçen ay), ilaç planı, alındı işaretleri ("YYYY-MM-DD|id"), sabah açlık şekeri */
 export type Aile = {

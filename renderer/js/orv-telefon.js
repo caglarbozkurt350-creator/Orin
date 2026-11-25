@@ -12,10 +12,10 @@ var OT9={DUR:{baslanacak:1,devam:1,bitti:1,beklemede:1}};
 OT9.pad=function(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
 OT9.ay=function(geri){var d=new Date();d=new Date(d.getFullYear(),d.getMonth()-(geri||0),1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')};
 // Kişisel bütçe: bir ayın gelir/gider toplamı, kategoriler ve 5 haftalık dağılım (1–7, 8–14, 15–21, 22–28, 29+)
-OT9.butceAy=function(ay){var f=typeof fnS=='function'?fnS():{kayit:[]},r={ay:ay,gelir:0,gider:0,kat:{},hg:[0,0,0,0,0],hc:[0,0,0,0,0]};
+OT9.butceAy=function(ay){var f=typeof fnS=='function'?fnS():{kayit:[]},r={ay:ay,gelir:0,gider:0,kat:{},hg:[0,0,0,0,0],hc:[0,0,0,0,0],kd:0,kdg:0};
  f.kayit.forEach(function(k){if(k.kim=='sirket'||String(k.tarih||'').slice(0,7)!=ay)return;var t=+k.tutar||0,w=Math.min(4,Math.floor(((+String(k.tarih).slice(8,10)||1)-1)/7));
-  if(k.tur=='gelir'){r.gelir+=t;r.hg[w]+=t}else{r.gider+=t;r.hc[w]+=t;r.kat[k.kalem||'Diğer']=(r.kat[k.kalem||'Diğer']||0)+t}});
- return r};
+  if(k.tur=='gelir'){r.gelir+=t;r.hg[w]+=t;if(k.kd||k.kalem=='Kayıt dışı gelir')r.kdg+=t}else{if(k.kd||k.kalem=='Kayıt dışı harcama')r.kd+=t;r.gider+=t;r.hc[w]+=t;r.kat[k.kalem||'Diğer']=(r.kat[k.kalem||'Diğer']||0)+t}});
+ r.kd=Math.round(r.kd*100)/100;r.kdg=Math.round(r.kdg*100)/100;return r};
 OT9.aile=function(){var a=OA.st(),f=typeof fnS=='function'?fnS():{kayit:[],piyasa:{}},bu=OT9.ay(0),once=OT9.ay(1),sin=OT9.pad(new Date(Date.now()-62*864e5)),al={},sk={},ss={};
  Object.keys(a.ilacAl||{}).forEach(function(k){if(k.slice(0,10)>=sin)al[k]=1});
  Object.keys(a.seker||{}).forEach(function(k){if(k>=sin){sk[k]=a.seker[k];if(a.sekerSaat&&a.sekerSaat[k])ss[k]=a.sekerSaat[k]}});

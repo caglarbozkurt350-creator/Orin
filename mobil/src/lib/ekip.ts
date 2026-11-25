@@ -127,7 +127,7 @@ function aileUygula(o: Ozet, e: Olay) {
   } else if (e.tur === 'etkinlik_sil') O.takvim = O.takvim.filter((x) => x.id !== v.id || (es && x.kim !== 'kubra'));
   else if (e.tur === 'ozel_gun') {
     const m = O.ozel.find((x) => x.id === v.id); if (m && es && m.kim !== 'kubra') return;
-    const y = { ad: v.ad, tarih: v.tarih, tur: v.tur || 'diger' }; if (m) Object.assign(m, y); else O.ozel.push({ id: v.id, kim, ...y });
+    const y = { ad: v.ad, tarih: v.tarih, tur: v.tur || 'diger', kisi: v.kisi === 'cagla' || v.kisi === 'kubra' ? v.kisi : undefined }; if (m) Object.assign(m, y); else O.ozel.push({ id: v.id, kim, ...y });
   } else if (e.tur === 'ozel_gun_sil') O.ozel = O.ozel.filter((x) => x.id !== v.id || (es && x.kim !== 'kubra'));
   else {
     // Harcama / gelir: es_harcama {tutar, ad, kasa cep|ortak, kat} · es_gelir · finans_kayit {tur, kim, tutar, kalem, tarih, hk?}

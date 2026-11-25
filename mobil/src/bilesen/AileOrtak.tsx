@@ -100,16 +100,26 @@ export function EtkinlikFormu({ rol, e, randevu0, kapat }: { rol: Rol; e?: Etkin
   );
 }
 
-function OzelGunFormu({ g, kapat }: { g?: OzelGun; kapat: () => void }) {
-  const [ad, setAd] = useState(g?.ad || ''), [tarih, setTarih] = useState(g ? tarihYaz(g.tarih) : ''), [tur, setTur] = useState<OzelGun['tur']>(g?.tur || 'dogum'), [hata, setHata] = useState(''), [sil, setSil] = useState(false);
-  const kaydet = () => { const t = tarihCoz(tarih); if (!ad.trim()) return setHata('Adını yaz'); if (!tarihGecerli(t)) return setHata('Tarihi 14.06.2020 gibi yaz'); olayEkle('ozel_gun', { id: g?.id || 'og' + uid(), ad: ad.trim(), tarih: t, tur }); esitleSonra(); kapat(); };
+/** 0.9.9: Özel günün bakana göre adı: kendi doğum günü "Doğum günüm", eşininki "Eşimin doğum günü" */
+export function ozelAd(g: OzelGun, rol: Rol) {
+  if (!g.kisi || g.tur === 'diger') return g.ad;
+  const benim = g.kisi === benKimim(rol);
+  return g.tur === 'dogum' ? (benim ? 'Doğum günüm' : 'Eşimin doğum günü') : (benim ? g.ad : 'Eşim · ' + g.ad);
+}
+
+function OzelGunFormu({ g, rol, kapat }: { g?: OzelGun; rol: Rol; kapat: () => void }) {
+  const ben = benKimim(rol), es: Kisi = ben === 'cagla' ? 'kubra' : 'cagla';
+  const [ad, setAd] = useState(g?.ad || ''), [tarih, setTarih] = useState(g ? tarihYaz(g.tarih) : ''), [tur, setTur] = useState<OzelGun['tur']>(g?.tur || 'dogum'), [kimin, setKimin] = useState<'ben' | 'es' | 'diger'>(g?.kisi ? (g.kisi === ben ? 'ben' : 'es') : g ? 'diger' : 'ben'), [hata, setHata] = useState(''), [sil, setSil] = useState(false);
+  const kisiVar = tur === 'dogum' && kimin !== 'diger', kisi = kisiVar ? (kimin === 'ben' ? ben : es) : undefined;
+  const kaydet = () => { const t = tarihCoz(tarih); const ad2 = ad.trim() || (kisi ? AD[kisi] + '’ın doğum günü' : ''); if (!ad2) return setHata('Adını yaz'); if (!tarihGecerli(t)) return setHata('Tarihi 14.06.2020 gibi yaz'); olayEkle('ozel_gun', { id: g?.id || 'og' + uid(), ad: ad2, tarih: t, tur, kisi }); esitleSonra(); kapat(); };
   return (
     <View style={{ gap: 12 }}>
       <Text style={{ color: R.yazi, fontSize: 17, fontWeight: '700' }}>{g ? 'Özel günü düzelt' : 'Özel gün ekle'}</Text>
       <Secici l={[['dogum', 'Doğum günü'], ['yildonumu', 'Yıldönümü'], ['diger', 'Diğer']]} v={tur} d={setTur} />
-      <View style={{ flexDirection: 'row', gap: 8 }}><Alan et="Ne?" v={ad} d={setAd} ph={tur === 'dogum' ? 'ör. Annemin doğum günü' : 'ör. Evlilik yıldönümü'} /></View>
+      {tur === 'dogum' && <Secici l={[['ben', 'Benim'], ['es', 'Eşimin'], ['diger', 'Başkası']]} v={kimin} d={setKimin} />}
+      {!kisiVar && <View style={{ flexDirection: 'row', gap: 8 }}><Alan et="Ne?" v={ad} d={setAd} ph={tur === 'dogum' ? 'ör. Annemin doğum günü' : 'ör. Evlilik yıldönümü'} /></View>}
       <View style={{ flexDirection: 'row', gap: 8 }}><Alan et="Tarih (ilk yıl)" v={tarih} d={setTarih} ph="14.06.2020" k="numbers-and-punctuation" /></View>
-      <Text style={[s.sub, { fontSize: 11.5 }]}>Her yıl aynı gün hatırlatılır; yıldönümünde kaçıncı yıl olduğu yazar.</Text>
+      <Text style={[s.sub, { fontSize: 11.5 }]}>{kisiVar ? 'Sende ve eşinde kendi açısından görünür: “Doğum günüm” / “Eşimin doğum günü”. ' : ''}Her yıl aynı gün hatırlatılır; yıldönümünde kaçıncı yıl olduğu yazar.</Text>
       {!!hata && <Text style={{ color: '#f4a3a3', fontSize: 13 }}>{hata}</Text>}
       <View style={{ flexDirection: 'row', gap: 8 }}>
         {g && <Dugme yazi={sil ? 'Emin misin? Sil' : 'Sil'} tur="tehlike" onPress={() => { if (!sil) return setSil(true); olayEkle('ozel_gun_sil', { id: g.id }); esitleSonra(); kapat(); }} />}
@@ -185,9 +195,9 @@ export function OrtakBolum() {
     const b = new Date(); b.setHours(0, 0, 0, 0); const son = new Date(b.getTime() + 30 * 86400000), r: { k: string; tip: 'etk' | 'izin' | 'ozel'; e?: Etkinlik; g?: OzelGun; baslik: string; alt: string; renk: string; ikon: string }[] = [];
     O.takvim.forEach((e) => { const d = tarihOf(e.tarih); if (d < b || d > son) return; r.push({ k: e.tarih + (e.saat || '') + e.id, tip: 'etk', e, baslik: (e.tur === 'randevu' ? 'Randevu · ' : '') + e.ad, alt: [e.saat, e.yer, e.kisi === 'aile' ? 'Aile' : AD[(e.kisi || e.kim) as Kisi]].filter(Boolean).join(' · '), renk: e.tur === 'randevu' ? RANDEVU : KISI_RENK[e.kim], ikon: e.tur === 'randevu' ? 'ilac' : 'gun' }); });
     izinAraliklari(O.izin).forEach((z) => { if (tarihOf(z.b) > son) return; r.push({ k: tamAnahtar(tarihOf(z.b)) + 'z', tip: 'izin', baslik: ad.cagla + ' · ' + (IZIN_AD[z.t] || 'İzin'), alt: kisaTarih(z.b) + (z.s !== z.b ? ' – ' + kisaTarih(z.s) : ''), renk: '#5fe0f5', ikon: 'izin' }); });
-    O.ozel.forEach((g) => { const x = ozelSonraki(g); if (x.kalan > 30) return; r.push({ k: tamAnahtar(x.d) + 'o' + g.id, tip: 'ozel', g, baslik: g.ad + (g.tur === 'yildonumu' && x.yil > 0 ? ' · ' + x.yil + '. yıl' : ''), alt: x.kalan === 0 ? 'bugün' : x.kalan + ' gün sonra', renk: '#fbbf24', ikon: 'yildiz' }); });
+    O.ozel.forEach((g) => { const x = ozelSonraki(g); if (x.kalan > 30) return; r.push({ k: tamAnahtar(x.d) + 'o' + g.id, tip: 'ozel', g, baslik: ozelAd(g, rol) + (g.tur === 'yildonumu' && x.yil > 0 ? ' · ' + x.yil + '. yıl' : ''), alt: x.kalan === 0 ? 'bugün' : x.kalan + ' gün sonra', renk: '#fbbf24', ikon: 'yildiz' }); });
     return r.sort((a, z) => a.k.localeCompare(z.k));
-  }, [O.takvim, O.izin, O.ozel]);
+  }, [O.takvim, O.izin, O.ozel, rol]);
   const randevular = O.takvim.filter((e) => e.tur === 'randevu' && tarihOf(e.tarih) >= new Date(new Date().setHours(0, 0, 0, 0)));
   const ozeller = O.ozel.map((g) => ({ g, ...ozelSonraki(g) })).sort((a, b) => a.kalan - b.kalan);
   const tarihEt = (k: string) => { const d = tarihOf(k.slice(0, 10)); return d.getDate() + ' ' + AY[d.getMonth()].slice(0, 3) + ' ' + GK[d.getDay()]; };
@@ -263,11 +273,11 @@ export function OrtakBolum() {
         <Text style={[s.sub, { fontSize: 11 }]}>{rol === 'es' ? ad.cagla + '’ın izinleri yalnız görüntülenir. Kendi eklediklerine dokunup düzeltebilirsin.' : 'Eşinin eklediği randevular burada görünür; yalnız o düzeltebilir.'}</Text>
       </KartK>
 
-      <KartK ad="ozelGun" baslik="ÖZEL GÜNLER" ozet={ozeller.length ? ozeller[0].g.ad + ' · ' + (ozeller[0].kalan ? ozeller[0].kalan + ' gün' : 'bugün') : 'kayıt yok'} sag={<Pressable onPress={() => ac({ t: 'ozel' })} accessibilityRole="button" accessibilityLabel="Özel gün ekle" hitSlop={4} style={{ height: 32, paddingHorizontal: 12, borderRadius: 16, backgroundColor: 'rgba(251,191,36,0.18)', justifyContent: 'center' }}><Text style={{ color: '#fbbf24', fontSize: 12.5, fontWeight: '700' }}>+ Ekle</Text></Pressable>}>
+      <KartK ad="ozelGun" baslik="ÖZEL GÜNLER" ozet={ozeller.length ? ozelAd(ozeller[0].g, rol) + ' · ' + (ozeller[0].kalan ? ozeller[0].kalan + ' gün' : 'bugün') : 'kayıt yok'} sag={<Pressable onPress={() => ac({ t: 'ozel' })} accessibilityRole="button" accessibilityLabel="Özel gün ekle" hitSlop={4} style={{ height: 32, paddingHorizontal: 12, borderRadius: 16, backgroundColor: 'rgba(251,191,36,0.18)', justifyContent: 'center' }}><Text style={{ color: '#fbbf24', fontSize: 12.5, fontWeight: '700' }}>+ Ekle</Text></Pressable>}>
         {ozeller.length ? ozeller.map(({ g, kalan, yil, d }) => { const sahip = duzenler(rol, g.kim); return (
           <Pressable key={g.id} disabled={!sahip} onPress={() => ac({ t: 'ozel', g })} accessibilityRole={sahip ? 'button' : undefined} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 48, paddingHorizontal: 10, borderRadius: 14, backgroundColor: kalan <= 7 ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.04)' }}>
             <Ikon ad={g.tur === 'dogum' ? 'yildiz' : g.tur === 'yildonumu' ? 'kalp' : 'gun'} boy={17} renk="#fbbf24" kalin={2} />
-            <View style={{ flex: 1 }}><Text numberOfLines={1} style={{ color: R.yazi, fontSize: 13.5, fontWeight: '600' }}>{g.ad}{g.tur === 'yildonumu' && yil > 0 ? ' · ' + yil + '. yıl' : ''}</Text><Text style={[s.sub, { fontSize: 11 }]}>{d.getDate()} {AY[d.getMonth()]} · ekleyen {AD[g.kim]}</Text></View>
+            <View style={{ flex: 1 }}><Text numberOfLines={1} style={{ color: R.yazi, fontSize: 13.5, fontWeight: '600' }}>{ozelAd(g, rol)}{g.tur === 'yildonumu' && yil > 0 ? ' · ' + yil + '. yıl' : ''}</Text><Text style={[s.sub, { fontSize: 11 }]}>{d.getDate()} {AY[d.getMonth()]} · ekleyen {AD[g.kim]}</Text></View>
             <Hap yazi={kalan === 0 ? 'Bugün' : kalan + ' gün'} t={kalan <= 7 ? 'o' : 'n'} />
           </Pressable>); }) : <Text style={s.soluk}>Doğum günü, yıldönümü gibi günleri ekle; yaklaşınca Aile takviminde görünür.</Text>}
       </KartK>
@@ -275,7 +285,7 @@ export function OrtakBolum() {
       <AltPencere acik={!!pen} kapat={() => setPen(null)}>
         {pen?.t === 'para' && <ParaFormu key={n} rol={rol} gelir0={pen.gelir} kapat={() => setPen(null)} />}
         {pen?.t === 'etk' && <EtkinlikFormu key={n} rol={rol} e={pen.e} randevu0={pen.randevu} kapat={() => setPen(null)} />}
-        {pen?.t === 'ozel' && <OzelGunFormu key={n} g={pen.g} kapat={() => setPen(null)} />}
+        {pen?.t === 'ozel' && <OzelGunFormu key={n} g={pen.g} rol={rol} kapat={() => setPen(null)} />}
       </AltPencere>
     </>
   );

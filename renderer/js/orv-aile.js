@@ -56,6 +56,8 @@ OAI.uygula=function(e,kaynak){var v=e.veri||{},a=OAI.st(),es=kaynak=='es',kim=es
  if(e.tur=='ozel_gun'){if(!v.id||!OAI.tarihOk(v.tarih)||!OAI.metin(v.ad,1))return false;var z=a.ozel.filter(function(x){return x.id==v.id})[0];
   if(z&&es&&z.kim!=OAI.ES)return false;
   var p={ad:OAI.metin(v.ad,50),tarih:v.tarih,tur:['dogum','yildonumu','diger'].indexOf(v.tur)>=0?v.tur:'diger'};
+  // 0.9.9: kimin günü (cagla|kubra); telefon bakana göre "Doğum günüm" / "Eşimin doğum günü" yazar
+  if(['cagla','kubra'].indexOf(v.kisi)>=0)p.kisi=v.kisi;else if(z)delete z.kisi;
   if(z)Object.assign(z,p);else{p.id=String(v.id).slice(0,40);p.kim=kim;a.ozel.push(p)}
   if(a.ozel.length>100)a.ozel.splice(0,a.ozel.length-100);OA.kaydet();return true}
  if(e.tur=='ozel_gun_sil'){var n1=a.ozel.length;a.ozel=a.ozel.filter(function(x){return x.id!=v.id||(es&&x.kim!=OAI.ES)});OA.kaydet();return a.ozel.length<n1}

@@ -33,6 +33,8 @@ window.__aile091Test=function(){var R=[];
   t('Eş: kendi randevusunu siler',OAI.uygula({id:'t91s2',tur:'etkinlik_sil',veri:{id:'t91rv'}},'es'));
   OAI.uygula({id:'t91o',tur:'ozel_gun',veri:{id:'t91og',ad:'Evlilik yıldönümü',tarih:'2020-06-14',tur:'yildonumu'}},'es');
   t('Eş: özel gün ekler',a.ozel.some(function(x){return x.id=='t91og'&&x.kim=='kubra'}));
+  OAI.uygula({id:'t91o2',tur:'ozel_gun',veri:{id:'t91dg',ad:'Çağlar’ın doğum günü',tarih:'1990-01-02',tur:'dogum',kisi:'cagla'}},'es');OAI.uygula({id:'t91o3',tur:'ozel_gun',veri:{id:'t91dg2',ad:'X',tarih:'1990-01-02',tur:'dogum',kisi:'baskasi'}},'es');
+  t('Özel gün: kimin günü (kisi) saklanır, geçersiz değer atılır',a.ozel.some(function(x){return x.id=='t91dg'&&x.kisi=='cagla'&&x.kim=='kubra'})&&a.ozel.some(function(x){return x.id=='t91dg2'&&!x.kisi}));
   // Yetki: Çağlar'ın verileri
   var gk=key(new Date(Date.now()+3*864e5)),d0=D[gk];
   t('Eş: izin / iş kaydı olayı reddedilir',!OAI.uygula({id:'t91z',tur:'izin',veri:{t:'yillik',b:gk}},'es')&&!OAI.uygula({id:'t91k2',tur:'kayit',veri:{k:gk,kod:'1',is:'x',dk:10}},'es')&&D[gk]===d0);

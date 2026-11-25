@@ -40,7 +40,7 @@ window.__aile091Test=function(){var R=[];
   t('Eş: izin / iş kaydı olayı reddedilir',!OAI.uygula({id:'t91z',tur:'izin',veri:{t:'yillik',b:gk}},'es')&&!OAI.uygula({id:'t91k2',tur:'kayit',veri:{k:gk,kod:'1',is:'x',dk:10}},'es')&&D[gk]===d0);
   var bk=OA.bugunKey();a.ilacAl[bk+'|t91c']=1;a.ilacAl[bk+'|t91k']=1;
   var eo=OAI.esOzet();
-  t('Eşin özeti: iş kaydı, ekip ve sohbet içermez',eo.rol=='es'&&!eo.gun&&!eo.ekip&&eo.aile&&eo.aile.ortak&&Array.isArray(eo.aile.ilac));
+  t('Eşin özeti: iş kaydı, ekip, sohbet ve spor (sağlık) içermez',eo.rol=='es'&&!eo.gun&&!eo.ekip&&eo.aile&&eo.aile.ortak&&Array.isArray(eo.aile.ilac)&&!('spor' in eo.aile));
   t('Eşin özeti: yalnız eşin ilaçları ve işaretleri gider; Çağlar’ın ilaçları gönderilmez',eo.aile.ilac.some(function(x){return x.id=='t91k'&&x.kim=='kubra'})&&!eo.aile.ilac.some(function(x){return x.kim!='kubra'})&&eo.aile.al[bk+'|t91k']&&!eo.aile.al[bk+'|t91c']);
   t('Çağlar’ın kendi özeti: iki kişinin ilaçları da durur',bulutOzet().aile.ilac.some(function(x){return x.id=='t91c'})&&bulutOzet().aile.ilac.some(function(x){return x.id=='t91k'}));
   OAI.ayar().eposta='';t('Ayarlar › Telefon: aile paylaşımı kartı',/Aile paylaşımı/.test(P.telefon())&&/aiE/.test(P.telefon()));

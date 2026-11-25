@@ -41,7 +41,7 @@ OAI.ortak=function(){var a=OAI.st(),F=OA.fin(),f=F.f,bugun=OT9.pad(new Date()),a
 var _oaiOz=bulutOzet;bulutOzet=function(){var oz=_oaiOz();try{oz.aile=oz.aile||OT9.aile();oz.aile.ortak=OAI.ortak()}catch(e){if(window.console)console.warn('[aile] ortak blok',e)}return oz};
 // Eşin özeti: iş kayıtları, ekip, görev, sohbet YOK. Bütçe, sağlık (iki kişinin ilaçları) ve ortak blok var.
 // 0.9.9: Çağlar'ın ilaçları ve alındı işaretleri eşin telefonuna hiç gönderilmez; eş yalnız kendi ilaçlarını görür (kullanıcı isteği).
-OAI.esOzet=function(){var al=OT9.aile();al.ortak=OAI.ortak();al.ilac=(al.ilac||[]).filter(function(i){return i.kim==OAI.ES});var idler={};al.ilac.forEach(function(i){idler[i.id]=1});var al2={};Object.keys(al.al||{}).forEach(function(k){if(idler[k.slice(11)])al2[k]=1});al.al=al2;return{v:1,rol:'es',olaySira:OAI.ayar().sira||0,bugun:TODAY,aile:al}};
+OAI.esOzet=function(){var al=OT9.aile();delete al.spor;al.ortak=OAI.ortak();al.ilac=(al.ilac||[]).filter(function(i){return i.kim==OAI.ES});var idler={};al.ilac.forEach(function(i){idler[i.id]=1});var al2={};Object.keys(al.al||{}).forEach(function(k){if(idler[k.slice(11)])al2[k]=1});al.al=al2;return{v:1,rol:'es',olaySira:OAI.ayar().sira||0,bugun:TODAY,aile:al}};
 
 // ---------- Olaylar ----------
 // kaynak 'es': eşin telefonu (yalnız ES_TUR; kayıtlar 'kubra'); kaynak 'ben': Çağlar'ın telefonu

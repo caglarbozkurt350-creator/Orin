@@ -21,6 +21,15 @@ const BEC0: Record<string, [string, number, string][]> = {
 const DESC0: Record<string, string> = { orin: 'şirketi yönetir, görevleri dağıtır, gelişimleri onaylar', orla: 'ekibi koordine eder, işleri sıraya koyar', nika: 'çalışan kartlarını hazırlar, beceri ve hafızaları geliştirir', echo: 'iş günü kayıtlarını toplar ve raporlar', otto: 'gelir-gider kaydını tutar, yaklaşan ödemeleri hatırlatır' };
 
 const bosAy = (ay: string): ButceAy => ({ ay, gelir: 0, gider: 0, kat: {}, hg: [0, 0, 0, 0, 0], hc: [0, 0, 0, 0, 0] });
+export const SPOR_TUR: Record<string, string> = { kosu: 'Koşu', bisiklet: 'Bisiklet', fitness: 'Fitness', yuzme: 'Yüzme', yoga: 'Yoga', diger: 'Diğer' };
+/** Masaüstündeki OT9.spor ile aynı kurallar */
+function sporUygula(o: Ozet, v: any) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(v.k || '') || (v.kim !== 'cagla' && v.kim !== 'kubra')) return;
+  const a = (o.aile = o.aile || bosAile()), sp = (a.spor = { ...(a.spor || {}) }), s = (x: any, m: number) => Math.max(0, Math.min(m, Math.round(+x) || 0));
+  const y: any = { adim: s(v.adim, 100000), dk: s(v.dk, 600), tur: SPOR_TUR[v.tur] ? v.tur : '', tdk: s(v.tdk, 600) };
+  if (!y.tur) y.tdk = 0; if (/^\d{2}:\d{2}$/.test(v.s || '')) y.s = v.s;
+  const k = v.k + '|' + v.kim; if (!y.adim && !y.dk && !y.tdk) delete sp[k]; else sp[k] = y;
+}
 export function bosAile(): Aile { return { fin: { bu: bosAy(''), once: bosAy(''), islem: [] }, ilac: [], al: {}, seker: {}, tcmb: null }; }
 export function bosOzet(): Ozet {
   return { v: 1, ts: 0, olaySira: 0, ekip: { m: {}, gorev: [], gel: [], sohbet: {} }, gun: {}, proj: [], ayar: { w1: 525, w2: 435 } };
@@ -77,6 +86,8 @@ export function uygula(o: Ozet, e: Olay) {
     }
   } else if (/^(etkinlik|etkinlik_sil|ozel_gun|ozel_gun_sil|es_harcama|es_gelir|finans_kayit|cep_iste|es_cep_iste)$/.test(e.tur)) {
     aileUygula(o, e);
+  } else if (e.tur === 'spor') {
+    sporUygula(o, v);
   } else if (/^(menu_yaz|market_ekle|market_tik|market_temizle|oneri_ekle|oneri_karar|ev_ekle|ev_tik|ev_temizle)$/.test(e.tur)) {
     katUygula(o, e);
   } else if (/^es_ilac_(al|kaydet|sil)$/.test(e.tur) || e.tur === 'ilac_al' || e.tur === 'ilac_kaydet' || e.tur === 'ilac_sil' || e.tur === 'seker') {

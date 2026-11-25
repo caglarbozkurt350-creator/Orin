@@ -1,4 +1,4 @@
-// Bana Özel (0.9.0): Sağlık özeti (şeker 7 gün, ilaç uyumu), AÇLIK ŞEKERİ grafiği (14/30/60 gün, hedef bandı), İLAÇLARIM (ekle/düzelt/sil, stok uyarısı, aylık PDF),
+// Bana Özel (0.9.0): Sağlık özeti (şeker 7 gün, ilaç uyumu), AÇLIK ŞEKERİ grafiği (14/30/60 gün, hedef bandı), İLAÇLARIM (ekle/düzelt/sil, stok uyarısı, aylık PDF), SPOR (adım, yürüyüş, aktivite; eş profilinde yok),
 // Hobi: takip edilen oyunlar ve YENİ ÇIKACAK OYUNLAR (Steam; takip et → kalan gün, zil → çıkış günü hatırlatması).
 // İlaç olayları: ilac_kaydet / ilac_sil (masaüstü orv-telefon.js). Oyun takibi yalnız bu telefonda (lib/dis).
 import { Image } from 'expo-image';
@@ -8,7 +8,7 @@ import Svg, { Circle, Polyline, Rect } from 'react-native-svg';
 import { AltPencere, Bos } from '@/bilesen/formlar';
 import { Bolumler, Dugme, Hap, Ikon, KartK, SayfaBasligi, s } from '@/bilesen/ortak';
 import { PdfDugme } from '@/bilesen/Pdf';
-import { alindiMi, IlacSatiri, SEKER_RENK, SekerSatiri } from '@/bilesen/Saglik';
+import { alindiMi, IlacSatiri, SEKER_RENK, SekerSatiri, SporKarti, sporOzet } from '@/bilesen/Saglik';
 import { SekerGrafik } from '@/bilesen/SekerGrafik';
 import { Ilac, olayEkle, Ozet, uid } from '@/lib/depo';
 import { kalanGun, oyunYenile, takipDegis, useDis, useDisYenile, zilDegis } from '@/lib/dis';
@@ -160,6 +160,10 @@ export function BanaOzel() {
       </KartK>
 
       {!es && <KartK ad="sekerGrafik" baslik="AÇLIK ŞEKERİ" ozet={sekerOzet}><SekerGrafik o={o} /></KartK>}
+
+      {!es && <KartK ad="spor" baslik="SPOR" ozet={(() => { const sp = sporOzet(o, ben); return 'ort. ' + sp.ortAdim.toLocaleString('tr-TR') + ' adım · ' + sp.dk + ' dk · 7 gün'; })()}>
+        <SporKarti key={'sp' + o.ts} o={o} />
+      </KartK>}
 
       {!es && <KartK ad="hobi" baslik="TAKİP ETTİĞİM OYUNLAR" ozet={takipL.length + ' oyun'}>
         {takipL.length ? takipL.map((t) => (

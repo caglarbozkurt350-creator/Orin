@@ -40,6 +40,11 @@ window.__telefon09Test=function(){var R=[];
   bulutUygula({id:'t9-e1',tur:'ev_ekle',ts:Date.now(),veri:{id:'t9ev',ad:'Çamaşır',kim:'Kübra'}});bulutUygula({id:'t9-e2',tur:'ev_tik',ts:Date.now(),veri:{id:'t9ev',bitti:1}});
   t('Ev işleri: eklenir, işaretlenir, özete gider',bulutOzet().aile.ev.some(function(x){return x.id=='t9ev'&&x.bitti&&x.kim=='Kübra'}));
   bulutUygula({id:'t9-e3',tur:'ev_temizle',ts:Date.now(),veri:{}});t('Ev işleri: bitenler kaldırılır',!a.ev.some(function(x){return x.id=='t9ev'}));
+  var spk=OT9.pad(new Date())+'|kubra';bulutUygula({id:'t9-s1',tur:'spor',ts:Date.now(),veri:{k:OT9.pad(new Date()),kim:'kubra',adim:8450,dk:35,tur:'kosu',tdk:20,s:'19:05'}});
+  t('Spor: telefondan yazılır ve özete gider',a.spor[spk].adim==8450&&a.spor[spk].tdk==20&&bulutOzet().aile.spor[spk].dk==35);
+  bulutUygula({id:'t9-s2',tur:'spor',ts:Date.now(),veri:{k:OT9.pad(new Date()),kim:'kubra',adim:999999,dk:5,tur:'xx',tdk:30}});t('Spor: sınırlar ve geçersiz tür',a.spor[spk].adim==100000&&a.spor[spk].tur==''&&a.spor[spk].tdk==0);
+  bulutUygula({id:'t9-s3',tur:'spor',ts:Date.now(),veri:{k:OT9.pad(new Date()),kim:'kubra',adim:0,dk:0}});t('Spor: sıfır yazılınca silinir',a.spor[spk]==null);
+  bulutUygula({id:'t9-s4',tur:'spor',ts:Date.now(),veri:{k:OT9.pad(new Date()),kim:'baskasi',adim:100}});t('Spor: geçersiz kişi yok sayılır',!Object.keys(a.spor).some(function(k){return /baskasi/.test(k)}));
   // İş kaydı: durum, düzelt, sil
   if(gk){
    bulutUygula({id:'t9-k1',tur:'kayit',ts:Date.now(),veri:{k:gk,kod:'10.20.30.01',is:'Montaj',dk:120,du:'devam'}});

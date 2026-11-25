@@ -23,7 +23,12 @@ export type Aile = {
   ilac: Ilac[]; al: Record<string, 1>; seker: Record<string, number>; /** şekerin yazıldığı saat (gün → "HH:MM") */ sekerSaat?: Record<string, string>;
   tcmb?: { tarih: string; usd: number; eur: number | null } | null;
   ortak?: Ortak;
+  /** 0.9.4 Ailem kategorileri (masaüstü S.orvA): menü "gün-ogle|aksam" (gün 0 = Pazartesi), market listesi, satın alma önerileri, ev işleri */
+  menu?: Record<string, string>; market?: MarketMadde[]; oneri?: Oneri[]; ev?: EvIsi[];
 };
+export type MarketMadde = { id: string; ad: string; al: boolean };
+export type Oneri = { id: string; ad: string; fiyat: string; alt: string; otto: string; karar: 'bekliyor' | 'onay' | 'ertele' | 'red'; ts: number };
+export type EvIsi = { id: string; ad: string; kim: string; bitti: boolean };
 export type Kisi = 'cagla' | 'kubra';
 /** Takvim etkinliği ya da hastane randevusu. kim: ekleyen; kisi: kimin için (aile = herkes) */
 export type Etkinlik = { id: string; ad: string; tarih: string; saat?: string; tur?: 'etkinlik' | 'randevu'; yer?: string; not?: string; kim: Kisi; kisi?: Kisi | 'aile'; ts?: number };

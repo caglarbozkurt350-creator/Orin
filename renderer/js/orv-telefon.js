@@ -3,6 +3,9 @@
 // Telefona giden özete `aile` bloğu eklenir: bu ay ve geçen ayın kişisel bütçesi (S.finans, Şirket hariç),
 // ilaç planı ve alındı işaretleri (S.orvA.ilac / ilacAl), sabah açlık şekeri (S.orvA.seker), TCMB kuru.
 // Telefondan gelen yeni olaylar: kayit_duzelt, kayit_sil, izin_sil, ilac_al, ilac_kaydet, ilac_sil, seker {k, v, s} (s: yazıldığı saat → S.orvA.sekerSaat).
+// 0.9.4: Ailem kategorileri telefonda da çalışır: özete menu {"gün-ogle|aksam": yemek}, market [{id,ad,al}],
+// oneri [{id,ad,fiyat,alt,otto,karar,ts}], ev [{id,ad,kim,bitti}] eklenir. Yeni olaylar: menu_yaz {k, v}, market_ekle {id, ad},
+// market_tik {id, al}, market_temizle, oneri_ekle {id, ad, fiyat, alt}, oneri_karar {id, karar}, ev_ekle {id, ad, kim}, ev_tik {id, bitti}, ev_temizle.
 // Telefondaki karşılığı: mobil/src/lib/ekip.ts → uygula(). Birini değiştirirken ötekini de güncelle.
 // ========================================================================
 var OT9={DUR:{baslanacak:1,devam:1,bitti:1,beklemede:1}};
@@ -21,7 +24,12 @@ OT9.aile=function(){var a=OA.st(),f=typeof fnS=='function'?fnS():{kayit:[],piyas
  var p=f.piyasa&&f.piyasa.tcmb;
  return{fin:{bu:OT9.butceAy(bu),once:OT9.butceAy(once),islem:islem},
   ilac:(a.ilac||[]).map(function(i){return{id:i.id,ad:i.ad,miktar:i.miktar||'',saat:i.saat||'',tekrar:i.tekrar||'gun',actok:i.actok||'',not:i.not||'',stok:i.stok==null?null:+i.stok,stokTs:i.stokTs||0,eklendi:i.eklendi||0,kim:i.kim||'cagla'}}),
-  al:al,seker:sk,sekerSaat:ss,tcmb:p&&p.kur&&p.kur.usd?{tarih:p.tarih,usd:p.kur.usd.satis,eur:p.kur.eur?p.kur.eur.satis:null}:null}};
+  al:al,seker:sk,sekerSaat:ss,
+  menu:Object.assign({},a.menu||{}),
+  market:(a.market||[]).slice(0,80).map(function(m){return{id:m.id,ad:m.ad,al:!!m.al}}),
+  oneri:(a.oneri||[]).slice(-30).map(function(o){return{id:o.id,ad:o.ad,fiyat:o.fiyat||'',alt:o.alt||'',otto:o.otto||'',karar:o.karar||'bekliyor',ts:o.ts||0}}),
+  ev:(a.ev||[]).slice(0,80).map(function(m){return{id:m.id,ad:m.ad,kim:m.kim||'',bitti:!!m.bitti}}),
+  tcmb:p&&p.kur&&p.kur.usd?{tarih:p.tarih,usd:p.kur.usd.satis,eur:p.kur.eur?p.kur.eur.satis:null}:null}};
 
 // ---------- Özet: aile bloğu + kayıtların durum etiketi ----------
 var _ot9Oz=bulutOzet;bulutOzet=function(){var oz=_ot9Oz();try{
@@ -43,4 +51,19 @@ var _ot9Bu=bulutUygula;bulutUygula=function(e){var v=e.veri||{},a=OA.st();
   var m=a.ilac.filter(function(z){return z.id==v.id})[0];if(m)Object.assign(m,o);else{o.id=v.id;o.eklendi=e.ts||Date.now();a.ilac.push(o)}OA.kaydet();return}
  if(e.tur=='ilac_sil'){a.ilac=a.ilac.filter(function(z){return z.id!=v.id});OA.kaydet();return}
  if(e.tur=='seker'){if(!/^\d{4}-\d{2}-\d{2}$/.test(v.k||''))return;a.seker=a.seker||{};a.sekerSaat=a.sekerSaat||{};var sv=Math.round(+v.v);if(sv>=20&&sv<=600){a.seker[v.k]=sv;if(/^\d{2}:\d{2}$/.test(v.s||''))a.sekerSaat[v.k]=v.s}else{delete a.seker[v.k];delete a.sekerSaat[v.k]}OA.kaydet();return}
+ if(OT9.aileOlay(e,v,a))return;
  return _ot9Bu(e)};
+// Ailem kategorileri (menü, market, satın alma, ev işleri): telefondan gelen olaylar. Masaüstündeki OA.menuKaydet / marketEkle / oneriKarar / evTik ile aynı kurallar.
+OT9.KARAR={bekliyor:1,onay:1,ertele:1,red:1};
+OT9.aileOlay=function(e,v,a){var t=e.tur,bul=function(L){return L.filter(function(x){return x.id==v.id})[0]},ok=function(){OA.kaydet();return true};
+ if(t=='menu_yaz'){if(!/^[0-6]-(ogle|aksam)$/.test(v.k||''))return true;var mv=String(v.v||'').trim().slice(0,60);if(mv)a.menu[v.k]=mv;else delete a.menu[v.k];return ok()}
+ if(t=='market_ekle'){var ma=String(v.ad||'').trim().slice(0,60);if(!v.id||!ma||bul(a.market))return true;a.market.push({id:v.id,ad:ma,al:false});return ok()}
+ if(t=='market_tik'){var m=bul(a.market);if(!m)return true;m.al=!!v.al;return ok()}
+ if(t=='market_temizle'){a.market=a.market.filter(function(x){return !x.al});return ok()}
+ if(t=='oneri_ekle'){var oa=String(v.ad||'').trim().slice(0,80);if(!v.id||!oa||bul(a.oneri))return true;a.oneri.push({id:v.id,ad:oa,fiyat:String(v.fiyat||'').slice(0,30),alt:String(v.alt||'').slice(0,200),otto:'',karar:'bekliyor',ts:e.ts||Date.now()});return ok()}
+ if(t=='oneri_karar'){var o=bul(a.oneri);if(!o||!OT9.KARAR[v.karar])return true;o.karar=v.karar;o.kts=e.ts||Date.now();
+  try{if(v.karar!='bekliyor')tmPush('nerya',{r:'sys',t:'Çağlar kararı (telefon): '+({onay:'Onayladı',ertele:'Erteledi',red:'Reddetti'})[v.karar]+' · '+o.ad})}catch(x){}return ok()}
+ if(t=='ev_ekle'){var ea=String(v.ad||'').trim().slice(0,80);if(!v.id||!ea||bul(a.ev))return true;a.ev.push({id:v.id,ad:ea,kim:['Ortak','Çağlar','Kübra'].indexOf(v.kim)>=0?v.kim:'Ortak',bitti:false});return ok()}
+ if(t=='ev_tik'){var ev=bul(a.ev);if(!ev)return true;ev.bitti=!!v.bitti;return ok()}
+ if(t=='ev_temizle'){a.ev=a.ev.filter(function(x){return !x.bitti});return ok()}
+ return false};

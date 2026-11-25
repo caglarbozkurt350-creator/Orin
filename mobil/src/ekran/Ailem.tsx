@@ -1,17 +1,18 @@
 // Ailem: tek sayfada kategoriler ve çalışanlar. Çalışanlar en sağda yuvarlak, yukarıdan aşağı açılır (AileRayi).
-// Kategori verileri (bütçe, ilaç planı, menü...) masaüstünde tutulur; telefonda ilgili çalışana ulaşılır:
-// Mesaj (çalışan sayfası), Görev ver, Otto'ya gelir/gider ekle (mevcut finans_kayit olayı).
+// Kategori verileri (bütçe, ilaç planı, menü...) masaüstünde tutulur; 0.9.4'ten beri kutucuğa dokununca altta o kategorinin
+// içeriği açılır ve telefondan değiştirilebilir (bilesen/AileKat.tsx). Ayrıca ilgili çalışana Mesaj / Görev ver.
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AltPencere, FinansFormu, GorevFormu } from '@/bilesen/formlar';
 import { OrtakBolum } from '@/bilesen/AileOrtak';
+import { KatPanel } from '@/bilesen/AileKat';
 import { PdfDugme } from '@/bilesen/Pdf';
 import { Avatar, Dugme, Foto, Ikon, KartK, SayfaBasligi, s } from '@/bilesen/ortak';
 import { aciklama } from '@/lib/ekip';
 import { KISA } from '@/lib/ekipMeta';
-import { aileSec, rayDegis, sekmeGit, useGezinti } from '@/lib/gezinti';
+import { aileSec, rayDegis, useGezinti } from '@/lib/gezinti';
 import { useEkip } from '@/lib/kullan';
 import { useRol } from '@/lib/rol';
 import { R, saydam } from '@/lib/tema';
@@ -68,6 +69,7 @@ export function Ailem() {
           );
         })}
       </View>
+      <KatPanel id={famId} />
       {c && (
         <KartK ad="aileSecili" baslik="SEÇİLİ ÇALIŞAN" ozet={c.ad + ' · ' + (KISA[c.id] || c.gorev)}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -92,7 +94,6 @@ export function Ailem() {
 /** Ailem · pasif: kategoriler işlev simgeleriyle; çalışan rayı ve "Mesaj / Görev ver" yok */
 function AilemPasif() {
   const fam = useGezinti((d) => d.aile.fam), sec = KAT.find((k) => k[0] === (fam || 'otto')) || KAT[0];
-  const [finans, setFinans] = useState(false);
   return (
     <View style={{ gap: 14 }}>
       <SayfaBasligi ust="Bütçe, sağlık, menü, takvim" baslik="Ailem" sag={<View style={{ marginBottom: 4 }}><PdfDugme tur="butce" yazi="Bütçe PDF" /></View>} />
@@ -110,12 +111,7 @@ function AilemPasif() {
           );
         })}
       </View>
-      <KartK ad="aileKat" baslik={sec[1].toLocaleUpperCase('tr')} ozet={PASIF_IS[sec[0]]}>
-        <Text style={{ color: '#d2d2d7', fontSize: 13, lineHeight: 19 }}>{PASIF_IS[sec[0]]} Ayrıntılar bilgisayardaki Orvane’de Ailem › {sec[1]} sayfasında tutulur.</Text>
-        {sec[0] === 'otto' && <Dugme yazi="Gelir / gider ekle" ikon="kaydet" onPress={() => setFinans(true)} />}
-        <Dugme yazi="İzin / takvim girişi" ikon="izin" tur="ikinci" onPress={() => sekmeGit(2, { kayit: 'izin' })} />
-      </KartK>
-      <AltPencere acik={finans} kapat={() => setFinans(false)}>{finans ? <FinansFormu kapat={() => setFinans(false)} /> : null}</AltPencere>
+      <KatPanel id={sec[0]} />
     </View>
   );
 }

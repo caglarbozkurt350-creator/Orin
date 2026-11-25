@@ -76,6 +76,8 @@ export function uygula(o: Ozet, e: Olay) {
     }
   } else if (/^(etkinlik|etkinlik_sil|ozel_gun|ozel_gun_sil|es_harcama|es_gelir|finans_kayit)$/.test(e.tur)) {
     aileUygula(o, e);
+  } else if (/^(menu_yaz|market_ekle|market_tik|market_temizle|oneri_ekle|oneri_karar|ev_ekle|ev_tik|ev_temizle)$/.test(e.tur)) {
+    katUygula(o, e);
   } else if (/^es_ilac_(al|kaydet|sil)$/.test(e.tur) || e.tur === 'ilac_al' || e.tur === 'ilac_kaydet' || e.tur === 'ilac_sil' || e.tur === 'seker') {
     const a = (o.aile = o.aile || bosAile());
     if (e.tur.startsWith('es_') && a.ilac.some((x) => x.id === v.id && x.kim !== 'kubra')) return; // eş yalnız kendi ilacını değiştirir
@@ -97,6 +99,20 @@ export function uygula(o: Ozet, e: Olay) {
       o.gun[k] = { ...(g || { L: null, T: 0, OT: 0, e: [] }), D: v.t };
     }
   }
+}
+/** Ailem kategorileri (masaüstü orv-telefon.js → OT9.aileOlay ile aynı kurallar): menü, market, satın alma, ev işleri */
+function katUygula(o: Ozet, e: Olay) {
+  const v = e.veri || {}, a = (o.aile = o.aile || bosAile());
+  const menu = (a.menu = { ...(a.menu || {}) }), market = (a.market = a.market || []), oneri = (a.oneri = a.oneri || []), ev = (a.ev = a.ev || []);
+  if (e.tur === 'menu_yaz') { if (!/^[0-6]-(ogle|aksam)$/.test(v.k || '')) return; const y = String(v.v || '').trim().slice(0, 60); if (y) menu[v.k] = y; else delete menu[v.k]; }
+  else if (e.tur === 'market_ekle') { const ad = String(v.ad || '').trim().slice(0, 60); if (v.id && ad && !market.some((x) => x.id === v.id)) market.push({ id: v.id, ad, al: false }); }
+  else if (e.tur === 'market_tik') { const m = market.find((x) => x.id === v.id); if (m) m.al = !!v.al; }
+  else if (e.tur === 'market_temizle') a.market = market.filter((x) => !x.al);
+  else if (e.tur === 'oneri_ekle') { const ad = String(v.ad || '').trim().slice(0, 80); if (v.id && ad && !oneri.some((x) => x.id === v.id)) oneri.push({ id: v.id, ad, fiyat: String(v.fiyat || ''), alt: String(v.alt || ''), otto: '', karar: 'bekliyor', ts: e.ts }); }
+  else if (e.tur === 'oneri_karar') { const x = oneri.find((y) => y.id === v.id); if (x && ['bekliyor', 'onay', 'ertele', 'red'].includes(v.karar)) x.karar = v.karar; }
+  else if (e.tur === 'ev_ekle') { const ad = String(v.ad || '').trim().slice(0, 80); if (v.id && ad && !ev.some((x) => x.id === v.id)) ev.push({ id: v.id, ad, kim: ['Ortak', 'Çağlar', 'Kübra'].includes(v.kim) ? v.kim : 'Ortak', bitti: false }); }
+  else if (e.tur === 'ev_tik') { const m = ev.find((x) => x.id === v.id); if (m) m.bitti = !!v.bitti; }
+  else if (e.tur === 'ev_temizle') a.ev = ev.filter((x) => !x.bitti);
 }
 /** Aile olayları (masaüstü orv-aile.js → OAI.uygula ile aynı kurallar): takvim, randevu, özel gün, harcama / gelir */
 function aileUygula(o: Ozet, e: Olay) {

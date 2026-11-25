@@ -26,6 +26,20 @@ window.__telefon09Test=function(){var R=[];
   bulutUygula({id:'t9-s3',tur:'seker',ts:Date.now(),veri:{k:bk,v:118,s:'06:12'}});t('Şeker: yazıldığı saat saklanır ve özete gider',a.seker[bk]==118&&a.sekerSaat[bk]=='06:12'&&bulutOzet().aile.sekerSaat[bk]=='06:12');
   bulutUygula({id:'t9-s2',tur:'seker',ts:Date.now(),veri:{k:bk,v:5}});t('Şeker: geçersiz değer kaydı ve saatini siler',a.seker[bk]==null&&!a.sekerSaat[bk]);
   bulutUygula({id:'t9-i3',tur:'ilac_sil',ts:Date.now(),veri:{id:'t9ilac'}});t('İlaç: telefondan kaldırılır',!a.ilac.some(function(x){return x.id=='t9ilac'}));
+  // 0.9.4 Ailem kategorileri: menü, market, satın alma, ev işleri
+  bulutUygula({id:'t9-m1',tur:'menu_yaz',ts:Date.now(),veri:{k:'2-aksam',v:'Kuru fasulye'}});t('Menü: telefondan yazılır ve özete gider',a.menu['2-aksam']=='Kuru fasulye'&&bulutOzet().aile.menu['2-aksam']=='Kuru fasulye');
+  bulutUygula({id:'t9-m2',tur:'menu_yaz',ts:Date.now(),veri:{k:'2-aksam',v:''}});t('Menü: boş yazılınca silinir',a.menu['2-aksam']==null);
+  bulutUygula({id:'t9-k1',tur:'market_ekle',ts:Date.now(),veri:{id:'t9mk',ad:'Süt'}});bulutUygula({id:'t9-k1b',tur:'market_ekle',ts:Date.now(),veri:{id:'t9mk',ad:'Süt'}});
+  t('Market: telefondan eklenir, aynı id kopya olmaz, özete gider',a.market.filter(function(x){return x.id=='t9mk'}).length==1&&bulutOzet().aile.market.some(function(x){return x.id=='t9mk'&&!x.al}));
+  bulutUygula({id:'t9-k2',tur:'market_tik',ts:Date.now(),veri:{id:'t9mk',al:1}});t('Market: işaretlenir',a.market.filter(function(x){return x.id=='t9mk'})[0].al===true);
+  bulutUygula({id:'t9-k3',tur:'market_temizle',ts:Date.now(),veri:{}});t('Market: alınanlar kaldırılır',!a.market.some(function(x){return x.id=='t9mk'}));
+  bulutUygula({id:'t9-o1',tur:'oneri_ekle',ts:Date.now(),veri:{id:'t9on',ad:'Blender',fiyat:'2.000 ₺'}});bulutUygula({id:'t9-o2',tur:'oneri_karar',ts:Date.now(),veri:{id:'t9on',karar:'onay'}});
+  t('Satın alma: öneri eklenir, karar verilir, özete gider',a.oneri.filter(function(x){return x.id=='t9on'})[0].karar=='onay'&&bulutOzet().aile.oneri.some(function(x){return x.id=='t9on'&&x.karar=='onay'}));
+  bulutUygula({id:'t9-o3',tur:'oneri_karar',ts:Date.now(),veri:{id:'t9on',karar:'xx'}});t('Satın alma: geçersiz karar yok sayılır',a.oneri.filter(function(x){return x.id=='t9on'})[0].karar=='onay');
+  a.oneri=a.oneri.filter(function(x){return x.id!='t9on'});
+  bulutUygula({id:'t9-e1',tur:'ev_ekle',ts:Date.now(),veri:{id:'t9ev',ad:'Çamaşır',kim:'Kübra'}});bulutUygula({id:'t9-e2',tur:'ev_tik',ts:Date.now(),veri:{id:'t9ev',bitti:1}});
+  t('Ev işleri: eklenir, işaretlenir, özete gider',bulutOzet().aile.ev.some(function(x){return x.id=='t9ev'&&x.bitti&&x.kim=='Kübra'}));
+  bulutUygula({id:'t9-e3',tur:'ev_temizle',ts:Date.now(),veri:{}});t('Ev işleri: bitenler kaldırılır',!a.ev.some(function(x){return x.id=='t9ev'}));
   // İş kaydı: durum, düzelt, sil
   if(gk){
    bulutUygula({id:'t9-k1',tur:'kayit',ts:Date.now(),veri:{k:gk,kod:'10.20.30.01',is:'Montaj',dk:120,du:'devam'}});

@@ -74,7 +74,7 @@ function ParaFormu({ rol, kapat, gelir0 }: { rol: Rol; kapat: () => void; gelir0
 }
 
 // ---------- Etkinlik / randevu formu ----------
-function EtkinlikFormu({ rol, e, randevu0, kapat }: { rol: Rol; e?: Etkinlik; randevu0?: boolean; kapat: () => void }) {
+export function EtkinlikFormu({ rol, e, randevu0, kapat }: { rol: Rol; e?: Etkinlik; randevu0?: boolean; kapat: () => void }) {
   const [tur, setTur] = useState<'etkinlik' | 'randevu'>(e?.tur || (randevu0 ? 'randevu' : 'etkinlik')), [ad, setAd] = useState(e?.ad || ''), [tarih, setTarih] = useState(e ? tarihYaz(e.tarih) : '');
   const [saat, setSaat] = useState(e?.saat || ''), [yer, setYer] = useState(e?.yer || ''), [kisi, setKisi] = useState<Kisi | 'aile'>(e?.kisi || benKimim(rol)), [hata, setHata] = useState(''), [sil, setSil] = useState(false);
   const kaydet = () => {

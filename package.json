@@ -1,72 +1,16 @@
 {
   "name": "orin",
   "productName": "Orvane",
-  "version": "0.9.7",
+  "version": "0.9.8",
   "description": "Orvane · iş raporu ve yapay zekâ çalışanları masaüstü uygulaması",
   "main": "main.js",
   "author": "Çağlar",
   "license": "UNLICENSED",
   "private": true,
-  "scripts": {
-    "start": "electron .",
-    "smoke": "electron . --smoke",
-    "icon": "electron tools/make-icon.js",
-    "dist": "electron-builder --win nsis && node tools/arsivle.js",
-    "seed": "electron . --seed",
-    "arsivle": "node tools/arsivle.js"
-  },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",
     "electron-updater": "^6.8.11",
     "pocketbase": "^0.29.0"
-  },
-  "build": {
-    "appId": "com.caglar.orin",
-    "productName": "Orvane",
-    "files": [
-      "main.js",
-      "preload.js",
-      "sheets.js",
-      "renderer/**",
-      "assets/**",
-      "!renderer/js/kisisel.js",
-      "export.js",
-      "calisanlar.json",
-      "bulut.js",
-      "pb.js",
-      "zeka.js",
-      "surum.js",
-      "onayli-surumler.json",
-      "abonelik.js",
-      "gelistir.js",
-      "apify.js",
-      "fikirler.json"
-    ],
-    "win": {
-      "target": "nsis",
-      "icon": "assets/icon.png"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "shortcutName": "Orvane",
-      "installerLanguages": [
-        "tr_TR"
-      ],
-      "language": "1055"
-    },
-    "publish": {
-      "provider": "github",
-      "owner": "caglarbozkurt350-creator",
-      "repo": "Orin",
-      "releaseType": "release"
-    },
-    "artifactName": "Orvane-Kurulum-${version}.${ext}"
-  },
-  "devDependencies": {
-    "@tabler/icons-webfont": "3.19.0",
-    "electron": "^45.3.0",
-    "electron-builder": "^26.18.0"
   },
   "repository": "https://github.com/caglarbozkurt350-creator/Orin"
 }

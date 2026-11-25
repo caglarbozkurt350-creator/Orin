@@ -149,7 +149,7 @@ export function BanaOzel() {
         {!es && <SekerSatiri key={'sk' + o.ts} o={o} />}
       </KartK>
 
-      {(diger.length > 0 || es) && <KartK ad="digerIlac" baslik={digerAd.toLocaleUpperCase('tr') + ' · İLAÇLAR'} ozet={diger.length + ' ilaç · ' + diger.filter((i) => alindiMi(o, i, bugun)).length + ' bugün alındı'}>
+      {!es && diger.length > 0 && <KartK ad="digerIlac" baslik={digerAd.toLocaleUpperCase('tr') + ' · İLAÇLAR'} ozet={diger.length + ' ilaç · ' + diger.filter((i) => alindiMi(o, i, bugun)).length + ' bugün alındı'}>
         {diger.slice().sort((a, b) => a.saat.localeCompare(b.saat)).map((i) => { const ok = alindiMi(o, i, bugun); return (
           <View key={i.id} accessible accessibilityLabel={i.ad + ' ' + i.saat + (ok ? ', bugün alındı' : '')} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 50, paddingHorizontal: 12, borderRadius: 16, backgroundColor: ok ? 'rgba(62,207,90,0.08)' : 'rgba(255,255,255,0.04)' }}>
             <Ikon ad="ilac" boy={17} renk={ok ? R.yesil : R.yazi2} kalin={2.1} />

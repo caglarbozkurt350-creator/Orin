@@ -40,7 +40,8 @@ OAI.ortak=function(){var a=OAI.st(),F=OA.fin(),f=F.f,bugun=OT9.pad(new Date()),a
 // Çağlar'ın kendi özetine ortak blok eklenir
 var _oaiOz=bulutOzet;bulutOzet=function(){var oz=_oaiOz();try{oz.aile=oz.aile||OT9.aile();oz.aile.ortak=OAI.ortak()}catch(e){if(window.console)console.warn('[aile] ortak blok',e)}return oz};
 // Eşin özeti: iş kayıtları, ekip, görev, sohbet YOK. Bütçe, sağlık (iki kişinin ilaçları) ve ortak blok var.
-OAI.esOzet=function(){var al=OT9.aile();al.ortak=OAI.ortak();return{v:1,rol:'es',olaySira:OAI.ayar().sira||0,bugun:TODAY,aile:al}};
+// 0.9.9: Çağlar'ın ilaçları ve alındı işaretleri eşin telefonuna hiç gönderilmez; eş yalnız kendi ilaçlarını görür (kullanıcı isteği).
+OAI.esOzet=function(){var al=OT9.aile();al.ortak=OAI.ortak();al.ilac=(al.ilac||[]).filter(function(i){return i.kim==OAI.ES});var idler={};al.ilac.forEach(function(i){idler[i.id]=1});var al2={};Object.keys(al.al||{}).forEach(function(k){if(idler[k.slice(11)])al2[k]=1});al.al=al2;return{v:1,rol:'es',olaySira:OAI.ayar().sira||0,bugun:TODAY,aile:al}};
 
 // ---------- Olaylar ----------
 // kaynak 'es': eşin telefonu (yalnız ES_TUR; kayıtlar 'kubra'); kaynak 'ben': Çağlar'ın telefonu
@@ -96,8 +97,8 @@ OAI.kaydetEposta=function(){var el=document.getElementById('aiE'),v=(el&&el.valu
  A.eposta=v;A.yayin='';save();toast(v?'Aile paylaşımı açıldı':'Aile paylaşımı kapatıldı');if(v)OAI.tick().then(function(){render()});else render()};
 var _oaiTel=P.telefon;P.telefon=function(){var h=_oaiTel(),A=OAI.ayar();
  var kart='<div class="card"><div class="ch"><i class="ti ti-users"></i>Aile paylaşımı (eşinin telefonu)</div>'+
- '<div class="hn" style="margin-bottom:8px">Eşin Orvane Mobil’i kurup <b>kendi e-postasıyla</b> hesap açar; buraya o e-postayı yaz. Eşin ortak bütçeyi ve grafikleri, sağlık verisini, izin günlerini, aile takvimini ve özel günleri <b>görür</b>. '+
- 'Kendi harcamasını (cep harçlığından ya da market/ev için ortak bütçeden), kendi ilaçlarını, hastane randevularını, takvim etkinliklerini ve özel günleri ekler. Senin iş kayıtlarını, izinlerini ve ilaçlarını <b>değiştiremez</b>.</div>'+
+ '<div class="hn" style="margin-bottom:8px">Eşin Orvane Mobil’i kurup <b>kendi e-postasıyla</b> hesap açar; buraya o e-postayı yaz. Eşin ortak bütçeyi ve grafikleri, izin günlerini, aile takvimini ve özel günleri <b>görür</b>. '+
+ 'Kendi harcamasını (cep harçlığından ya da market/ev için ortak bütçeden), kendi ilaçlarını, hastane randevularını, takvim etkinliklerini ve özel günleri ekler. Senin ilaçlarını <b>görmez</b>; iş kayıtlarını ve izinlerini <b>değiştiremez</b>.</div>'+
  '<input id="aiE" type="email" placeholder="esinin@eposta.com" class="ti2" value="'+esc(A.eposta||'')+'" style="width:100%;box-sizing:border-box">'+
  '<div style="display:flex;gap:8px;margin-top:8px"><button class="bt p" onclick="OAI.kaydetEposta()">Kaydet</button>'+(A.eposta?'<button class="bt" onclick="document.getElementById(\'aiE\').value=\'\';OAI.kaydetEposta()">Paylaşımı kapat</button>':'')+'</div>'+
  (A.hata?'<div class="kr"><span style="color:#f1c88a">'+esc(A.hata)+'</span></div>':A.eposta?'<div class="kr"><span>Durum</span><span class="hn">'+(A.yayin?'yayında':'ilk eşitleme bekleniyor')+'</span></div>':'')+

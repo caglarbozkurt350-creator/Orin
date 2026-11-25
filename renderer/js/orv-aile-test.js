@@ -36,9 +36,11 @@ window.__aile091Test=function(){var R=[];
   // Yetki: Çağlar'ın verileri
   var gk=key(new Date(Date.now()+3*864e5)),d0=D[gk];
   t('Eş: izin / iş kaydı olayı reddedilir',!OAI.uygula({id:'t91z',tur:'izin',veri:{t:'yillik',b:gk}},'es')&&!OAI.uygula({id:'t91k2',tur:'kayit',veri:{k:gk,kod:'1',is:'x',dk:10}},'es')&&D[gk]===d0);
+  var bk=OA.bugunKey();a.ilacAl[bk+'|t91c']=1;a.ilacAl[bk+'|t91k']=1;
   var eo=OAI.esOzet();
   t('Eşin özeti: iş kaydı, ekip ve sohbet içermez',eo.rol=='es'&&!eo.gun&&!eo.ekip&&eo.aile&&eo.aile.ortak&&Array.isArray(eo.aile.ilac));
-  t('Eşin özeti: ilaçlarda sahibi belli',eo.aile.ilac.some(function(x){return x.id=='t91k'&&x.kim=='kubra'})&&eo.aile.ilac.some(function(x){return x.id=='t91c'&&x.kim=='cagla'}));
+  t('Eşin özeti: yalnız eşin ilaçları ve işaretleri gider; Çağlar’ın ilaçları gönderilmez',eo.aile.ilac.some(function(x){return x.id=='t91k'&&x.kim=='kubra'})&&!eo.aile.ilac.some(function(x){return x.kim!='kubra'})&&eo.aile.al[bk+'|t91k']&&!eo.aile.al[bk+'|t91c']);
+  t('Çağlar’ın kendi özeti: iki kişinin ilaçları da durur',bulutOzet().aile.ilac.some(function(x){return x.id=='t91c'})&&bulutOzet().aile.ilac.some(function(x){return x.id=='t91k'}));
   OAI.ayar().eposta='';t('Ayarlar › Telefon: aile paylaşımı kartı',/Aile paylaşımı/.test(P.telefon())&&/aiE/.test(P.telefon()));
  }catch(e){t('Aile testi',false,e.stack)}
  finally{a.ilac=JSON.parse(y.ilac);a.ilacAl=JSON.parse(y.al);a.takvim=JSON.parse(y.tk);a.ozel=JSON.parse(y.oz);if(y.fn)S.finans=JSON.parse(y.fn);else delete S.finans;S.bulut=JSON.parse(y.bl)}

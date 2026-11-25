@@ -45,7 +45,7 @@ function CubukSecimi() {
 export function AyarlarSayfasi() {
   const g = useGorunumAyari(), { o } = useEkip(), senk = useDurum((d) => d.senk), rol = useRol(), es = rol === 'es';
   const YETKI: [string, boolean][] = es
-    ? [['Ortak bütçe, gelir–gider ve grafikler', true], ['Kendi harcaman (cep harçlığı ya da ortak bütçe) ve gelir', true], ['Kendi ilaçların, randevuların, etkinliklerin, özel günlerin', true], [AD.cagla + '’ın izin günleri, ilaçları, şekeri (yalnız görüntüleme)', false], ['İş kayıtları, görevler, ekip', false]]
+    ? [['Ortak bütçe, gelir–gider ve grafikler', true], ['Kendi harcaman (cep harçlığı ya da ortak bütçe) ve gelir', true], ['Kendi ilaçların, randevuların, etkinliklerin, özel günlerin', true], [AD.cagla + '’ın izin günleri ve şekeri (yalnız görüntüleme)', false], ['İş kayıtları, görevler, ekip', false]]
     : [['Tüm iş kayıtları, izinler, görevler', true], ['Ortak bütçe, kendi cep harçlığın, ilaç ve şekerin', true], [AD.kubra + '’nın ilaç, randevu ve harcamaları (yalnız görüntüleme)', false]];
   return (
     <View style={{ gap: 14 }}>

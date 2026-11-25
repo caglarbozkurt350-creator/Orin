@@ -42,7 +42,7 @@ export type Ortak = {
   trend: [string, number, number][];
   kasa: { ortak: number; c: number; e: number };
   kat: Record<string, number>;
-  cep: { c?: CepDurum; e?: CepDurum; kalanGun?: number; bek?: number };
+  cep: { c?: CepDurum; e?: CepDurum; kalanGun?: number; bek?: number; /** 0.9.11 bakiye: cep harçlığı tutar olarak; yuzde: kalanın yüzdesi */ mod?: 'bakiye' | 'yuzde' };
   hareket: [string, 0 | 1, string, string, number, 'o' | 'c' | 'e', Kisi][];
   odeme: { ad: string; tutar: number; tarih: string }[];
   takvim: Etkinlik[]; ozel: OzelGun[]; izin: Record<string, string>;

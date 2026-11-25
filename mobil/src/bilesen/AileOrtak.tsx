@@ -50,6 +50,25 @@ export function tarihCoz(x: string, ileri = false, bugun = new Date()): string {
 }
 const tarihYaz = (k: string) => { const d = tarihOf(k); return d.getDate() + '.' + (d.getMonth() + 1) + '.' + d.getFullYear(); };
 
+// ---------- Cep harçlığı iste (0.9.11) ----------
+// Tutar doğrudan isteyenin cep bakiyesine eklenir; Aile Bütçesi cep harçlıklarını da kapsadığı için değişmez, aylık gelir artmaz.
+function CepIsteFormu({ rol, kapat }: { rol: Rol; kapat: () => void }) {
+  const [tutar, setTutar] = useState(''), [hata, setHata] = useState('');
+  const kaydet = () => {
+    const t = Math.round((Number(tutar.replace(/./g, '').replace(',', '.')) || 0) * 100) / 100; if (!(t > 0)) return setHata('Tutarı yaz');
+    olayEkle(rol === 'es' ? 'es_cep_iste' : 'cep_iste', { tutar: t }); esitleSonra(); kapat();
+  };
+  return (
+    <View style={{ gap: 12 }}>
+      <Text style={{ color: R.yazi, fontSize: 17, fontWeight: '700' }}>Cep harçlığı iste</Text>
+      <View style={{ flexDirection: 'row', gap: 8 }}><Alan et="Tutar (₺)" v={tutar} d={setTutar} ph="ör. 1.000" k="decimal-pad" /></View>
+      <Text style={[s.sub, { fontSize: 11.5 }]}>Cep harçlığına eklenir. Aile Bütçesi değişmez, aylık gelir artmaz.</Text>
+      {!!hata && <Text style={{ color: '#f4a3a3', fontSize: 13 }}>{hata}</Text>}
+      <View style={{ flexDirection: 'row', gap: 8 }}><Dugme yazi="Vazgeç" tur="ikinci" onPress={kapat} stil={{ flex: 1 }} /><Dugme yazi="Ekle" onPress={kaydet} stil={{ flex: 1 }} /></View>
+    </View>
+  );
+}
+
 // ---------- Harcama / gelir formu ----------
 function ParaFormu({ rol, kapat, gelir0 }: { rol: Rol; kapat: () => void; gelir0?: boolean }) {
   const [gelir, setGelir] = useState(!!gelir0), [kasa, setKasa] = useState<'cep' | 'ortak'>('ortak'), [kat, setKat] = useState('Market');
@@ -175,17 +194,18 @@ function KasaCubuk({ kasa, ad }: { kasa: Ortak['kasa']; ad: Ortak['ad'] }) {
     </View>
   );
 }
-function CepSatir({ ad, c, renk, ben }: { ad: string; c?: Ortak['cep']['c']; renk: string; ben: boolean }) {
+function CepSatir({ ad, c, renk, ben, bakiye, iste }: { ad: string; c?: Ortak['cep']['c']; renk: string; ben: boolean; bakiye?: boolean; iste?: () => void }) {
   if (!c) return null; const p = c.har ? Math.max(0, Math.min(100, (c.harcanan / c.har) * 100)) : 0, asti = c.kal != null && c.kal < 0;
   return (
     <View style={{ gap: 5, padding: 10, borderRadius: 14, backgroundColor: ben ? saydam(renk, 0.08) : 'rgba(255,255,255,0.04)' }}>
       <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
         <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: renk }} />
-        <Text style={{ flex: 1, color: R.yazi, fontSize: 13.5, fontWeight: '600' }}>{ad} · cep harçlığı %{c.oran}{ben ? ' (sen)' : ''}</Text>
+        <Text style={{ flex: 1, color: R.yazi, fontSize: 13.5, fontWeight: '600' }}>{ad} · cep harçlığı{bakiye ? '' : ' %' + c.oran}{ben ? ' (sen)' : ''}</Text>
+        {ben && iste && <Pressable onPress={iste} accessibilityRole="button" accessibilityLabel="Cep harçlığı iste" hitSlop={6} style={{ paddingHorizontal: 10, paddingVertical: 3, borderRadius: 12, backgroundColor: saydam(renk, 0.18) }}><Text style={{ color: R.yazi, fontSize: 11.5, fontWeight: '700' }}>İste</Text></Pressable>}
         <Text style={{ color: asti ? '#f4a3a3' : R.yazi, fontSize: 13, fontWeight: '700' }}>{c.kal == null ? '—' : tl(c.kal)}</Text>
       </View>
       <View style={{ height: 7, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}><View style={{ width: p + '%', height: '100%', backgroundColor: asti ? '#f47a7a' : renk, borderRadius: 4 }} /></View>
-      <Text style={[s.sub, { fontSize: 11 }]}>{c.har == null ? 'Gelir girilince hesaplanır' : tl(c.harcanan) + ' / ' + tl(c.har) + ' harcandı' + (c.gunluk != null && c.kal != null && c.kal > 0 ? ' · günde ' + tl(c.gunluk) : asti ? ' · harçlık aşıldı' : '')}</Text>
+      <Text style={[s.sub, { fontSize: 11 }]}>{c.har == null ? (bakiye ? 'Bakiye bildirilince görünür' : 'Gelir girilince hesaplanır') : tl(c.harcanan) + ' / ' + tl(c.har) + ' harcandı' + (c.gunluk != null && c.kal != null && c.kal > 0 ? ' · günde ' + tl(c.gunluk) : asti ? ' · harçlık aşıldı' : '')}</Text>
     </View>
   );
 }
@@ -194,7 +214,7 @@ function CepSatir({ ad, c, renk, ben }: { ad: string; c?: Ortak['cep']['c']; ren
 export function OrtakBolum() {
   const o = useGorunum(), rol = useRol(), ben = benKimim(rol);
   const O: Ortak = o.aile?.ortak || bosOrtak(), ad = O.ad || AD;
-  const [pen, setPen] = useState<null | { t: 'para'; gelir?: boolean } | { t: 'etk'; e?: Etkinlik; randevu?: boolean } | { t: 'ozel'; g?: OzelGun }>(null), [n, setN] = useState(0);
+  const [pen, setPen] = useState<null | { t: 'para'; gelir?: boolean } | { t: 'cep' } | { t: 'etk'; e?: Etkinlik; randevu?: boolean } | { t: 'ozel'; g?: OzelGun }>(null), [n, setN] = useState(0);
   const ac = (p: NonNullable<typeof pen>) => { setPen(p); setN((x) => x + 1); };
   const tr = O.trend[O.trend.length - 1] || ['', o.aile?.fin.bu.gelir || 0, o.aile?.fin.bu.gider || 0], once = O.trend[O.trend.length - 2];
   const kalan = tr[1] - tr[2], kat = Object.entries(O.kat).sort((a, b) => b[1] - a[1]), kmax = kat.length ? kat[0][1] : 1;
@@ -233,8 +253,8 @@ export function OrtakBolum() {
         </>}
         <Text style={s.sub}>Bu ay giderler nereden çıktı?</Text>
         <KasaCubuk kasa={O.kasa} ad={ad} />
-        <CepSatir ad={ad.cagla} c={O.cep.c} renk={KISI_RENK.cagla} ben={ben === 'cagla'} />
-        <CepSatir ad={ad.kubra} c={O.cep.e} renk={KISI_RENK.kubra} ben={ben === 'kubra'} />
+        <CepSatir ad={ad.cagla} c={O.cep.c} renk={KISI_RENK.cagla} ben={ben === 'cagla'} bakiye={O.cep.mod === 'bakiye'} iste={O.cep.mod === 'bakiye' ? () => ac({ t: 'cep' }) : undefined} />
+        <CepSatir ad={ad.kubra} c={O.cep.e} renk={KISI_RENK.kubra} ben={ben === 'kubra'} bakiye={O.cep.mod === 'bakiye'} iste={O.cep.mod === 'bakiye' ? () => ac({ t: 'cep' }) : undefined} />
         {kat.length > 0 && <View style={{ gap: 7 }}>
           <Text style={s.sub}>Ortak giderler</Text>
           {kat.slice(0, 6).map(([k, v]) => (
@@ -292,6 +312,7 @@ export function OrtakBolum() {
       </KartK>
 
       <AltPencere acik={!!pen} kapat={() => setPen(null)}>
+        {pen?.t === 'cep' && <CepIsteFormu key={n} rol={rol} kapat={() => setPen(null)} />}
         {pen?.t === 'para' && <ParaFormu key={n} rol={rol} gelir0={pen.gelir} kapat={() => setPen(null)} />}
         {pen?.t === 'etk' && <EtkinlikFormu key={n} rol={rol} e={pen.e} randevu0={pen.randevu} kapat={() => setPen(null)} />}
         {pen?.t === 'ozel' && <OzelGunFormu key={n} g={pen.g} rol={rol} kapat={() => setPen(null)} />}

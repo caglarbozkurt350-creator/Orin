@@ -75,7 +75,7 @@ export function uygula(o: Ozet, e: Olay) {
       const k = gunAnahtari(d), g = o.gun[k];
       if (g?.D && (!v.t || g.D === v.t || (v.t === 'rapor13' && g.D === 'rapor4'))) { const y = { ...g }; delete y.D; o.gun[k] = y; }
     }
-  } else if (/^(etkinlik|etkinlik_sil|ozel_gun|ozel_gun_sil|es_harcama|es_gelir|finans_kayit)$/.test(e.tur)) {
+  } else if (/^(etkinlik|etkinlik_sil|ozel_gun|ozel_gun_sil|es_harcama|es_gelir|finans_kayit|cep_iste|es_cep_iste)$/.test(e.tur)) {
     aileUygula(o, e);
   } else if (/^(menu_yaz|market_ekle|market_tik|market_temizle|oneri_ekle|oneri_karar|ev_ekle|ev_tik|ev_temizle)$/.test(e.tur)) {
     katUygula(o, e);
@@ -129,7 +129,11 @@ function aileUygula(o: Ozet, e: Olay) {
     const m = O.ozel.find((x) => x.id === v.id); if (m && es && m.kim !== 'kubra') return;
     const y = { ad: v.ad, tarih: v.tarih, tur: v.tur || 'diger', kisi: v.kisi === 'cagla' || v.kisi === 'kubra' ? v.kisi : undefined }; if (m) Object.assign(m, y); else O.ozel.push({ id: v.id, kim, ...y });
   } else if (e.tur === 'ozel_gun_sil') O.ozel = O.ozel.filter((x) => x.id !== v.id || (es && x.kim !== 'kubra'));
-  else {
+  else if (e.tur === 'cep_iste' || e.tur === 'es_cep_iste') {
+    // 0.9.11: cep harçlığı iste → yalnız isteyenin cebi artar; Aile Bütçesi ve gelir değişmez
+    const t = Math.round((+String(v.tutar).replace(',', '.') || 0) * 100) / 100, c = O.cep[e.tur === 'cep_iste' ? 'c' : 'e']; if (!(t > 0) || !c) return;
+    c.har = (c.har || 0) + t; if (c.kal != null) { c.kal += t; c.gunluk = O.cep.kalanGun ? Math.max(0, Math.round(c.kal / O.cep.kalanGun)) : c.gunluk; } else c.kal = t;
+  } else {
     // Harcama / gelir: es_harcama {tutar, ad, kasa cep|ortak, kat} · es_gelir · finans_kayit {tur, kim, tutar, kalem, tarih, hk?}
     if (e.tur === 'finans_kayit' && v.kim === 'sirket') return;
     const gelir = e.tur === 'es_gelir' || (e.tur === 'finans_kayit' && v.tur === 'gelir'), tutar = Math.round((+String(v.tutar).replace(',', '.') || 0) * 100) / 100; if (!(tutar > 0)) return;

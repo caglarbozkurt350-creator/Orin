@@ -39,6 +39,13 @@ window.__bordroTest=function(){var R=[];
     var ai=a.bak.aile.t,ca=a.bak.cagla.t,L1=OA.bakIsle('cagla',-30),ok1=a.bak.cagla.t==Math.round((ca-30)*100)/100&&a.bak.aile.t==Math.round((ai-30)*100)/100,bC=OA.bakBeklenen('cagla'),ai2=a.bak.aile.t,s5=OA.bakBildir('cagla',bC-20,'test');
     ok=ok&&L1.join()=='cagla,aile'&&ok1&&s5.fark==-20&&a.bak.cagla.t==Math.round((bC-20)*100)/100&&a.bak.aile.t==Math.round((ai2-20)*100)/100}
    finally{f.kayit=k0;a.bak=JSON.parse(B0);a.cep=JSON.parse(c0);a.hareket.splice(h0)}return ok});
+  t('Cep harçlığı iste Aile Bütçesini ve geliri değiştirmez; Aile Bütçesi üst sınırı; aylık rakam düzeltmesi Elle düzeltme kaydı yazar',function(){var a=OA.st(),f=fnS(),k0=f.kayit,B0=JSON.stringify(a.bak),h0=a.hareket.length,ok;
+   try{var bu=OA.bugunKey().slice(0,7),once=OA.ayOnce(bu);f.kayit=[{id:'t1',tur:'gelir',kim:'cagla',tutar:700,kalem:'Maaş',tarih:once+'-05',ts:1},{id:'t2',tur:'gider',kim:'cagla',tutar:500,kalem:'Market',tarih:once+'-10',ts:1},{id:'t3',tur:'gelir',kim:'cagla',tutar:900,kalem:'Maaş',tarih:bu+'-05',ts:1},{id:'t4',tur:'gelir',kim:'sirket',tutar:5555,kalem:'Şirket',tarih:bu+'-05',ts:1}];
+    a.bak={aile:{t:1000,ts:1,bts:1},cagla:{t:100,ts:1,bts:1}};var g0=OA.ayToplam(bu).gelir,b=OA.cepIste('e',250,'test'),c=OA.cepIste('c',50,'test');
+    ok=g0==900&&b.t==250&&a.bak.kubra.t==250&&c.t==150&&a.bak.aile.t==1000&&OA.ayToplam(bu).gelir==900&&f.kayit.length==4&&OA.cepIste('c',0)===null&&OA.aileUst()==1100&&OA.okuTL('1.234,50')==1234.5&&OA.okuTL('24.332')==24332;
+    var f1=OA.ayDuzelt(once,'gider',450),f2=OA.ayDuzelt(bu,'gelir',1000),T=OA.ayToplam(once),r=f.kayit[4];
+    ok=ok&&f1==-50&&f2==100&&T.gider==450&&OA.ayToplam(bu).gelir==1000&&r.kalem=='Elle düzeltme'&&r.tutar==-50&&r.tarih.slice(0,7)==once&&OA.kayitKasa(r)===null&&OA.ayDuzelt(bu,'gelir',1000)===0&&OA.aileUst()==1250}
+   finally{f.kayit=k0;a.bak=JSON.parse(B0);a.hareket.splice(h0)}return ok});
   t('Bordro: içe aktarma penceresi son klasörde açılır, seçilen dosyanın klasörü kaydedilir',function(){var A0=API,ist=null,o;S.bordro.yol='C:\\Eski';
    API=Object.assign({},A0,{bordro:{sec:function(y){ist=y;return{then:function(f){f({klasor:'C:\\Bordro\\2030',ad:'b.json',metin:JSON.stringify(ornek)})}}}}});
    try{BR.iceAl();o=ist=='C:\\Eski'&&S.bordro.yol=='C:\\Bordro\\2030'&&/b\.json/.test(BR.ui.ok)}finally{API=A0}return o});

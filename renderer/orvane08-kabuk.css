@@ -19,6 +19,9 @@ html.orv.orv-acik-sabit{--orv-ml:312px}
 /* ---------- Üst çubuk ---------- */
 html.orv .mb{position:relative;margin:8px 150px 0 12px;height:56px;padding:0 10px;gap:10px;border-radius:22px;
   background:var(--cam);border:1px solid var(--cam-kenar);backdrop-filter:blur(var(--cam-bulanik));-webkit-backdrop-filter:blur(var(--cam-bulanik));box-shadow:var(--cam-golge)}
+/* Üst bar sol menü (z 30) ve sayfaların önünde: düğme ipuçları görünsün */
+html.orv .mb{position:relative;z-index:40}
+html.orv .mb .nb:hover::after{z-index:41}
 html.orv .mb button,html.orv .mb .nb,html.orv .mb .sy,html.orv .mb .mi,html.orv .mb .orv-pop,html.orv .mb label{-webkit-app-region:no-drag}
 html.orv .mb .nb{width:38px;height:38px;border-radius:19px;font-size:20px}
 html.orv .mb .nb:hover{background:rgba(255,255,255,.12)}

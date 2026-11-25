@@ -149,7 +149,7 @@ export function Anasayfa() {
   const g = isGunuOlcu(o), bH = (g.bg?.L || 0) + (g.bg?.OT || 0);
   const acik = o.ekip.gorev.filter((x) => x.durum !== 'bitti');
   const gorevler = acik.slice().sort((a, b) => Number(b.onc === 'acil') - Number(a.onc === 'acil') || b.ts - a.ts).slice(0, 2);
-  const bugun = useBugun(), ilac = bugunIlac(o, bugun), alinan = ilac.filter((i) => alindiMi(o, i, bugun)).length; // 00:00'da yeni güne geçer
+  const bugun = useBugun(), ilac = bugunIlac(o, bugun, es ? 'kubra' : 'cagla'), alinan = ilac.filter((i) => alindiMi(o, i, bugun)).length; // 00:00'da yeni güne geçer
   const bugunYazisi = !o.ts ? 'Masaüstü Orvane ile eşitlenince iş günü kayıtların burada görünür.' : g.bg?.D ? 'Bugün izin günü, tam gün sayılır.' : bH ? 'Bugün ' + (g.bg?.T || 0) + ' / ' + bH + ' dk girildi' + (g.eksik ? ' · bu ay ' + g.eksik + ' eksik gün' : '') : 'Bugün için iş süresi yok.';
   return (
     <View style={{ gap: 14 }}>

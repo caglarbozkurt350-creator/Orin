@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Pressable, Switch, Text, TextInput, View } from 'react-native';
 import { Ikon, s } from '@/bilesen/ortak';
-import type { Ilac, Ozet } from '@/lib/depo';
+import type { Ilac, Kisi, Ozet } from '@/lib/depo';
 import { olayEkle } from '@/lib/depo';
 import { AD, duzenler, ilacTur, useRol } from '@/lib/rol';
 import { esitleSonra } from '@/lib/senk';
@@ -13,9 +13,10 @@ import { tarihOf } from '@/lib/zaman';
 
 export const SEKER_RENK = '#fb7185';
 /** d: tarih ya da yerel gün anahtarı ("YYYY-AA-GG", useBugun) */
-export const bugunIlac = (o: Ozet, d: Date | string = new Date()) => {
+/** kim verilirse yalnız o kişinin ilaçları (0.9.9: herkes Anasayfa/Sağlık’ta kendi ilaçlarını görür) */
+export const bugunIlac = (o: Ozet, d: Date | string = new Date(), kim?: Kisi) => {
   const g = (typeof d === 'string' ? tarihOf(d) : d).getDay();
-  return (o.aile?.ilac || []).filter((i) => (i.tekrar === 'haftaici' ? g % 6 !== 0 : i.tekrar === 'haftasonu' ? g % 6 === 0 : true)).sort((a, b) => a.saat.localeCompare(b.saat));
+  return (o.aile?.ilac || []).filter((i) => !kim || (i.kim || 'cagla') === kim).filter((i) => (i.tekrar === 'haftaici' ? g % 6 !== 0 : i.tekrar === 'haftasonu' ? g % 6 === 0 : true)).sort((a, b) => a.saat.localeCompare(b.saat));
 };
 /** k: yerel gün anahtarı. Ekranlar useBugun() verir; böylece 00:00'da işaretler kendiliğinden boş görünür. */
 export const alindiMi = (o: Ozet, i: Ilac, k: string = bugunAnahtari()) => !!o.aile?.al[k + '|' + i.id];

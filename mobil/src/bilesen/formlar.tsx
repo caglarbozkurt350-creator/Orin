@@ -1,30 +1,27 @@
 // Orvane Mobil · alttan açılan formlar: doğrudan görev, gelişim isteği
-import { useEffect, useState } from 'react';
-import { Alert, Keyboard, Modal, Platform, Pressable, ScrollView, Text, TextInput, useWindowDimensions, View } from 'react-native';
+import { useState } from 'react';
+import { Alert, Keyboard, Modal, Pressable, ScrollView, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Dugme, Foto, Ikon, s } from '@/bilesen/ortak';
 import { olayEkle, uid } from '@/lib/depo';
 import { beceriler, Calisan, GT, LVL } from '@/lib/ekip';
 import { Ozet } from '@/lib/depo';
+import { useKlavyeKaydir } from '@/lib/klavye';
 import { esitleSonra } from '@/lib/senk';
 import { R, saydam } from '@/lib/tema';
 
-// Alttan açılan pencere. Android'de Modal penceresi klavyeyle küçülmediği için klavye yüksekliği kadar elle yukarı kaydırılır.
+// Alttan açılan pencere. Klavye açılınca pencere klavyenin üstüne çıkar, odaktaki yazı kutusu görünür kalacak şekilde kaydırılır.
+// Pencere uç uca (status/gezinti çubuğu altına) açılır; klavyenin ne kadar örttüğü ölçülür, pencere küçülse de çift boşluk olmaz.
 export function AltPencere({ acik, kapat, children }: { acik: boolean; kapat: () => void; children: React.ReactNode }) {
   const alt = useSafeAreaInsets().bottom, { height: H } = useWindowDimensions();
-  const [kb, setKb] = useState(0);
-  useEffect(() => {
-    const g = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow', (e) => setKb(e.endCoordinates.height));
-    const k = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide', () => setKb(0));
-    return () => { g.remove(); k.remove(); };
-  }, []);
+  const kb = useKlavyeKaydir(16), ortu = kb.ortu;
   return (
-    <Modal visible={acik} transparent animationType="slide" onRequestClose={kapat}>
-      <View style={{ flex: 1, justifyContent: 'flex-end', paddingBottom: kb }}>
+    <Modal visible={acik} transparent animationType="slide" onRequestClose={kapat} statusBarTranslucent navigationBarTranslucent>
+      <View ref={kb.kap} style={{ flex: 1, justifyContent: 'flex-end', paddingBottom: ortu }}>
         <Pressable style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.45)' }} onPress={() => { Keyboard.dismiss(); kapat(); }} accessibilityLabel="Kapat" />
-        <View style={{ backgroundColor: '#1f1f22', borderTopLeftRadius: 26, borderTopRightRadius: 26, borderTopWidth: 1, borderColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 18, paddingTop: 10, paddingBottom: kb ? 14 : Math.max(alt, 16) + 10, maxHeight: Math.max(260, H - kb - 60) }}>
+        <View style={{ backgroundColor: '#1f1f22', borderTopLeftRadius: 26, borderTopRightRadius: 26, borderTopWidth: 1, borderColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 18, paddingTop: 10, paddingBottom: ortu ? 14 : Math.max(alt, 16) + 10, maxHeight: Math.max(220, H - ortu - 60) }}>
           <View style={{ width: 40, height: 5, borderRadius: 99, backgroundColor: '#4a4a50', alignSelf: 'center', marginBottom: 12 }} />
-          <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">{children}</ScrollView>
+          <ScrollView ref={kb.sc} onScroll={kb.kaydir} scrollEventThrottle={32} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">{children}</ScrollView>
         </View>
       </View>
     </Modal>

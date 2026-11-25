@@ -26,6 +26,17 @@ window.__bordroTest=function(){var R=[];
    try{var o={bak:{aile:5000,cagla:77.5,kubra:0},cep:{e:0,mod:'bakiye'},butceBas:'2026-10',kayit:[{id:'tst-1',tur:'gider',kalem:'Market',tutar:120,tarih:'2026-11-25'},{id:'tst-2',tur:'gelir',kalem:'SGK',tutar:1234.56,tarih:'2026-11-16'}]};
     var n=OA.iceUygula(o),n2=OA.iceUygula({kayit:o.kayit});ok=n.b==3&&n.k==2&&n2.k==0&&n2.a==2&&a.bak.aile.t==5000&&a.bak.cagla.t==77.5&&a.cep.e===0&&a.cep.mod=='bakiye'&&a.butceBas=='2026-10'&&f.kayit.filter(function(x){return x.id=='tst-2'})[0].tutar==1234.56}
    finally{f.kayit=k0;a.bak=JSON.parse(B0);a.cep=JSON.parse(c0);if(bb)a.butceBas=bb;else delete a.butceBas;a.hareket.splice(h0)}return ok});
+  t('Bakiye bildirimi: beklenenden düşükse fark Kayıt dışı harcama, yüksekse Kayıt dışı gelir; ay raporunda ayrı satır',function(){var a=OA.st(),f=fnS(),k0=f.kayit,B0=JSON.stringify(a.bak),c0=JSON.stringify(a.cep),h0=a.hareket.length,ok;
+   try{f.kayit=[];a.bak={aile:{t:1000,ts:1,bts:1},cagla:{t:300,ts:1,bts:1}};a.cep.e=50;
+    fnKaydet({tur:'gelir',kim:'cagla',tutar:'500',kalem:'Ek gelir'});fnKaydet({tur:'gider',kim:'cagla',tutar:'200',kalem:'Market'});fnKaydet({tur:'gider',kim:'sirket',tutar:'999',kalem:'Şirket'});
+    var dus=fnKaydet({tur:'gider',kim:'cagla',tutar:'40',kalem:'Cep harçlığı · Çağlar'});dus.hk='c';dus.bakDus=1;var cep=fnKaydet({tur:'gider',kim:'cagla',tutar:'25',kalem:'Cep harçlığı · Çağlar'});cep.hk='c';
+    var bek=OA.bakBeklenen('aile'),bekC=OA.bakBeklenen('cagla'),s1=OA.bakBildir('aile',1100,'test'),r1=s1.kayit;
+    var s2=OA.bakBildir('aile',1150,'test'),s3=OA.bakBildir('aile',1150,'test');delete a.bak.kubra;var s4=OA.bakBildir('kubra',80,'test');
+    var ay=OT9.butceAy(OA.bugunKey().slice(0,7));
+    ok=bek==1300&&bekC==275&&r1&&r1.tur=='gider'&&r1.kalem=='Kayıt dışı harcama'&&r1.tutar==200&&s1.fark==-200&&a.bak.aile.t==1150&&
+     s2.kayit&&s2.kayit.tur=='gelir'&&s2.kayit.kalem=='Kayıt dışı gelir'&&s2.kayit.tutar==50&&!s3.kayit&&s3.fark==0&&s4.bek===null&&!s4.kayit&&a.bak.kubra.t==80&&
+     ay.kd==200&&ay.kdg==50&&OA.bakBeklenen('aile')==1150}
+   finally{f.kayit=k0;a.bak=JSON.parse(B0);a.cep=JSON.parse(c0);a.hareket.splice(h0)}return ok});
   t('Bordro: içe aktarma penceresi son klasörde açılır, seçilen dosyanın klasörü kaydedilir',function(){var A0=API,ist=null,o;S.bordro.yol='C:\\Eski';
    API=Object.assign({},A0,{bordro:{sec:function(y){ist=y;return{then:function(f){f({klasor:'C:\\Bordro\\2030',ad:'b.json',metin:JSON.stringify(ornek)})}}}}});
    try{BR.iceAl();o=ist=='C:\\Eski'&&S.bordro.yol=='C:\\Bordro\\2030'&&/b\.json/.test(BR.ui.ok)}finally{API=A0}return o});

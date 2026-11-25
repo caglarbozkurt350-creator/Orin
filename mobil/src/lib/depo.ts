@@ -3,6 +3,7 @@
 // Ekranda görünen = özet + henüz özete girmemiş olaylar (iyimser uygulama).
 import Storage from 'expo-sqlite/kv-store';
 import { useSyncExternalStore } from 'react';
+import { AppState } from 'react-native';
 
 export type Mesaj = { id: string; r: 'ben' | 'o' | 'sys'; t: string; ts: number; tur?: 'mesaj' | 'not' | 'ses'; bek?: 1; qr?: string[]; kaynak?: string; ilt?: 1 };
 export type Gorev = { id: string; kim: string; metin: string; onc: 'normal' | 'acil'; son: string; durum: 'acik' | 'bitti' | 'calisiyor'; bilgi: boolean; yol?: string; ts: number; bts?: number | null; sureDk?: number; bitis?: number; tokenLimit?: number; token?: number; usd?: number; sonuc?: string; hata?: string };
@@ -83,10 +84,15 @@ function yukle(): Durum {
 let _t: ReturnType<typeof setTimeout> | null = null;
 function kaydet() {
   if (_t) clearTimeout(_t);
-  _t = setTimeout(() => {
-    try { Storage.setItemSync(ANAHTAR, JSON.stringify({ ...D, senk: { son: D.senk.son } })); } catch {}
-  }, 200);
+  _t = setTimeout(kaydetHemen, 200);
 }
+/** Bekleyen yazmayı hemen diske indirir. Android'de uygulama arka plana geçince JS zamanlayıcıları durur;
+ *  200 ms'lik gecikme dolmadan sistem uygulamayı kapatırsa yeni olay (ör. ilaç işareti) kaybolurdu. */
+export function kaydetHemen() {
+  if (_t) { clearTimeout(_t); _t = null; }
+  try { Storage.setItemSync(ANAHTAR, JSON.stringify({ ...D, senk: { son: D.senk.son } })); } catch {}
+}
+AppState.addEventListener('change', (s) => { if (s !== 'active') kaydetHemen(); });
 
 export function durum() { return D; }
 export function guncelle(f: (d: Durum) => Durum) { D = f(D); kaydet(); dinleyenler.forEach((x) => x()); }
@@ -100,5 +106,6 @@ export function uid() { return Date.now().toString(36) + Math.random().toString(
 export function olayEkle(tur: string, veri: any) {
   const o: Olay = { id: uid(), tur, veri, ts: Date.now() };
   guncelle((d) => ({ ...d, olaylar: [...d.olaylar, o] }));
+  kaydetHemen(); // kullanıcının girdiği veri beklemeden diske yazılır
   return o;
 }

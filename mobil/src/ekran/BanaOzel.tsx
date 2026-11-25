@@ -11,6 +11,7 @@ import { PdfDugme } from '@/bilesen/Pdf';
 import { alindiMi, IlacSatiri, SEKER_RENK, SekerSatiri } from '@/bilesen/Saglik';
 import { Ilac, olayEkle, Ozet, uid } from '@/lib/depo';
 import { kalanGun, oyunYenile, takipDegis, useDis, useDisYenile, zilDegis } from '@/lib/dis';
+import { useBugun } from '@/lib/bugun';
 import { useGorunum } from '@/lib/ekip';
 import { kalanStok } from '@/lib/pdf';
 import { AD, benKimim, ilacTur, Rol, useRol } from '@/lib/rol';
@@ -111,7 +112,7 @@ export function BanaOzel() {
   const o = useGorunum(); useDisYenile(['oyun']);
   const oyun = useDis((d) => d.oyun), takip = useDis((d) => d.tercih.takip);
   const [form, setForm] = useState<{ i: Ilac | null } | null>(null), [n, setN] = useState(0);
-  const rol = useRol(), ben = benKimim(rol), es = rol === 'es', tum = o.aile?.ilac || [];
+  const rol = useRol(), ben = benKimim(rol), es = rol === 'es', tum = o.aile?.ilac || [], bugun = useBugun(); // bugun: 00:00'da ekran yeni güne geçer
   const ilac = tum.filter((i) => (i.kim || 'cagla') === ben), diger = tum.filter((i) => (i.kim || 'cagla') !== ben), digerAd = es ? AD.cagla : AD.kubra;
   const so = saglikOzet(o, ilac);
   const azalan = ilac.map((i) => ({ i, k: kalanStok(i) })).filter((x) => x.k != null && x.k <= 7);
@@ -148,8 +149,8 @@ export function BanaOzel() {
         {!es && <SekerSatiri key={'sk' + o.ts} o={o} />}
       </KartK>
 
-      {(diger.length > 0 || es) && <KartK ad="digerIlac" baslik={digerAd.toLocaleUpperCase('tr') + ' · İLAÇLAR'} ozet={diger.length + ' ilaç · ' + diger.filter((i) => alindiMi(o, i)).length + ' bugün alındı'}>
-        {diger.slice().sort((a, b) => a.saat.localeCompare(b.saat)).map((i) => { const ok = alindiMi(o, i); return (
+      {(diger.length > 0 || es) && <KartK ad="digerIlac" baslik={digerAd.toLocaleUpperCase('tr') + ' · İLAÇLAR'} ozet={diger.length + ' ilaç · ' + diger.filter((i) => alindiMi(o, i, bugun)).length + ' bugün alındı'}>
+        {diger.slice().sort((a, b) => a.saat.localeCompare(b.saat)).map((i) => { const ok = alindiMi(o, i, bugun); return (
           <View key={i.id} accessible accessibilityLabel={i.ad + ' ' + i.saat + (ok ? ', bugün alındı' : '')} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 50, paddingHorizontal: 12, borderRadius: 16, backgroundColor: ok ? 'rgba(62,207,90,0.08)' : 'rgba(255,255,255,0.04)' }}>
             <Ikon ad="ilac" boy={17} renk={ok ? R.yesil : R.yazi2} kalin={2.1} />
             <View style={{ flex: 1, gap: 1 }}><Text style={{ color: R.yazi, fontSize: 14, fontWeight: '600' }}>{i.ad}</Text><Text style={s.sub}>{[i.miktar, i.saat, TEKRAR.find((t) => t[0] === i.tekrar)?.[1]].filter(Boolean).join(' · ')}</Text></View>

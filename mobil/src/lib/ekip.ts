@@ -2,6 +2,7 @@
 // Masaüstündeki renderer/js/team.js ile aynı kurallar. Birini değiştirirken ötekini de güncelle.
 import { useMemo } from 'react';
 import C0 from '@/veri/calisanlar.json';
+import { bugunAnahtari, bugunIsareti } from '@/lib/bugun';
 import { Aile, Beceri, ButceAy, Durum, Etkinlik, Gelisim, Gorev, Hafiza, Kisi, Mesaj, Olay, Ortak, Ozet, uid, useDurum } from '@/lib/depo';
 
 export type Calisan = { id: string; ad: string; grup: string; gorev: string; bagli: string; renk: string; foto?: string; kart?: string; aciklama?: string; hikaye?: string; yeni?: 1 };
@@ -153,10 +154,12 @@ function gelisimUygula(o: Ozet, g: Gelisim, ts: number) {
   else { const h: Hafiza[] = (m.haf || []).slice(); h.push({ id: g.id + 'h', metin: g.metin, kaynak: (g.kimden === 'nika' ? 'Nika önerdi' : 'Çağlar istedi') + ' · Nika ve Orin onayladı', ts }); m.haf = h; }
 }
 
-/** Ekranda görünen özet: masaüstü özeti + özete henüz girmemiş olaylar */
+/** Ekranda görünen özet: masaüstü özeti + özete henüz girmemiş olaylar.
+ *  Bugün bu telefonda atılan ilaç işaretleri özete girmiş olsa da yeniden uygulanır: masaüstünden gelen özet
+ *  işareti içermese bile (eski özet, masaüstünde kaybolan olay) işaret yerel 00:00'a kadar görünür kalır. */
 export function gorunum(d: Durum): Ozet {
-  const o: Ozet = JSON.parse(JSON.stringify(d.ozet || bosOzet()));
-  d.olaylar.filter((e) => !e.sira || e.sira > o.olaySira).sort((a, b) => a.ts - b.ts).forEach((e) => uygula(o, e));
+  const o: Ozet = JSON.parse(JSON.stringify(d.ozet || bosOzet())), k = bugunAnahtari();
+  d.olaylar.filter((e) => !e.sira || e.sira > o.olaySira || bugunIsareti(e, k)).sort((a, b) => a.ts - b.ts).forEach((e) => uygula(o, e));
   return o;
 }
 // Görünüm bütün ekranlarda aynı durum nesnesinden bir kez hesaplanır (her kanca ayrı kopya üretmesin)

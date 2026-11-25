@@ -8,11 +8,17 @@ import { olayEkle } from '@/lib/depo';
 import { AD, duzenler, ilacTur, useRol } from '@/lib/rol';
 import { esitleSonra } from '@/lib/senk';
 import { R, saydam } from '@/lib/tema';
-import { tamAnahtar } from '@/lib/zaman';
+import { bugunAnahtari, useBugun } from '@/lib/bugun';
+import { tarihOf } from '@/lib/zaman';
 
 export const SEKER_RENK = '#fb7185';
-export const bugunIlac = (o: Ozet, d = new Date()) => (o.aile?.ilac || []).filter((i) => (i.tekrar === 'haftaici' ? d.getDay() % 6 !== 0 : i.tekrar === 'haftasonu' ? d.getDay() % 6 === 0 : true)).sort((a, b) => a.saat.localeCompare(b.saat));
-export const alindiMi = (o: Ozet, i: Ilac, d = new Date()) => !!o.aile?.al[tamAnahtar(d) + '|' + i.id];
+/** d: tarih ya da yerel gün anahtarı ("YYYY-AA-GG", useBugun) */
+export const bugunIlac = (o: Ozet, d: Date | string = new Date()) => {
+  const g = (typeof d === 'string' ? tarihOf(d) : d).getDay();
+  return (o.aile?.ilac || []).filter((i) => (i.tekrar === 'haftaici' ? g % 6 !== 0 : i.tekrar === 'haftasonu' ? g % 6 === 0 : true)).sort((a, b) => a.saat.localeCompare(b.saat));
+};
+/** k: yerel gün anahtarı. Ekranlar useBugun() verir; böylece 00:00'da işaretler kendiliğinden boş görünür. */
+export const alindiMi = (o: Ozet, i: Ilac, k: string = bugunAnahtari()) => !!o.aile?.al[k + '|' + i.id];
 
 /** Günün bölümü: 11:00 öncesi Sabah, 16:00 öncesi Öğlen, sonrası Akşam */
 export const donem = (saat: string) => { const h = parseInt(saat, 10); return isNaN(h) ? '' : h < 11 ? 'Sabah' : h < 16 ? 'Öğlen' : 'Akşam'; };
@@ -22,8 +28,9 @@ export const ilacAlt = (i: Ilac) => [i.miktar, donem(i.saat), i.actok === 'ac' ?
 /** İlaç satırı: sıra no · ad · doz · Sabah/Öğlen/Akşam · Aç/Tok · saat · kayar düğme (içince açılır).
  *  Herkes yalnız kendi ilacını işaretler; diğerininki salt okunur görünür. duzenle verilirse ada dokununca düzeltme açılır. */
 export function IlacSatiri({ o, i, no, duzenle, ek }: { o: Ozet; i: Ilac; no?: number; duzenle?: () => void; ek?: string }) {
-  const ok = alindiMi(o, i), k = tamAnahtar(new Date()), rol = useRol(), benim = duzenler(rol, i.kim), iki = (o.aile?.ilac || []).some((x) => x.kim === 'kubra');
-  const degis = (v: boolean) => { if (v === ok) return; olayEkle(ilacTur(rol, 'ilac_al'), { k, id: i.id, al: v ? 1 : 0 }); esitleSonra(); };
+  const bugun = useBugun(), ok = alindiMi(o, i, bugun), rol = useRol(), benim = duzenler(rol, i.kim), iki = (o.aile?.ilac || []).some((x) => x.kim === 'kubra');
+  // Tarih dokunulduğu anda alınır: ekran gece yarısından önce çizilmiş olsa da işaret o günün tarihine yazılır
+  const degis = (v: boolean) => { const k = bugunAnahtari(); if (v === alindiMi(o, i, k)) return; olayEkle(ilacTur(rol, 'ilac_al'), { k, id: i.id, al: v ? 1 : 0 }); esitleSonra(); };
   const alt = [iki ? AD[i.kim || 'cagla'] : '', ilacAlt(i), ek].filter(Boolean).join(' · ');
   const Govde = (
     <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -46,11 +53,11 @@ export function IlacSatiri({ o, i, no, duzenle, ek }: { o: Ozet; i: Ilac; no?: n
 
 /** Sabah açlık şekeri: − / + ile 5'er, yazarak da girilir. Bugün kayıtlıysa değeri gösterir. */
 export function SekerSatiri({ o }: { o: Ozet }) {
-  const k = tamAnahtar(new Date()), kayitli = o.aile?.seker[k], saat = o.aile?.sekerSaat?.[k], es = useRol() === 'es';
+  const k = useBugun(), kayitli = o.aile?.seker[k], saat = o.aile?.sekerSaat?.[k], es = useRol() === 'es';
   const son = Object.keys(o.aile?.seker || {}).sort().reverse().find((x) => x < k);
   const [v, setV] = useState(String(kayitli ?? (son ? o.aile!.seker[son] : 100))), [duz, setDuz] = useState(kayitli == null);
   const n = parseInt(v, 10), gecerli = n >= 20 && n <= 600, dis = gecerli && (n > 130 || n < 80);
-  const kaydet = () => { if (!gecerli) return; const d = new Date(); olayEkle('seker', { k, v: n, s: String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') }); esitleSonra(); setDuz(false); };
+  const kaydet = () => { if (!gecerli) return; const d = new Date(); olayEkle('seker', { k: bugunAnahtari(d), v: n, s: String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') }); esitleSonra(); setDuz(false); };
   const art = (d: number) => setV(String(Math.max(20, Math.min(600, (gecerli ? n : 100) + d))));
   // Şeker Çağlar’ın ölçümü: eşte yalnız görüntülenir
   if (es) return (

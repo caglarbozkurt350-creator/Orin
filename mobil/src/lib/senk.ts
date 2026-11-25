@@ -4,6 +4,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import Storage from 'expo-sqlite/kv-store';
 import { AppState, Platform } from 'react-native';
+import { bugunAnahtari, bugunIsareti } from '@/lib/bugun';
 import { durum, guncelle, Ozet } from '@/lib/depo';
 
 // Masaüstüyle aynı Supabase projesi. Ayarlar ekranından değiştirilebilir.
@@ -91,7 +92,7 @@ export async function esitle(): Promise<void> {
     guncelle((d) => {
       const yer = new Map(d.olaylar.map((o) => [o.id, o]));
       (ol || []).forEach((r: any) => { if (!yer.has(r.id)) yer.set(r.id, { id: r.id, tur: r.tur, veri: r.veri, ts: Date.parse(r.ts), sira: r.sira, gitti: true }); });
-      const olaylar = [...yer.values()].filter((o) => !o.gitti || !o.sira || o.sira > bas);
+      const k = bugunAnahtari(), olaylar = [...yer.values()].filter((o) => !o.gitti || !o.sira || o.sira > bas || bugunIsareti(o, k)); // bugünkü ilaç işaretleri 00:00'a kadar kalır (ekip.ts gorunum)
       return { ...d, ozet: ozet || d.ozet, olaylar, senk: { son: Date.now(), calisiyor: false } };
     });
   } catch (e) {
@@ -121,7 +122,7 @@ async function esitleEs(c: SupabaseClient, sahip: string) {
   guncelle((d) => {
     const yer = new Map(d.olaylar.map((o) => [o.id, o]));
     (ol || []).forEach((r: any) => { if (!yer.has(r.id)) yer.set(r.id, { id: r.id, tur: r.tur, veri: r.veri, ts: Date.parse(r.ts), sira: r.sira, gitti: true }); });
-    const olaylar = [...yer.values()].filter((o) => !o.gitti || !o.sira || o.sira > bas);
+    const k = bugunAnahtari(), olaylar = [...yer.values()].filter((o) => !o.gitti || !o.sira || o.sira > bas || bugunIsareti(o, k)); // bugünkü ilaç işaretleri 00:00'a kadar kalır (ekip.ts gorunum)
     return { ...d, ozet: ozet || d.ozet, olaylar, senk: { son: Date.now(), calisiyor: false } };
   });
 }

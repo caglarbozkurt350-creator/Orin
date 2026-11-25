@@ -12,6 +12,7 @@ import { EtkinlikFormu } from '@/bilesen/AileOrtak';
 import { AltPencere, Bos, FinansFormu } from '@/bilesen/formlar';
 import { Dugme, Hap, Ikon, KartK, s } from '@/bilesen/ortak';
 import { bugunIlac, IlacSatiri, SekerSatiri } from '@/bilesen/Saglik';
+import { useBugun } from '@/lib/bugun';
 import type { Etkinlik, Kisi, Oneri, Ozet } from '@/lib/depo';
 import { olayEkle, uid } from '@/lib/depo';
 import { useGorunum } from '@/lib/ekip';
@@ -96,7 +97,7 @@ function Butce({ o }: { o: Ozet }) {
 
 // ---------- Sağlık ----------
 function Saglik({ o }: { o: Ozet }) {
-  const L = bugunIlac(o);
+  const L = bugunIlac(o, useBugun());
   return (
     <>
       <Text style={s.sub}>Bugünkü ilaçlar · içtiğinde düğmeyi aç</Text>

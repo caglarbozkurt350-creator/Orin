@@ -172,7 +172,7 @@ button.oa-pill:active{transform:scale(.93)}
 .oa-drawer::-webkit-scrollbar{display:none}
 .oa-dr{display:flex;justify-content:space-between;gap:12px;font-size:13px;line-height:18px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.07)}
 .oa-dr .k{color:var(--yazi2);flex:none}.oa-dr span:last-child{text-align:right;min-width:0;overflow-wrap:anywhere}
-.oa-rdact{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.oa-rdact{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
 .oa-rda{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:64px;padding:8px 0;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#e9e9ec;font:600 11px var(--font-ana);cursor:pointer;transition:transform .32s var(--ease-yay),background .2s,border-color .2s}
 .oa-rda:hover{transform:translateY(-2px)}.oa-rda:active{transform:scale(.93)}
 .oa-rda.on{background:color-mix(in srgb,var(--acc) 16%,transparent);border-color:color-mix(in srgb,var(--acc) 60%,transparent);color:#fff}

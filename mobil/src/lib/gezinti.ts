@@ -2,7 +2,7 @@
 // Ekranlar arası (ör. Anasayfa kartı → Görevler, Bildirim › Ekip şeridi → Ekip) geçiş buradan yapılır.
 import { useSyncExternalStore } from 'react';
 
-export type Kip = 'gorev' | 'mesaj' | 'not' | 'tg';
+export type Kip = 'gorev' | 'mesaj' | 'not';
 type Durum = {
   sekme: number; yon: 'r' | 'l';
   gorevBolum: 'gorev' | 'onay' | 'gorsel'; kayitBolum: 'gun' | 'izin'; ekipBolum: 'ekip' | 'hiyer';

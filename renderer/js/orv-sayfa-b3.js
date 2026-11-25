@@ -1,4 +1,4 @@
-// Orvane 0.8.0 · Aşama 5: Zamanlanmış işler paneli (Bölüm 3.3) + PocketBase bağlantıları + Telegram sırası
+// Orvane 0.8.0 · Aşama 5: Zamanlanmış işler paneli (Bölüm 3.3) + PocketBase bağlantıları
 // Panel kancaları orvane08-kabuk.js'ten gelir: ORV.zpIcerik() / ORV.zpAktif() / ORV.zpTog(); panel #orvZp. Burada yeniden tanımlanır.
 // Kalıcı durum: S.orvZ {isler:[…], gecmis:[…]}. TEK zamanlayıcı (30 sn): aynı işi iki kez çalıştırmaz. Mevcut arkaplan.js Claude Code işleridir, zamanlayıcı içermez; çift zamanlayıcı yoktur.
 // PocketBase: mevcut oturum (ana süreçte, token renderer'a gelmez). Yeni koleksiyon/alan YOK: görevler → `gorevler`, zamanlanmış işler → `ayarlar` (anahtar zamanlanmis_isler).
@@ -11,7 +11,7 @@ var TEK=[['gun','Her gün'],['hi','Hafta içi (Pzt–Cum)'],['pz','Haftalık · 
 function ymd(d){return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())}
 
 // ---------- Bildirim kaydı (Merkez › Bildirimler okur) ----------
-OB.bildir=function(o){var b=OB.st();b.bil.unshift({id:'b'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),kanal:o.kanal||'Sistem',baslik:o.baslik||'',alt:o.alt||'',ts:o.ts||Date.now(),git:o.git||''});if(b.bil.length>100)b.bil.length=100;if(typeof save=='function')save();if(typeof ORV!='undefined'&&ORV.ustGuncelle)ORV.ustGuncelle()};
+OB.bildir=function(o){var b=OB.st();b.bil.unshift({id:'b'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),kanal:o.kanal||'Sistem',baslik:o.baslik||'',alt:o.alt||'',ts:o.ts||Date.now(),git:o.git||''});if(b.bil.length>100)b.bil.length=100;if(typeof save=='function')save();if(typeof ORV!='undefined'){if(ORV.okSifirla)ORV.okSifirla();if(ORV.ustGuncelle)ORV.ustGuncelle()}};
 
 // ---------- İş listesi ----------
 OB.zSeed=function(){return [
@@ -97,12 +97,7 @@ OB.pbOku=function(zorla){if(!OB.pbHazir())return Promise.resolve(null);if(!zorla
  return API.pb.liste({k:'gorevler',adet:40,sirala:'-zaman'}).then(function(r){if(r&&r.ok){OB.pbD.gorev=r.v;OB.pbD.gt=Date.now()}return OB.pbD.gorev},function(){return null})};
 OB.pbGorevKart=function(){var L=OB.pbD.gorev;if(!L||!L.length)return '';var yerel={};TMS().gorev.forEach(function(g){yerel[OB.pbId(g.id)]=1});
  var A=L.filter(function(x){return !yerel[x.id]&&x.durum!='bitti'&&x.durum!='iptal'}).slice(0,8);if(!A.length)return '';
- return OA.kart(OA.hd(OA.ico('linear-gradient(160deg,#5fe0f5,#3b82f6)','bulut'),'Sunucudaki görevler',OA.kp('PocketBase','n')),'<div class="ob-kan">'+A.map(function(x){var c=(typeof tm=='function'&&tm(x.atanan_kod))||{ad:x.atanan_kod};return '<div class="ob-kc"><div class="ob-r">'+OA.imgAv(x.atanan_kod,'oa-av','width:32px;height:32px')+'<span class="ob-ad"><b>'+esc(c.ad)+'</b></span><span class="ob-et '+(x.kaynak=='telegram'?'d':'')+'">'+esc(x.kaynak||'sunucu')+'</span></div><p>'+esc(String(x.baslik||x.metin||'').slice(0,160))+'</p><span class="oa-sub">'+esc(x.durum||'')+'</span></div>'}).join('')+'</div>',.2)};
+ return OA.kart(OA.hd(OA.ico('linear-gradient(160deg,#5fe0f5,#3b82f6)','bulut'),'Sunucudaki görevler',OA.kp('PocketBase','n')),'<div class="ob-kan">'+A.map(function(x){var c=(typeof tm=='function'&&tm(x.atanan_kod))||{ad:x.atanan_kod};return '<div class="ob-kc"><div class="ob-r">'+OA.imgAv(x.atanan_kod,'oa-av','width:32px;height:32px')+'<span class="ob-ad"><b>'+esc(c.ad)+'</b></span><span class="ob-et">'+esc(x.kaynak||'sunucu')+'</span></div><p>'+esc(String(x.baslik||x.metin||'').slice(0,160))+'</p><span class="oa-sub">'+esc(x.durum||'')+'</span></div>'}).join('')+'</div>',.2)};
 if(!SMOKE()){setInterval(function(){OB.pbAkit()},60000);setTimeout(function(){OB.pbDurumAl(true).then(function(){OB.pbAkit()})},8000);if(window.API&&API.pb&&API.pb.degisti)API.pb.degisti(function(d){OB.pbD.d=d;OB.pbD.t=Date.now();if(d&&d.girisli)OB.pbAkit()})}
 
-// ========================================================================
-// TELEGRAM SIRASI (masaüstünde bot gönderme yolu yok: kimlik bilgisi eklenmedi; sıra Eşitleme'de gösterilir)
-// ========================================================================
-OB.tgSirada=function(){return OA.st().tg.filter(function(x){return x.durum=='sirada'})};
-OB.tgGonderYolu=function(){return false}; // bot token / n8n webhook yok → false
 })();

@@ -1,7 +1,7 @@
 // Orvane 0.8.0 · Aşama 4A: Anasayfa, Hiyerarşi, Ekip, Ailem (Bütçe, Sağlık, Menü & Market, Satın Alma, Ev İşleri)
 // Tasarım: Program kurulum\Tasarim\Main.dc.html (pAna, pAgac, pEk, pAi). Sayfalar ORV.sayfa(...) ile kaydolur.
 // GERÇEK VERİ: finans S.finans (sirketim.js), piyasa S.finans.piyasa (TCMB / Otto), çalışanlar TMS()/tm(), görev/mesaj tmTaskNew/tmSend.
-// Bu sayfalara özgü kalıcı durum S.orvA içinde (durum.json): cep oranları, bakiyeler, ilaç planı, menü, market, öneriler, ev işleri, Telegram sırası, kur geçmişi.
+// Bu sayfalara özgü kalıcı durum S.orvA içinde (durum.json): cep oranları, bakiyeler, ilaç planı, menü, market, öneriler, ev işleri, kur geçmişi.
 // Ortak yardımcılar (sonraki sayfa ajanları): OA.kart/OA.hd/OA.ico/OA.bos/OA.sekmeler/OA.foto/OA.yazKutusu/OA.dlg/OA.say* ve grafik: OA.yol, OA.seri, OA.gauge...
 var OA=window.OA||{};
 (function(){
@@ -12,7 +12,7 @@ var fix=function(n,d){return (+n).toFixed(d==null?1:d)};
 // ---------- Kalıcı durum ----------
 OA.st=function(){if(!S.orvA)S.orvA={};var a=S.orvA;
  a.cep=a.cep||{c:30,e:20};if(a.cep.c==null)a.cep.c=30;if(a.cep.e==null)a.cep.e=20;
- a.bak=a.bak||{};a.hareket=a.hareket||[];a.odeme=a.odeme||[];a.ilac=a.ilac||[];a.menu=a.menu||{};a.market=a.market||[];a.oneri=a.oneri||[];a.ev=a.ev||[];a.tg=a.tg||[];a.kur=a.kur||{};a.ilacAl=a.ilacAl||{};
+ a.bak=a.bak||{};a.hareket=a.hareket||[];a.odeme=a.odeme||[];a.ilac=a.ilac||[];a.menu=a.menu||{};a.market=a.market||[];a.oneri=a.oneri||[];a.ev=a.ev||[];delete a.tg;a.kur=a.kur||{};a.ilacAl=a.ilacAl||{};
  return a};
 OA.kaydet=function(){if(typeof save=='function')save()};
 OA.saat=function(ts){var d=new Date(ts||Date.now());return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
@@ -27,7 +27,6 @@ OA.yuzde=function(n){return (n>0?'+':'')+(Math.round(n*10)/10).toLocaleString('t
 var GR={yonetim:'linear-gradient(135deg,#ff8a3d,#ffc24a)',aile:'linear-gradient(135deg,#ff7ac6,#a855f7)',is:'linear-gradient(135deg,#38d6f0,#3b82f6)',plan:'linear-gradient(135deg,#6ee7b7,#16a34a)',teknik:'linear-gradient(135deg,#fde68a,#f59e0b)',servis:'linear-gradient(135deg,#e5e7eb,#6b7280)',diger:'linear-gradient(135deg,#8f9bb3,#5b6578)'};
 OA.DEPAD={yonetim:'Yönetim',aile:'Aile',is:'İş',plan:'Plan & İletişim',teknik:'Teknik',servis:'Ortak servis',diger:'Diğer'};
 OA.DEPRENK={yonetim:'#ff8a3d',aile:'#ff7ac6',is:'#38d6f0',plan:'#6ee7b7',teknik:'#fbbf24',servis:'#9ca3af',diger:'#8f9bb3'};
-OA.BOT={orin:'@Ceo_Orin_bot',echo:'@IsraporuEcho_bot',mia:'@Orvanee_bot',otto:'@Orvanee_bot',iris:'@Orvanee_bot',marco:'@Orvanee_bot',nerya:'@Orvanee_bot'};
 OA.P={
  orin:{g:'yonetim',un:'CEO',bag:'Çağlar',ajan:'Yönetim',is:'Herkesi denetler, işi Orla’ya verir, başarılı ve başarısız işleri Çağlar’a raporlar; çok önemli kararları sorar.'},
  orla:{g:'yonetim',un:'Koordinatör',bag:'Orin',ajan:'Yönetim',is:'İşi dağıtır, ekibi denetler, hatalı işi düzeltmeden yukarı geçirmez.'},
@@ -45,7 +44,7 @@ OA.P={
  cleo:{g:'plan',un:'Yazışma',bag:'Orla',ajan:'Plan ve iletişim',is:'Yazışma ve mesaj taslakları.'},
  ada:{g:'teknik',un:'Kod · Geliştirme',bag:'Orla',ajan:'Teknik',is:'Program ve kod yazımı, güncellemeler.'},
  kai:{g:'teknik',un:'Bakım Onarım',bag:'Orla',ajan:'Teknik',is:'Hata ayıklama ve optimizasyon; Ada ile birlikte çalışır.'}};
-OA.bilgi=function(c){var p=OA.P[c.id]||{};return{g:p.g||'diger',un:p.un||c.gorev||'',bag:p.bag||c.bagli||'Orla',ajan:p.ajan||'—',is:(typeof tmDesc=='function'?(p.is||tmDesc(c)):p.is)||'',tg:OA.BOT[c.id]||''}};
+OA.bilgi=function(c){var p=OA.P[c.id]||{};return{g:p.g||'diger',un:p.un||c.gorev||'',bag:p.bag||c.bagli||'Orla',ajan:p.ajan||'—',is:(typeof tmDesc=='function'?(p.is||tmDesc(c)):p.is)||''}};
 OA.grad=function(g){return GR[g]||GR.diger};
 OA.foto=function(id){var c=typeof tm=='function'?tm(id):null;return c&&c.foto?'../'+c.foto:''};
 OA.imgAv=function(id,cls,st){var u=OA.foto(id);return u?'<img class="'+(cls||'oa-av')+'" src="'+esc(u)+'" alt=""'+(st?' style="'+st+'"':'')+'>':'<span class="'+(cls||'oa-av')+'" style="display:inline-flex;align-items:center;justify-content:center;background:#26262a;font-weight:700;'+(st||'')+'">'+esc((id||'?').charAt(0).toUpperCase())+'</span>'};
@@ -85,21 +84,19 @@ OA.cubuk=function(v,W,H,mx,x0,gen,taban){var n=v.length,s=W/n,b=gen*s,out='';tab
 OA.gauge=function(oran){oran=Math.max(0,Math.min(1,oran||0));return{dash:fix(oran*201,1),ibre:fix(-90+oran*180,0)}};
 
 // ---------- Yazma kutusu (Hiyerarşi kartı ve Ekip çalışan sayfası ortak) ----------
-// OA.yazKutusu(kimlik, kip, kuyruk): kip 'gorev'|'mesaj'|'not'|'telegram'; gönderme işlevleri mevcut sistemdekilerdir.
-OA.KIPLER={gorev:{ad:'Görev ver',alt:'Doğrudan görev · Orin/Orla’yı atlar',yer:'Görevi yaz…',ikon:'arti'},mesaj:{ad:'Mesaj',alt:'Çalışana mesaj',yer:'Mesajını yaz…',ikon:'mesaj'},not:{ad:'Not',alt:'Çevrimdışıyken de saklanır',yer:'Notunu yaz…',ikon:'not'},telegram:{ad:'Telegram',alt:'Telegram botundan yaz',yer:'Telegram mesajını yaz…',ikon:'gonder'}};
+// OA.yazKutusu(kimlik, kip, kuyruk): kip 'gorev'|'mesaj'|'not'; gönderme işlevleri mevcut sistemdekilerdir.
+OA.KIPLER={gorev:{ad:'Görev ver',alt:'Doğrudan görev · Orin/Orla’yı atlar',yer:'Görevi yaz…',ikon:'arti'},mesaj:{ad:'Mesaj',alt:'Çalışana mesaj',yer:'Mesajını yaz…',ikon:'mesaj'},not:{ad:'Not',alt:'Çevrimdışıyken de saklanır',yer:'Notunu yaz…',ikon:'not'}};
 OA.gonder=function(id,kip,metin){var c=tm(id);if(!c)return{ok:false,m:'Çalışan bulunamadı'};metin=String(metin||'').trim();if(!metin)return{ok:false,m:'Önce bir şey yaz'};
  var on=typeof tmOnline=='function'?tmOnline():true;
  if(kip=='gorev'){tmTaskNew(id,metin,'normal','',id!='orin');return{ok:true,m:c.ad+'’ya görev verildi'}}
  if(kip=='mesaj'){tmSend(id,metin,on?'mesaj':'not');return{ok:true,m:on?'Mesaj gönderildi':'Çevrimdışı · not olarak saklandı, bağlanınca iletilir'}}
  if(kip=='not'){tmSend(id,metin,'not');return{ok:true,m:on?'Not kaydedildi':'Not saklandı · bağlanınca iletilir'}}
- if(kip=='telegram'){var bot=OA.BOT[id];if(!bot)return{ok:false,m:c.ad+' için Telegram botu yok'};var a=OA.st();a.tg.push({id:uid(),kim:id,bot:bot,metin:metin,ts:Date.now(),durum:'sirada'});if(a.tg.length>200)a.tg.splice(0,a.tg.length-200);OA.kaydet();return{ok:true,m:'Telegram sırasına alındı · '+bot}}
  return{ok:false,m:'Bilinmeyen tür'}};
-// Çalışanın geçmişi: görev, mesaj, not, Telegram (en yeni üstte)
+// Çalışanın geçmişi: görev, mesaj, not (en yeni üstte)
 OA.gecmis=function(id,n){var L=[];if(typeof TMS!='function')return L;var T=TMS();
  T.gorev.filter(function(g){return g.kim==id&&g.yol=='dogrudan'}).forEach(function(g){L.push({tur:'Görev',t:g.metin,ts:g.ts})});
  (T.sohbet[id]||[]).forEach(function(m){if(m.r=='ben')L.push({tur:m.tur=='not'?'Not':m.tur=='ses'?'Sesli':'Mesaj',t:m.t,ts:m.ts})});
  T.not.filter(function(x){return x.kim==id&&x.durum=='bekliyor'}).forEach(function(x){L.push({tur:'Not',t:x.metin+' (bekliyor)',ts:x.ts})});
- OA.st().tg.filter(function(x){return x.kim==id}).forEach(function(x){L.push({tur:'Telegram',t:x.metin+(x.durum=='sirada'?' (sırada)':''),ts:x.ts})});
  L.sort(function(a,b){return (b.ts||0)-(a.ts||0)});return L.slice(0,n||8)};
 OA.tarihKisa=function(ts){if(!ts)return '';var d=new Date(ts),b=new Date();return d.toDateString()==b.toDateString()?OA.saat(ts):d.getDate()+' '+AYK[d.getMonth()]};
 OA.gecmisHtml=function(id){var L=OA.gecmis(id);return L.length?L.map(function(h){return '<div class="oa-rdh"><span class="oa-rdht">'+esc(h.tur)+'</span><span style="flex:1;min-width:0;font-size:12.5px;line-height:17px;color:#d8d8dc;overflow-wrap:anywhere">'+esc(String(h.t).slice(0,140))+'</span><span class="oa-sub" style="flex:none">'+OA.tarihKisa(h.ts)+'</span></div>'}).join(''):'<span class="oa-sub" style="padding:4px 2px 6px">Henüz gönderilen bir şey yok.</span>'};
@@ -207,7 +204,6 @@ OA.anasayfa=function(){
   ozet.push('Beklenen ödemelerden sonra kalan: <b>'+OA.tl(C.kalan)+'</b>.');
   ozet.push('Cep harçlıkları kalanın <b>%'+C.toplam+'</b>’i; birikime <b>%'+Math.max(0,100-C.toplam)+'</b> kalıyor.')}
  ozet.push('Kur tahminlerim günde 1 kez (00:00) yenilenir, 6 ay saklanır; gerçekleşenle karşılaştırıp kendimi düzeltirim.');
- ozet.push('Telegram’dan girilen harcamalarda kalan harçlığı ve günlük limiti yazarım; limit aşılırsa ikinize de bildiririm, aşımda kalan günlerin limiti yeniden hesaplanır (azalır).');
  h+='<div class="oa-grid21">'+OA.kart(OA.hd(OA.ico('linear-gradient(160deg,#5fe0f5,#3b82f6)','grafik'),'Gelir · Gider · Net (6 ay)','<span style="display:flex;gap:12px;font-size:11.5px;color:#c9c9cf">'+sw('#3ecf5a','Gelir')+sw('#ff8a3d','Gider')+sw('#f2f2f3','Net')+'</span>'),sc,.5)+
   OA.kart(OA.hd(OA.imgAv('otto','oa-av'),'Otto’nun özeti',OA.kp('Finans U.','n')),'<ul class="oa-lis">'+ozet.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul><span style="font-size:11px;color:var(--yazi3);margin-top:auto">Kur tahminleri bilgi amaçlıdır, yatırım tavsiyesi değildir.</span>',.56)+'</div>';
  h+='</div>';return h};

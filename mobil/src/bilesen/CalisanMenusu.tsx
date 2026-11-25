@@ -1,5 +1,5 @@
 // Sağ çalışan menüsü (eski sol menünün yerine). Üstteki kişi simgesi ya da sağ kenardaki okla açılır.
-// Yuvarlak profiller departman başlıklarıyla alt alta; çalışana dokununca Görev ver / Mesaj / Not / Telegram.
+// Yuvarlak profiller departman başlıklarıyla alt alta; çalışana dokununca Görev ver / Mesaj / Not.
 // Gönderince yeşil bildirim, çalışan başına açılır-kapanır Geçmiş. 1,2 sn dokunulmazsa kapanır (yazarken kapanmaz).
 import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar, Ikon } from '@/bilesen/ortak';
 import { olayEkle, uid } from '@/lib/depo';
 import { Calisan, echoCevap } from '@/lib/ekip';
-import { depAdi, SIRA, TG, unvan } from '@/lib/ekipMeta';
+import { depAdi, SIRA, unvan } from '@/lib/ekipMeta';
 import { Kip, menuKapat, menuKip, menuSec, useGezinti } from '@/lib/gezinti';
 import { useKlavye } from '@/lib/klavye';
 import { saatYazi, useEkip } from '@/lib/kullan';
@@ -16,10 +16,10 @@ import { esitleSonra, hizliBekle } from '@/lib/senk';
 import { R, saydam } from '@/lib/tema';
 
 const GIZLEME_MS = 1200;
-const KIPLER: [Kip, string, string][] = [['gorev', 'Görev ver', 'artiDaire'], ['mesaj', 'Mesaj', 'mesaj'], ['not', 'Not', 'not'], ['tg', 'Telegram', 'ucak']];
-const BASLIK: Record<Kip, string> = { gorev: 'Görev ver', mesaj: 'Mesaj gönder', not: 'Not yaz', tg: 'Telegram mesajı' };
-const YER: Record<Kip, string> = { gorev: 'Görevi yaz: ne, ne zamana kadar…', mesaj: 'Mesajını yaz…', not: 'Notunu yaz; çevrimdışıyken de kaydedilir…', tg: 'Telegram’dan gönderilecek mesaj…' };
-const SONUC: Record<Kip, string> = { gorev: 'Görev iletildi', mesaj: 'Mesaj gönderildi', not: 'Not kaydedildi', tg: 'Telegram mesajı sıraya alındı' };
+const KIPLER: [Kip, string, string][] = [['gorev', 'Görev ver', 'artiDaire'], ['mesaj', 'Mesaj', 'mesaj'], ['not', 'Not', 'not']];
+const BASLIK: Record<Kip, string> = { gorev: 'Görev ver', mesaj: 'Mesaj gönder', not: 'Not yaz' };
+const YER: Record<Kip, string> = { gorev: 'Görevi yaz: ne, ne zamana kadar…', mesaj: 'Mesajını yaz…', not: 'Notunu yaz; çevrimdışıyken de kaydedilir…' };
+const SONUC: Record<Kip, string> = { gorev: 'Görev iletildi', mesaj: 'Mesaj gönderildi', not: 'Not kaydedildi' };
 
 type Gecmis = { tur: string; txt: string; ts: number };
 
@@ -58,8 +58,7 @@ export function CalisanMenusu() {
     return ids.map((id) => hepsi.find((c) => c.id === id) as Calisan).filter((c) => !q || c.ad.toLocaleLowerCase('tr').includes(q) || unvan(c.id, c.gorev).toLocaleLowerCase('tr').includes(q));
   }, [hepsi, ara]);
   const kim = sec ? hepsi.find((c) => c.id === sec) : undefined;
-  const tgYok = kip === 'tg' && !!kim && !TG[kim.id];
-  const gonderilir = !!txt.trim() && !tgYok && !!kim;
+  const gonderilir = !!txt.trim() && !!kim;
 
   const gecmis = (c: Calisan): Gecmis[] => {
     const r: Gecmis[] = [];
@@ -71,7 +70,6 @@ export function CalisanMenusu() {
     if (!gonderilir || !kim || !kip) return;
     const t = txt.trim();
     if (kip === 'gorev') olayEkle('gorev', { id: uid(), kim: kim.id, ad: kim.ad, metin: t, onc: 'normal', son: '', bilgi: kim.id !== 'orin', sureDk: 0, tokenLimit: 0 });
-    else if (kip === 'tg') olayEkle('telegram', { kim: kim.id, ad: kim.ad, bot: TG[kim.id], t });
     else {
       const r = kip === 'mesaj' && kim.id === 'echo' && !o.zeka?.bagli ? echoCevap(o, t) : null;
       olayEkle('mesaj', { kim: kim.id, t, mod: kip, bek: kip === 'mesaj' && !r ? 1 : 0 });
@@ -92,7 +90,7 @@ export function CalisanMenusu() {
       <Animated.View ref={kl.ref as any} onTouchStart={planla} pointerEvents={acik ? 'auto' : 'none'} accessibilityViewIsModal={acik} accessibilityLabel="Çalışanlar"
         style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: PW, zIndex: 9, borderTopLeftRadius: 26, borderBottomLeftRadius: 26, backgroundColor: 'rgba(32,32,36,0.985)', borderWidth: 1, borderRightWidth: 0, borderColor: R.camKenar, paddingTop: ust + 14, paddingHorizontal: 12, paddingBottom: kl.ortu > 0 ? kl.ortu + 8 : 12, transform: [{ translateX: tx }] }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 4, paddingBottom: 12 }}>
-          <View style={{ flex: 1, gap: 2 }}><Text style={{ color: R.yazi, fontSize: 18, lineHeight: 24, fontWeight: '600' }}>Çalışanlar</Text><Text style={{ color: R.yazi2, fontSize: 12 }}>Doğrudan görev, mesaj, not ve Telegram</Text></View>
+          <View style={{ flex: 1, gap: 2 }}><Text style={{ color: R.yazi, fontSize: 18, lineHeight: 24, fontWeight: '600' }}>Çalışanlar</Text><Text style={{ color: R.yazi2, fontSize: 12 }}>Doğrudan görev, mesaj ve not</Text></View>
           <Pressable onPress={menuKapat} accessibilityLabel="Kapat" style={ikDugme}><Ikon ad="kapat" boy={18} renk="#e9e9ec" /></Pressable>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, height: 44, paddingHorizontal: 14, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.07)', borderWidth: 1, borderColor: R.camKenar }}>
@@ -154,7 +152,7 @@ export function CalisanMenusu() {
               <Avatar c={kim} boy={34} />
               <View style={{ flex: 1 }}>
                 <Text style={{ color: R.yazi, fontSize: 13.5, fontWeight: '600' }}>{BASLIK[kip]} · {kim.ad}</Text>
-                <Text style={{ color: R.yazi2, fontSize: 11.5 }}>{kip === 'tg' ? (TG[kim.id] ? 'Bot: ' + TG[kim.id] : 'Bu çalışanın Telegram botu tanımlı değil') : kip === 'not' ? 'Çalışanın kayıt sayfasına eklenir' : kip === 'gorev' ? 'Orin ve Orla atlanır, doğrudan çalışana gider' : 'Cevap bilgisayardaki Orvane açıkken gelir'}</Text>
+                <Text style={{ color: R.yazi2, fontSize: 11.5 }}>{kip === 'not' ? 'Çalışanın kayıt sayfasına eklenir' : kip === 'gorev' ? 'Orin ve Orla atlanır, doğrudan çalışana gider' : 'Cevap bilgisayardaki Orvane açıkken gelir'}</Text>
               </View>
               <Pressable onPress={() => { menuKip(null); setTxt(''); planla(); }} accessibilityLabel="Vazgeç" style={ikDugme}><Ikon ad="kapat" boy={16} renk="#e9e9ec" /></Pressable>
             </View>

@@ -40,7 +40,7 @@ BL.busy=true;var gelen=0,b0=BLS(),sira0=b0.olaySira,hata0=b0.hata||'';
 // 0.7.20 (Ada): her olay ayrı korunur — bozuk bir olay sırayı tıkamaz, atlanır ve hataya yazılır
 return call(API.bulut.pull(BLS().olaySira)).then(function(rows){var bozuk=[];(rows||[]).forEach(function(r){if(r.kaynak=='telefon'){try{bulutUygula({id:r.id,tur:r.tur,veri:r.veri,ts:Date.parse(r.ts)});gelen++}catch(e){bozuk.push((r.tur||'?')+' #'+(r.sira||'?')+': '+(e&&e.message||e))}}BLS().olaySira=Math.max(BLS().olaySira,+r.sira||0)});
 if(bozuk.length){BL.olayHata='Telefondan gelen '+bozuk.length+' işlem uygulanamadı ve atlandı ('+bozuk.join('; ').slice(0,200)+')';if(window.console)console.warn('[bulut] '+BL.olayHata)}
-if(gelen){toast(gelen+' işlem telefondan geldi');if(area=='team'||area=='home')render()}
+if(gelen){toast(gelen+' işlem telefondan geldi');if(area=='team'||area=='home'||area=='orv')render()}
 var oz=bulutOzet(),k=JSON.stringify(Object.assign({},oz,{ts:0}));if(!zorla&&k==BL.yayin)return;return call(API.bulut.push(oz)).then(function(){BL.yayin=k})})
 .then(function(){BLS().son=Date.now();BLS().hata=BL.olayHata||'';BL.olayHata=''},function(e){BLS().hata=e.message;if(/giriş|Oturum/i.test(e.message))bulutDurum()})
 // 0.7.20 (Ada): durum dosyası yalnız gerçek değişiklikte yazılır (olay geldi, sıra ilerledi ya da hata değişti); "son eşitleme" zamanı bellekte kalır

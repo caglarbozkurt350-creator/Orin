@@ -26,7 +26,8 @@ function toastKisa(m){if(typeof toast=='function')toast(m)}
 // ========================================================================
 // GÖREVLER
 // ========================================================================
-var GSEK=[['gorevler','Görevler'],['onaylar','Onaylar'],['gorseller','Görseller']];
+var GSEK=[['ekip','Ekip'],['hiyerarsi','Hiyerarşi'],['gorevler','Görevler'],['onaylar','Onaylar']];
+var ISEK=[['gunluk','Günlük'],['ozet','Özet'],['projeler','Projeler'],['gorseller','Görseller'],['izinler','İzinler']];
 OB.gGit=function(id){ORV.git(id)};
 function gorevSon(g){var s=String(g.son||'');if(!s)return null;var t=typeof hfrSon=='function'?hfrSon(g):Date.parse(s);return t&&!isNaN(t)?t:null}
 OB.gorevSut=function(){var G=TMS().gorev.slice().sort(function(a,b){return (b.ts||0)-(a.ts||0)}),r={bek:[],sur:[],plan:[],bit:[]},now=Date.now();
@@ -59,21 +60,29 @@ OB.onaylar=function(){var sag='<div style="display:flex;gap:10px;align-items:cen
 
 // ---- Görseller: yerel klasör (Ayarlar), proje koduna göre eşleme, kodla arama ----
 OB.gq='';
+// 0.9.3: klasör ayarlanmadıysa varsayılan Belgeler\Orin\Görseller\Biten Projeler
+if(typeof S!='undefined'&&!S.path&&typeof INFO!='undefined'&&INFO&&INFO.belgeler&&!INFO.smoke)S.path=INFO.belgeler+'\\Orin\\Görseller\\Biten Projeler';
+OB.gTile=function(x){return '<button type="button" class="ob-gt" title="'+esc((x.klasor?x.klasor+' / ':'')+x.name)+'" onclick="API&&API.openPath(decodeURI(\''+jq(x.url)+'\').replace(\'file:///\',\'\'))"><span class="ob-gi"><img src="'+esc(x.url)+'" loading="lazy" alt=""></span><span class="oa-sub" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc((x.klasor?x.klasor+' / ':'')+x.name)+'</span></button>'};
+// Proje koduyla eşlenmeyen görseller (telefon adlı dosyalar, alt klasörler) de görünsün
+OB.gTumKart=function(q){var es={};allP().forEach(function(p){imgsFor(p[0]).forEach(function(x){es[x.url]=1})});
+ var R=IM.filter(function(x){return !es[x.url]&&(!q||trl(x.name).indexOf(q)>=0||trl(x.klasor||'').indexOf(q)>=0)}),lim=OB.gTum?R.length:48;
+ return OA.kart(OA.hd('','Klasördeki görseller',OA.kp(R.length+' görsel','n')),(R.length?'<div class="ob-gor">'+R.slice(0,lim).map(OB.gTile).join('')+'</div>'+(R.length>lim?'<button type="button" class="oa-btn ghost sm" style="align-self:flex-start" onclick="OB.gTum=1;OB.yenile()">Tümünü göster ('+R.length+')</button>':''):OA.bos('resim','Görsel yok',q?'Aramaya uyan görsel yok':'Klasörde görsel bulunamadı',100))+
+  '<span class="oa-sub">Proje koduyla eşlenmeyen görseller. Dosya adı proje koduyla başlarsa (ör. 88.34.01.51 Komodin.jpg) o projenin altında da görünür.</span>',.06)};
 OB.gAra=function(v){OB.gq=String(v||'');yenile();setTimeout(function(){var e=document.getElementById('obGq');if(e){e.focus();try{e.setSelectionRange(OB.gq.length,OB.gq.length)}catch(x){}}},0)};
 OB.gKlasor=function(){if(API&&API.pickFolder)API.pickFolder(S.path).then(function(p){if(p){sx('path',p);OB.gYukle(true)}});else toastKisa('Klasör seçimi yalnız masaüstü uygulamasında')};
 OB.gYukle=function(zorla){if(!API||!API.images||!S.path)return;if(OB._gy&&!zorla)return;OB._gy=true;API.images(S.path).then(function(r){OB._gy=false;var ch=JSON.stringify(r.items)!=JSON.stringify(IM);IM=r.items;if(ch&&area=='orv'&&(pg=='gorseller'))yenile()},function(){OB._gy=false})};
-OB.gorseller=function(){var sag='<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">'+sekmeIc(GSEK,'gorseller','OB.gGit')+'</div>',h='<div class="ob-pg">';
+OB.gorseller=function(){var sag='<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">'+sekmeIc(ISEK,'gorseller','OB.isGit')+'</div>',h='<div class="ob-pg">';
  if(arg){var c=arg,im=imgsFor(c);h+=ustAlt(esc(c),esc(pname(c))||'Proje görselleri',sag)+OA.kart('','<div class="ob-satir"><button type="button" class="oa-btn ghost sm" onclick="ORV.git0(\'gorseller\',\'\')">‹ Tüm projeler</button><span class="oa-sub">Klasör: '+esc(S.path||'—')+' · '+im.length+' görsel</span></div>'+(im.length?'<div class="ob-gor">'+im.map(function(x){return '<button type="button" class="ob-gt" title="'+esc(x.name)+'" onclick="API&&API.openPath(decodeURI(\''+jq(x.url)+'\').replace(\'file:///\',\'\'))"><span class="ob-gi"><img src="'+esc(x.url)+'" loading="lazy" alt=""></span><span class="oa-sub" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(x.name)+'</span></button>'}).join('')+'</div>':OA.bos('resim','Bu proje için görsel bulunamadı','Dosya adını proje koduyla başlat (ör. '+c+' montaj 1.jpg)',140)),0)+'</div>';return h};
  h+=ustAlt('Görseller','Tamamlanan işlerin görselleri proje koduyla eşlenir',sag);
  if(!S.path)return h+OA.kart('',OA.bos('resim','Görsel klasörü ayarlanmadı','Klasör yalnız bu bilgisayarda geçerlidir; dosya adı proje koduyla başlamalıdır.',160)+'<div style="display:flex;justify-content:center;gap:10px"><button type="button" class="oa-btn" onclick="OB.gKlasor()">Klasör seç</button><button type="button" class="oa-btn ghost" onclick="ORV.git(\'ayarlar\',\'kural\')">Ayarlar</button></div>',0)+'</div>';
- var q=trl(OB.gq),L=allP().filter(function(p){return !q||trl(p[0]).indexOf(q)>=0||trl(p[1]).indexOf(q)>=0});
- return h+OA.kart('','<div class="ob-satir"><input id="obGq" class="oa-in" style="flex:1;min-width:200px" type="search" placeholder="Proje koduyla ara (ör. 78.26)" aria-label="Kodla ara" value="'+esc(OB.gq)+'" oninput="OB.gAra(this.value)"><span class="oa-sub">Klasör: '+esc(S.path)+' · '+IM.length+' görsel</span><button type="button" class="oa-btn ghost sm" onclick="OB.gYukle(true)">Yenile</button></span></div>'+
-  (L.length?'<div class="ob-gor">'+L.map(function(p){var im=imgsFor(p[0]);return '<button type="button" class="ob-gt" onclick="ORV.git0(\'gorseller\',\''+jq(p[0])+'\')"><span class="ob-gi">'+(im.length?'<img src="'+esc(im[0].url)+'" loading="lazy" alt="">':ORV.svg('resim',26,1.6))+'</span><span style="font-size:13px;font-weight:600">'+esc(p[0])+(im.length?' <span class="oa-sub">· '+im.length+'</span>':'')+'</span><span class="oa-sub" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(p[1])+'</span></button>'}).join('')+'</div>':OA.bos('ara','Eşleşen proje yok','Kodu kontrol et',120)),0)+'</div>'};
+ var q=trl(OB.gq),L=allP().filter(function(p){return q?(trl(p[0]).indexOf(q)>=0||trl(p[1]).indexOf(q)>=0):imgsFor(p[0]).length>0}).sort(function(a,b){return imgsFor(b[0]).length-imgsFor(a[0]).length});
+ return h+OA.kart('','<div class="ob-satir"><input id="obGq" class="oa-in" style="flex:1;min-width:200px" type="search" placeholder="Proje kodu ya da dosya adıyla ara (ör. 78.26)" aria-label="Kodla ara" value="'+esc(OB.gq)+'" oninput="OB.gAra(this.value)"><span class="oa-sub">Klasör: '+esc(S.path)+' · '+IM.length+' görsel</span><button type="button" class="oa-btn ghost sm" onclick="OB.gYukle(true)">Yenile</button></span></div>'+
+  (L.length?'<div class="ob-gor">'+L.map(function(p){var im=imgsFor(p[0]);return '<button type="button" class="ob-gt" onclick="ORV.git0(\'gorseller\',\''+jq(p[0])+'\')"><span class="ob-gi">'+(im.length?'<img src="'+esc(im[0].url)+'" loading="lazy" alt="">':ORV.svg('resim',26,1.6))+'</span><span style="font-size:13px;font-weight:600">'+esc(p[0])+(im.length?' <span class="oa-sub">· '+im.length+'</span>':'')+'</span><span class="oa-sub" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(p[1])+'</span></button>'}).join('')+'</div>':(q?OA.bos('ara','Eşleşen proje yok','Kodu kontrol et',120):'<span class="oa-sub">Adı proje koduyla başlayan görsel yok; klasördeki tüm görseller aşağıda.</span>')),0)+OB.gTumKart(q)+'</div>'};
 function trl(s){return String(s==null?'':s).toLocaleLowerCase('tr')}
 OB.trl=trl;
-ORV.sayfa('gorevler',{ciz:OB.gorevler,baslik:'Görevler › Görevler'});
-ORV.sayfa('onaylar',{ciz:OB.onaylar,baslik:'Görevler › Onaylar',sb:function(){return typeof onaySb=='function'?onaySb():''}});
-ORV.sayfa('gorseller',{ciz:OB.gorseller,baslik:'Görevler › Görseller',sonra:function(){OB.gYukle()}});
+ORV.sayfa('gorevler',{ciz:OB.gorevler,baslik:'Ekip › Görevler'});
+ORV.sayfa('onaylar',{ciz:OB.onaylar,baslik:'Ekip › Onaylar',sb:function(){return typeof onaySb=='function'?onaySb():''}});
+ORV.sayfa('gorseller',{ciz:OB.gorseller,baslik:'İş Günleri › Görseller',sonra:function(){OB.gYukle()}});
 
 // ========================================================================
 // İŞ GÜNLERİ · ÖZET
@@ -132,7 +141,7 @@ OB.ozet=function(){var V=OB.ozetVeri(OB.hf),kf=OB.kf,tk=kf.t||OB.ymd(TODAY),son=
  var ayAd=AY[pk(V.g[3]).getMonth()];
  var stats='<div class="oa-grid2" style="grid-template-columns:repeat(4,minmax(0,1fr))">'+stat(ayAd+' toplam',OA.sayi(V.ayT)+' <span class="oa-sub" style="font-weight:500">dk</span>','',.12)+stat('Kayıtlı gün',V.ayK+' <span class="oa-sub" style="font-weight:500">/ '+V.ayI+'</span>','',.16)+stat('Eksik gün',String(V.ayE),V.ayE?'#fca5a5':'',.2)+stat('Fazla mesai','Askıda','#f7bd55',.24,'10 Kas’tan beri')+'</div>';
  return '<div class="ob-pg" id="obOzet">'+ISsekme('ozet')+'<div class="oa-grid21">'+OA.kart('',haftaK,0)+OA.kart('',form,.08)+'</div>'+stats+'<div class="oa-grid2">'+OA.kart('',OB.takvimKart(),.14)+OA.kart('',OB.kuralKart(),.18)+'</div></div>'};
-function ISsekme(a){return ustAlt('İş Günleri','Kaynak: İş Günü Raporu · Echo Pzt–Cum 18:20’de kontrol eder',sekmeIc([['gunluk','Günlük'],['ozet','Özet'],['projeler','Projeler']],a,'OB.isGit'))}
+function ISsekme(a){return ustAlt('İş Günleri','Kaynak: İş Günü Raporu · Echo Pzt–Cum 18:20’de kontrol eder',sekmeIc(ISEK,a,'OB.isGit'))}
 OB.isGit=function(id){ORV.git(id)};
 OB.gunAc=function(k){sel=k;ORV.git('gunluk',k)};
 OB.takvimKart=function(){var m=pk(OB.haftaGunler(OB.hf)[3]),y=m.getFullYear(),ay=m.getMonth(),dim=new Date(y,ay+1,0).getDate(),off=(new Date(y,ay,1).getDay()+6)%7,h='<div class="oa-hd">'+OA.ico('linear-gradient(160deg,#ffc24a,#ff7a2f)','takvim')+'<span class="oa-tl">'+AY[ay]+' '+y+'</span><button type="button" class="oa-btn ghost sm" onclick="nav(\'cal\',\'takvim\',\'\')">Ay / hafta takvimi · ay sonu özeti ›</button></div><div class="ob-takv">';
@@ -185,7 +194,7 @@ OB.izYedek=function(n){res=n;if(PA=='B')applyPlan('B');else{yenile();save()}};
 var PSAD=['Taslak','Onay bekliyor','Onaylandı'];
 OB.izSayilar=function(){var y=pk(TODAY).getFullYear(),h={};['mazeret','ucretsiz','refakat','rapor13','rapor4','yillik'].forEach(function(t){h[t]=daysOf(t)});return{y:y,h:h,refK:refUsed(y)}};
 OB.izinler=function(){var t=OB.iz.tab,tab=sekmeIc([['yillik','Yıllık'],['mazeret','Mazeret']],t,'OB.izTab');
- var top=ustAlt('İzinler','Hak ediş tarihi '+anniv()+' · kullanılmayan yıllık izin devreder',tab),h='<div class="ob-pg" id="obIzin">'+top;
+ var top=ustAlt('İzinler','Hak ediş tarihi '+anniv()+' · kullanılmayan yıllık izin devreder','<div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">'+sekmeIc(ISEK,'izinler','OB.isGit')+tab+'</div>'),h='<div class="ob-pg" id="obIzin">'+top;
  if(t=='yillik'){var k=kal(),tt=S.hak+S.dev,kul=tt-k,pcs=kul>0?Math.min(100,kul/tt*100):0,mA=best(k),mB=best(Math.max(0,k-res)),sp=selP,m=sp=='A'?mA:mB,x=ptot(m),ap=PA==sp,boxes='';
   for(var i=0;i<tt;i++)boxes+='<span class="ob-izg '+(i<kul?'k':'b')+'" style="animation-delay:'+(.3+i*.04)+'s"></span>';
   var sol='<div class="oa-hd">'+OA.ico('linear-gradient(160deg,#7cf096,#16a34a)','gunes')+'<span class="oa-tl">Yıllık İzin</span>'+OA.kp(f(k)+' kalan / '+tt+' toplam','g')+'</div><div class="ob-ibar"><span class="ob-ibu" style="width:'+(tt?kul/tt*100:0)+'%"></span><span class="ob-ibk" style="width:'+(tt?k/tt*100:0)+'%"></span></div><div class="ob-satir" style="justify-content:space-between"><span class="oa-sub"><span class="ob-sw" style="background:var(--acc)"></span> '+f(kul)+' gün kullanıldı</span><span class="oa-sub"><span class="ob-sw" style="background:#3ecf5a"></span> '+f(k)+' gün kalan</span></div><div class="ob-izs" style="grid-template-columns:repeat('+Math.min(14,Math.max(1,tt))+',minmax(0,1fr))">'+boxes+'</div>'+
@@ -218,5 +227,5 @@ OB.izKaydet=function(){var F=OB.izf,b=OB.keyOf(F.b),s=OB.keyOf(F.s||F.b);F.ok=''
   var was=D[k];sel=k;var v=tur;if(v=='rapor13'){var n=0,p=k;while((p=prevWork(p))&&(D[p]=='rapor13'||D[p]=='rapor4'))n++;if(n>=S.rap-1)v='rapor4'}
   D[k]=v;if((IZL[was]||IZL[v])&&was!==v)dayTypeChanged(k);say++;if(F.a){var b2=OB.st();b2.izinNot=b2.izinNot||{};b2.izinNot[k]=F.a}});
  sel=sk;save();F.ok=say+' gün işlendi'+(atla?' · '+atla+' gün atlandı (hafta sonu/tatil/dolu)':'');if(say){F.b='';F.s='';F.a=''}yenile();return say>0};
-ORV.sayfa('izinler',{ciz:OB.izinler,baslik:'İzinler'});
+ORV.sayfa('izinler',{ciz:OB.izinler,baslik:'İş Günleri › İzinler'});
 })();

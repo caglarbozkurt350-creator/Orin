@@ -40,7 +40,15 @@ button.oa-pill:active{transform:scale(.93)}
 .oa-grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
 .oa-grid13{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:14px}
 @media (max-width:1500px){.oa-grid5{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media (max-width:1050px){.oa-grid5,.oa-grid3,.oa-grid21,.oa-grid2,.oa-grid13{grid-template-columns:minmax(0,1fr)}}
+/* 0.9.3: kur kartı Hafta/Ay/Yıl düğmeleri */
+.oa-kseg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.oa-ksb{display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 4px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#c9c9cf;font:500 11.5px var(--font-ana);cursor:pointer;transition:background .2s,border-color .2s}
+.oa-ksb b{font-size:13px;font-weight:700}.oa-ksb b.g{color:#6be585}.oa-ksb b.r{color:#fca5a5}.oa-ksb b.n{color:var(--yazi3)}
+.oa-ksb:hover{background:rgba(255,255,255,.08)}.oa-ksb.on{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.32);color:#f2f2f3}
+.oa-ksb:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+/* 0.9.3: Anasayfa 1. satır her genişlikte 3 sütun (gelir, gider, beklenen / cep Ç, cep E, Ay özeti) */
+.oa-grid6{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:1050px){.oa-grid5,.oa-grid6,.oa-grid3,.oa-grid21,.oa-grid2,.oa-grid13{grid-template-columns:minmax(0,1fr)}}
 
 /* grafik animasyonları */
 .oa-draw{stroke-dasharray:3000;stroke-dashoffset:0;animation:oaDraw 1.6s .25s var(--ease-akis) backwards}

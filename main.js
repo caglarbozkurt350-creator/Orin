@@ -302,7 +302,7 @@ ipcMain.handle('data:move', (e, { dir, mode }) => {
     return { ok: true, info: dataInfo() };
   } catch (err) { return { ok: false, err: err.message }; }
 });
-ipcMain.on('app:info', e => { e.returnValue = { version: app.getVersion(), userData: DATA(), smoke: SMOKE }; });
+ipcMain.on('app:info', e => { e.returnValue = { version: app.getVersion(), userData: DATA(), smoke: SMOKE, belgeler: app.getPath('documents') }; });
 
 ipcMain.handle('notes:list', (e, dir) => {
   if (!dir || !fs.existsSync(dir)) return { ok: false, items: [] };
@@ -325,7 +325,10 @@ ipcMain.handle('notes:delete', (e, { dir, file }) => { const p = path.join(dir, 
 
 ipcMain.handle('images:list', (e, dir) => {
   if (!dir || !fs.existsSync(dir)) return { ok: false, items: [] };
-  const items = fs.readdirSync(dir).filter(f => IMG_EXT.test(f)).map(f => ({ name: f, url: 'file:///' + path.join(dir, f).replace(/\\/g, '/').split('/').map(encodeURIComponent).join('/').replace(/^([A-Za-z])%3A/, '$1:') }));
+  const items = [], url = p => 'file:///' + p.replace(/\\/g, '/').split('/').map(encodeURIComponent).join('/').replace(/^([A-Za-z])%3A/, '$1:');
+  const tara = (d, klasor) => { let L = []; try { L = fs.readdirSync(d, { withFileTypes: true }); } catch (e) { return; }
+    L.forEach(x => { if (x.isDirectory()) { if (!klasor) tara(path.join(d, x.name), x.name); } else if (IMG_EXT.test(x.name)) items.push({ name: x.name, url: url(path.join(d, x.name)), klasor: klasor || '' }); }); };
+  tara(dir, '');
   return { ok: true, items };
 });
 
@@ -531,12 +534,25 @@ function tcmbAyikla(xml) { const tarih = (String(xml).match(/Tarih="([\d.]+)"/) 
   ['USD', 'EUR', 'GBP'].forEach(k => { const b = String(xml).match(new RegExp('CurrencyCode="' + k + '"[\\s\\S]*?</Currency>')); if (!b) return; const al = (b[0].match(/<ForexBuying>([\d.]+)</) || [])[1], sat = (b[0].match(/<ForexSelling>([\d.]+)</) || [])[1]; if (sat) kur[k.toLowerCase()] = { alis: +al || null, satis: +sat }; });
   if (!kur.usd) throw new Error('TCMB kur listesi okunamadı'); return { tarih, kur, kaynak: 'TCMB', alindi: Date.now() }; }
 ipcMain.handle('piyasa:tcmb', wrap(async zorla => { const f = path.join(DATA(), 'tcmb-kur.json'), o = readJSON(f, null);
-  if (!zorla && o && Date.now() - o.alindi < 6 * 3600e3) return o; if (SMOKE) throw new Error('Testte ağ yok');
+  if (!zorla && o && o.altin && Date.now() - o.alindi < 6 * 3600e3) return o; if (SMOKE) throw new Error('Testte ağ yok');
   let v = null, hata = '';
   try { const r = await fetch('https://www.tcmb.gov.tr/kurlar/today.xml', { cache: 'no-store', signal: AbortSignal.timeout(8000) }); if (!r.ok) throw new Error('TCMB ' + r.status); v = tcmbAyikla(await r.text()); } catch (e) { hata = e.message; }
   // Yedek: Avrupa Merkez Bankası referans kurları (Frankfurter, anahtarsız) — TCMB'ye ulaşılamazsa
   if (!v) { const r = await fetch('https://api.frankfurter.app/latest?from=USD&to=TRY,EUR,GBP', { cache: 'no-store', signal: AbortSignal.timeout(10000) }); if (!r.ok) throw new Error('Kur alınamadı (TCMB: ' + hata + ', ECB ' + r.status + ')'); v = ecbAyikla(await r.json()); }
+  try { v.altin = await altinAl(); } catch (e) { if (o && o.altin) v.altin = o.altin; } // altın alınamazsa son bilinen değer kalır
   writeJSON(f, v); return v; }));
+// 0.9.3: 1 yıllık USD/TRY ve EUR/TRY günlük geçmişi (ECB · Frankfurter, anahtarsız) — Hafta/Ay/Yıl değişimi için; 20 saat önbellek
+ipcMain.handle('piyasa:gecmis', wrap(async () => { const f = path.join(DATA(), 'kur-gecmis.json'), o = readJSON(f, null);
+  if (o && o.gun && Date.now() - o.alindi < 20 * 3600e3) return o; if (SMOKE) throw new Error('Testte ağ yok');
+  const g = d => d.toISOString().slice(0, 10), bas = new Date(Date.now() - 372 * 864e5);
+  const r = await fetch('https://api.frankfurter.dev/v1/' + g(bas) + '..' + g(new Date()) + '?base=USD&symbols=TRY,EUR', { cache: 'no-store', signal: AbortSignal.timeout(15000) });
+  if (!r.ok) throw new Error('Kur geçmişi alınamadı (' + r.status + ')'); const j = await r.json(), gun = {};
+  Object.keys(j.rates || {}).forEach(d => { const t = +j.rates[d].TRY, e = +j.rates[d].EUR; if (t > 0) gun[d] = { usd: Math.round(t * 10000) / 10000, eur: e > 0 ? Math.round(t / e * 10000) / 10000 : null }; });
+  if (!Object.keys(gun).length) throw new Error('Kur geçmişi boş'); const v = { gun, kaynak: 'ECB (Frankfurter)', alindi: Date.now() }; writeJSON(f, v); return v; }));
+// Truncgil v4 today.json → GRA (gram altın) satış. Değer TL; 100–100000 dışı reddedilir.
+async function altinAl() { const r = await fetch('https://finans.truncgil.com/v4/today.json', { cache: 'no-store', signal: AbortSignal.timeout(8000) }); if (!r.ok) throw new Error('Truncgil ' + r.status);
+  const j = await r.json(), g = j && j.GRA, sat = g && +g.Selling; if (!(sat > 100 && sat < 100000)) throw new Error('Gram altın okunamadı');
+  return { gram: Math.round(sat * 100) / 100, alis: +g.Buying || null, kaynak: 'Truncgil', tarih: String(j.Update_Date || '') }; }
 function ecbAyikla(j) { const t = j && j.rates && +j.rates.TRY; if (!t) throw new Error('ECB kur listesi okunamadı'); const kur = { usd: { alis: null, satis: Math.round(t * 10000) / 10000 } };
   if (j.rates.EUR) kur.eur = { alis: null, satis: Math.round(t / j.rates.EUR * 10000) / 10000 }; if (j.rates.GBP) kur.gbp = { alis: null, satis: Math.round(t / j.rates.GBP * 10000) / 10000 };
   const d = String(j.date || ''); return { tarih: d.split('-').reverse().join('.'), kur, kaynak: 'ECB (Frankfurter)', alindi: Date.now() }; }

@@ -127,18 +127,33 @@ OA.cepAdim=function(k,yon){var a=OA.st(),v=(k=='c'?a.cep.c:a.cep.e)+yon*5;v=Math
  ORV.yenile()};
 // kur geçmişi: her gün görülen son değer birikir (grafikler gerçek veriden çizilir)
 OA.kurDeger=function(){var f=typeof fnS=='function'?fnS():{piyasa:{}},p=f.piyasa||{},t=p.tcmb&&p.tcmb.kur,o=p.otto&&p.otto.veri||{},n=function(x){x=+x;return isFinite(x)&&x>0?x:null};
- return{usd:n(t&&t.usd&&t.usd.satis)||n(o.usd),eur:n(t&&t.eur&&t.eur.satis)||n(o.eur),au:n(o.gram_altin),tarih:p.tcmb&&p.tcmb.tarih||'',otto:p.otto&&p.otto.ts||0}};
-OA.kurKaydet=function(){var a=OA.st(),v=OA.kurDeger(),k=OA.bugunKey(),e=a.kur[k]||{},ch=false;['usd','eur','au'].forEach(function(x){if(v[x]!=null&&e[x]!==v[x]){e[x]=v[x];ch=true}});if(ch){a.kur[k]=e;var ks=Object.keys(a.kur).sort();while(ks.length>90){delete a.kur[ks.shift()]}OA.kaydet()}return v};
+ return{usd:n(t&&t.usd&&t.usd.satis)||n(o.usd),eur:n(t&&t.eur&&t.eur.satis)||n(o.eur),au:n(p.tcmb&&p.tcmb.altin&&p.tcmb.altin.gram)||n(o.gram_altin),tarih:p.tcmb&&p.tcmb.tarih||'',otto:p.otto&&p.otto.ts||0}};
+OA.kurKaydet=function(){var a=OA.st(),v=OA.kurDeger(),k=OA.bugunKey(),e=a.kur[k]||{},ch=false;['usd','eur','au'].forEach(function(x){if(v[x]!=null&&e[x]!==v[x]){e[x]=v[x];ch=true}});if(ch){a.kur[k]=e;var ks=Object.keys(a.kur).sort();while(ks.length>400){delete a.kur[ks.shift()]}OA.kaydet()}return v};
 OA.kurSeri=function(x,n){var a=OA.st(),ks=Object.keys(a.kur).sort(),r=[];ks.forEach(function(k){if(a.kur[k][x]!=null)r.push(a.kur[k][x])});return r.slice(-n)};
 var _kurDeneme=0;
-OA.kurCek=function(){if(SMOKE()||typeof fnTcmb!='function')return;var p=fnS().piyasa;if(Date.now()-_kurDeneme<10*60e3)return;_kurDeneme=Date.now();try{var pr=fnTcmb(false);if(pr&&pr.then)pr.then(function(){if(area=='orv'&&pg=='anasayfa'&&!OA._yen){OA._yen=1;ORV.yenile();setTimeout(function(){OA._yen=0},3000)}},function(){})}catch(e){}};
-OA.kurKarti=function(k,gec){var v=OA.kurKaydet(),S1=OA.kurSeri(k.x,k.n),son=v[k.x],onc=S1.length>1?S1[S1.length-2]:null,deg=son!=null&&onc?(son-onc)/onc*100:null;
- var ic=OA.ico(k.grad,k.ikon,20,k.ist||''),kpl=deg==null?OA.kp('—','n'):OA.kp(OA.yuzde(deg),deg>=0?'g':'r');
+OA.kurGecmis=function(){var a=OA.st();if(SMOKE()||!window.API||!API.piyasa||!API.piyasa.gecmis||a.kurGecmisGun==OA.bugunKey())return;
+ API.piyasa.gecmis().then(function(r){if(!r||!r.ok||!r.v||!r.v.gun)return;var g=r.v.gun,n=0;Object.keys(g).forEach(function(d){var e=a.kur[d]||{};['usd','eur'].forEach(function(x){if(e[x]==null&&g[d][x]>0){e[x]=g[d][x];n++}});a.kur[d]=e});
+  var ks=Object.keys(a.kur).sort();while(ks.length>400){delete a.kur[ks.shift()]}a.kurGecmisGun=OA.bugunKey();OA.kaydet();if(n&&area=='orv'&&pg=='anasayfa')ORV.yenile()},function(){})};
+OA.kurCek=function(){OA.kurGecmis();if(SMOKE()||typeof fnTcmb!='function')return;var p=fnS().piyasa;if(Date.now()-_kurDeneme<10*60e3)return;_kurDeneme=Date.now();try{var pr=fnTcmb(false);if(pr&&pr.then)pr.then(function(){if(area=='orv'&&pg=='anasayfa'&&!OA._yen){OA._yen=1;ORV.yenile();setTimeout(function(){OA._yen=0},3000)}},function(){})}catch(e){}};
+// 0.9.3: Hafta / Ay / Yıl — değişim, aralığın başındaki son kayıtlı günle bugünkü değer arasında; grafik o aralığı çizer
+OA.KAR=[['h','Hafta',7],['a','Ay',30],['y','Yıl',365]];
+OA.gunKey=function(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+OA.kurAr=function(x){var a=OA.st();return (a.kurAr&&a.kurAr[x])||'a'};
+OA.kurArSec=function(x,k){var a=OA.st();a.kurAr=a.kurAr||{};a.kurAr[x]=k;OA.kaydet();ORV.yenile()};
+OA.kurDegisim=function(x,gun){var a=OA.st(),ks=Object.keys(a.kur).filter(function(k){return a.kur[k][x]!=null}).sort();if(ks.length<2)return{yok:true,n:ks.length};
+ var d=new Date();d.setDate(d.getDate()-gun);var hedef=OA.gunKey(d),bas=null;ks.forEach(function(k){if(k<=hedef)bas=k});
+ var son=a.kur[ks[ks.length-1]][x];if(!bas)return{yok:true,n:ks.length,ilk:ks[0]};var v0=a.kur[bas][x];return{p:(son-v0)/v0*100,bas:bas,v0:v0}};
+OA.kurSeriGun=function(x,gun){var a=OA.st(),d=new Date();d.setDate(d.getDate()-gun);var h=OA.gunKey(d),ks=Object.keys(a.kur).sort(),r=[];ks.forEach(function(k){if(k>=h&&a.kur[k][x]!=null)r.push(a.kur[k][x])});return r};
+OA.kurCizgi=function(s,renk,id){var p=OA.seri(s,300,130);return '<svg class="oa-chart" viewBox="0 0 300 130" preserveAspectRatio="none" aria-hidden="true" style="height:130px"><defs><linearGradient id="'+id+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+renk+'" stop-opacity=".35"/><stop offset="1" stop-color="'+renk+'" stop-opacity="0"/></linearGradient></defs><path class="oa-afill" d="'+OA.alan(p,300,130)+'" fill="url(#'+id+')"/><path class="oa-draw" d="'+OA.yol(p)+'" fill="none" stroke="'+renk+'" stroke-width="2.2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>'};
+OA.kurKarti=function(k,gec){var v=OA.kurKaydet(),son=v[k.x],ar=OA.kurAr(k.x),A=OA.KAR.filter(function(z){return z[0]==ar})[0]||OA.KAR[1],S1=OA.kurSeriGun(k.x,A[2]),dg=OA.kurDegisim(k.x,A[2]);
+ var ic=OA.ico(k.grad,k.ikon,20,k.ist||''),kpl=dg.yok?OA.kp('—','n'):OA.kp(OA.yuzde(dg.p),dg.p>=0?'g':'r');
  var fiyat=son!=null?'<b class="oa-num">'+OA.say(son,'dec2',OA.sayi(son,2)+' ₺')+'</b>':'<b class="oa-num" style="color:var(--yazi3)">—</b>',ch;
+ var seg='<div class="oa-kseg" role="group" aria-label="'+esc(k.ad)+' değişim aralığı">'+OA.KAR.map(function(z){var d=OA.kurDegisim(k.x,z[2]),on=z[0]==ar;return '<button type="button" class="oa-ksb'+(on?' on':'')+'" aria-pressed="'+on+'" onclick="OA.kurArSec(\''+k.x+'\',\''+z[0]+'\')"><span>'+z[1]+'</span><b class="'+(d.yok?'n':d.p>=0?'g':'r')+'">'+(d.yok?'—':OA.yuzde(d.p))+'</b></button>'}).join('')+'</div>';
  if(S1.length<2)ch=OA.bos('grafik','Veri bekleniyor','Geçmiş her gün birikir ('+S1.length+'/2 gün). '+(son==null?'Kaynak bağlanınca değer burada görünür.':''),110);
- else ch=k.ciz(S1);
+ else ch=S1.length>60&&k.cizUzun?k.cizUzun(S1):k.ciz(S1);
+ var not=dg.yok?'<span class="oa-sub">'+A[1]+'lık değişim için geçmiş birikiyor'+(dg.ilk?' (ilk kayıt '+esc(OA.gunKisa?OA.gunKisa(dg.ilk):dg.ilk)+')':'')+'.</span>':'<span class="oa-sub">'+esc(OA.gunKisa?OA.gunKisa(dg.bas):dg.bas)+' · '+OA.sayi(dg.v0,2)+' ₺ → bugün '+OA.sayi(son!=null?son:dg.v0,2)+' ₺</span>';
  var tah='<div class="oa-fc"><span>Tahmin · 7 gün</span><span class="oa-pbar" title="Otto tahmin üretince görünür"></span><span class="oa-pr" style="white-space:nowrap;color:var(--yazi3)">Otto bekleniyor</span></div>';
- return OA.kart(OA.hd(ic,k.ad,kpl),'<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">'+fiyat+'<span class="oa-sub">'+k.alt+'</span></div>'+ch+tah+
+ return OA.kart(OA.hd(ic,k.ad,kpl),'<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">'+fiyat+'<span class="oa-sub">'+A[1]+' · '+k.tip+'</span></div>'+seg+ch+not+tah+
   '<div class="oa-src"><span>Kaynak: '+k.kaynak+' (ücretsiz)</span><span class="oa-srcai">'+OA.imgAv('sage','oa-av','width:20px;height:20px')+OA.imgAv('otto','oa-av','width:20px;height:20px')+'Sage araştırır · Otto tahmin eder</span></div>'+
   '<span class="oa-isb"><span class="oa-isbd"></span>İsabet oranı: veri yok · günde 1 kez, 00:00</span>',gec)};
 OA.kurNot='Kaynak: TCMB / Truncgil (ücretsiz) · Sage araştırır · Otto tahmin eder';
@@ -148,7 +163,7 @@ OA.anasayfa=function(){
  h+=OA.baslik('Anasayfa',mAd+' · aylık özet <span class="oa-pill '+(bos0?'o':'g')+'"><span class="oa-sw" style="background:'+(bos0?'#f5a524':'#3ecf5a')+'"></span>'+(bos0?'Veri bekleniyor · Otto’ya kayıt girilince dolar':'Gerçek veri · Otto kayıtları')+'</span>',
   '<span style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--yazi2)"><span class="oa-live"></span>Piyasa: '+(kv.tarih?'TCMB '+esc(kv.tarih):'veri bekleniyor')+'</span>');
  // --- Satır 1 ---
- h+='<div class="oa-grid5">';
+ h+='<div class="oa-grid5 oa-grid6">';
  // Aylık gelir
  var gv=F.T.map(function(x){return x.gelir}),gel;
  if(bos0)gel=OA.bos('grafik','Veri bekleniyor','Gelir kaydı girilince 6 aylık grafik çizilir.',120);
@@ -178,25 +193,7 @@ OA.anasayfa=function(){
    (uy?'<div class="oa-uy">'+OA.imgAv('otto','oa-av','width:22px;height:22px')+'<span>'+esc(uy)+'</span></div>':''),gec+=.06)}
  h+=cepKart('c',C.c,'Çağlar','linear-gradient(160deg,#ffd27a,#ff7a2f)','para',true);
  h+=cepKart('e',C.e,'Eşim','linear-gradient(160deg,#ff9ad4,#e14fa0)','kalp',false);
- h+='</div>';
- // --- Satır 2: kurlar ---
- h+='<div class="oa-grid3">';
- h+=OA.kurKarti({x:'au',n:14,ad:'Gram Altın',alt:'14 gün · mum grafik',kaynak:'Truncgil',grad:'linear-gradient(160deg,#fff1b8,#e0a32e)',ikon:'para',
-  ciz:function(s){var W=300,H=130,mn=Math.min.apply(null,s),mx=Math.max.apply(null,s),r=(mx-mn)||1,y=function(v){return H-6-((v-mn)/r)*(H-12)},n=s.length-1,sw=W/n,bw=Math.min(14,sw*.55),fi='',up='',dn='';
-   for(var i=1;i<s.length;i++){var o=s[i-1],c=s[i],hi=Math.max(o,c),lo=Math.min(o,c),x=(i-1)*sw+sw/2;fi+='M'+fix(x,1)+' '+fix(y(hi)-3,1)+' V'+fix(y(lo)+3,1)+' ';var y1=y(hi),y2=Math.max(y(lo),y1+2),rc='M'+fix(x-bw/2,1)+' '+fix(y1,1)+' H'+fix(x+bw/2,1)+' V'+fix(y2,1)+' H'+fix(x-bw/2,1)+' Z ';if(c>=o)up+=rc;else dn+=rc}
-   return '<svg class="oa-chart" viewBox="0 0 300 130" preserveAspectRatio="none" aria-hidden="true" style="height:130px"><g class="oa-bars"><path d="'+fi+'" stroke="rgba(255,255,255,.45)" stroke-width="1.2" vector-effect="non-scaling-stroke" fill="none"/><path d="'+up+'" fill="#5ee07a"/><path d="'+dn+'" fill="#f87171"/></g></svg>'}},.32);
- h+=OA.kurKarti({x:'usd',n:30,ad:'Dolar · USD/TRY',alt:'30 gün · çizgi',kaynak:'TCMB',grad:'linear-gradient(160deg,#9be7b6,#15803d)',ikon:'para',
-  ciz:function(s){var p=OA.seri(s,300,130);return '<svg class="oa-chart" viewBox="0 0 300 130" preserveAspectRatio="none" aria-hidden="true" style="height:130px"><defs><linearGradient id="oaGUsd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#38d6f0" stop-opacity=".35"/><stop offset="1" stop-color="#38d6f0" stop-opacity="0"/></linearGradient></defs><path class="oa-afill" d="'+OA.alan(p,300,130)+'" fill="url(#oaGUsd)"/><path class="oa-draw" d="'+OA.yol(p)+'" fill="none" stroke="#5fe0f5" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>'}},.38);
- h+=OA.kurKarti({x:'eur',n:20,ad:'Euro · EUR/TRY',alt:'20 gün · günlük değişim',kaynak:'TCMB',grad:'linear-gradient(160deg,#a5b4fc,#4338ca)',ikon:'para',
-  ciz:function(s){var W=300,H=130,ch=[];for(var i=1;i<s.length;i++)ch.push(s[i]-s[i-1]);var mx=Math.max.apply(null,ch.map(Math.abs))||1,n=ch.length,sw=W/n,bw=sw*.6,up='',dn='';ch.forEach(function(v,i){var x=i*sw+(sw-bw)/2,h=Math.max(2,Math.abs(v)/mx*58),r=v>=0?'M'+fix(x,1)+' 65 V'+fix(65-h,1)+' H'+fix(x+bw,1)+' V65 Z ':'M'+fix(x,1)+' 65 V'+fix(65+h,1)+' H'+fix(x+bw,1)+' V65 Z ';if(v>=0)up+=r;else dn+=r});
-   var p=OA.seri(s.slice(1),W,H,Math.min.apply(null,s),Math.max.apply(null,s));return '<svg class="oa-chart" viewBox="0 0 300 130" preserveAspectRatio="none" aria-hidden="true" style="height:130px"><path d="M 0 65 H 300" stroke="rgba(255,255,255,.18)" stroke-width="1" vector-effect="non-scaling-stroke"/><g class="oa-bars2"><path d="'+up+'" fill="#5ee07a"/><path d="'+dn+'" fill="#f87171"/></g><path class="oa-draw" d="'+OA.yol(p)+'" fill="none" stroke="#a5b4fc" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>'}},.44);
- h+='</div>';
- // --- Satır 3 ---
- var mx=Math.max.apply(null,F.T.map(function(x){return Math.max(x.gelir,x.gider)}))||1,nv=F.T.map(function(x){return Math.max(0,x.net)}),sc;
- if(bos0)sc=OA.bos('grafik','Veri bekleniyor','Gelir ve gider kaydı girilince 6 aylık sütunlar çizilir.',150);
- else{var cg=OA.cubuk(F.T.map(function(x){return x.gelir}),600,150,mx,.1,.34),cb=OA.cubuk(F.T.map(function(x){return x.gider}),600,150,mx,.5,.34),np=F.T.map(function(x,i){return[i*100+50,140-6-Math.max(0,x.net)/mx*128]});
-  sc='<svg class="oa-chart" viewBox="0 0 600 150" preserveAspectRatio="none" aria-hidden="true" style="height:150px"><path d="M 0 140 H 600" stroke="rgba(255,255,255,.12)" stroke-width="1" vector-effect="non-scaling-stroke"/><g class="oa-bars"><path d="'+cg+'" fill="#3ecf5a"/><path d="'+cb+'" fill="#ff8a3d"/></g><path class="oa-draw" d="'+OA.yol(np)+'" fill="none" stroke="#f2f2f3" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg><span class="oa-ax" style="padding:0 4%">'+F.A.map(function(x){return '<span>'+AYK[+x.slice(5)-1]+'</span>'}).join('')+'</span>'}
- var sw=function(r,t){return '<span style="display:flex;align-items:center;gap:6px"><span class="oa-sw" style="background:'+r+'"></span>'+t+'</span>'};
+ // Ay özeti (0.9.3): Beklenen Gider'in altında, cep harçlıklarının yanında
  var ozet=[];
  if(bos0)ozet.push('Veri bekleniyor: gelir ve gider kayıtları girilince özetim burada olur.');
  else{ozet.push('Giderler geçen aya göre <b style="color:'+(dGi!=null&&dGi<=0?'#6be585':'#fca5a5')+'">'+(dGi==null?'karşılaştırılamıyor':(dGi<=0?'%'+Math.abs(Math.round(dGi))+' azaldı':'%'+Math.round(dGi)+' arttı'))+'</b>.');
@@ -204,14 +201,35 @@ OA.anasayfa=function(){
   ozet.push('Beklenen ödemelerden sonra kalan: <b>'+OA.tl(C.kalan)+'</b>.');
   ozet.push('Cep harçlıkları kalanın <b>%'+C.toplam+'</b>’i; birikime <b>%'+Math.max(0,100-C.toplam)+'</b> kalıyor.')}
  ozet.push('Kur tahminlerim günde 1 kez (00:00) yenilenir, 6 ay saklanır; gerçekleşenle karşılaştırıp kendimi düzeltirim.');
- h+='<div class="oa-grid21">'+OA.kart(OA.hd(OA.ico('linear-gradient(160deg,#5fe0f5,#3b82f6)','grafik'),'Gelir · Gider · Net (6 ay)','<span style="display:flex;gap:12px;font-size:11.5px;color:#c9c9cf">'+sw('#3ecf5a','Gelir')+sw('#ff8a3d','Gider')+sw('#f2f2f3','Net')+'</span>'),sc,.5)+
-  OA.kart(OA.hd(OA.imgAv('otto','oa-av'),'Otto’nun özeti',OA.kp('Finans U.','n')),'<ul class="oa-lis">'+ozet.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul><span style="font-size:11px;color:var(--yazi3);margin-top:auto">Kur tahminleri bilgi amaçlıdır, yatırım tavsiyesi değildir.</span>',.56)+'</div>';
+ h+=OA.kart(OA.hd(OA.imgAv('otto','oa-av'),'Otto’nun özeti',OA.kp('Finans U.','n')),'<ul class="oa-lis">'+ozet.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul><span style="font-size:11px;color:var(--yazi3);margin-top:auto">Kur tahminleri bilgi amaçlıdır, yatırım tavsiyesi değildir.</span>',gec+=.06);
+ h+='</div>';
+ // --- Satır 2: kurlar ---
+ h+='<div class="oa-grid3">';
+ h+=OA.kurKarti({x:'au',ad:'Gram Altın',tip:'mum grafik',cizUzun:function(s){return OA.kurCizgi(s,'#f5c542','oaGAu')},kaynak:'Truncgil',grad:'linear-gradient(160deg,#fff1b8,#e0a32e)',ikon:'para',
+  ciz:function(s){var W=300,H=130,mn=Math.min.apply(null,s),mx=Math.max.apply(null,s),r=(mx-mn)||1,y=function(v){return H-6-((v-mn)/r)*(H-12)},n=s.length-1,sw=W/n,bw=Math.min(14,sw*.55),fi='',up='',dn='';
+   for(var i=1;i<s.length;i++){var o=s[i-1],c=s[i],hi=Math.max(o,c),lo=Math.min(o,c),x=(i-1)*sw+sw/2;fi+='M'+fix(x,1)+' '+fix(y(hi)-3,1)+' V'+fix(y(lo)+3,1)+' ';var y1=y(hi),y2=Math.max(y(lo),y1+2),rc='M'+fix(x-bw/2,1)+' '+fix(y1,1)+' H'+fix(x+bw/2,1)+' V'+fix(y2,1)+' H'+fix(x-bw/2,1)+' Z ';if(c>=o)up+=rc;else dn+=rc}
+   return '<svg class="oa-chart" viewBox="0 0 300 130" preserveAspectRatio="none" aria-hidden="true" style="height:130px"><g class="oa-bars"><path d="'+fi+'" stroke="rgba(255,255,255,.45)" stroke-width="1.2" vector-effect="non-scaling-stroke" fill="none"/><path d="'+up+'" fill="#5ee07a"/><path d="'+dn+'" fill="#f87171"/></g></svg>'}},.32);
+ h+=OA.kurKarti({x:'usd',ad:'Dolar · USD/TRY',tip:'çizgi',kaynak:'TCMB',grad:'linear-gradient(160deg,#9be7b6,#15803d)',ikon:'para',
+  ciz:function(s){var p=OA.seri(s,300,130);return '<svg class="oa-chart" viewBox="0 0 300 130" preserveAspectRatio="none" aria-hidden="true" style="height:130px"><defs><linearGradient id="oaGUsd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#38d6f0" stop-opacity=".35"/><stop offset="1" stop-color="#38d6f0" stop-opacity="0"/></linearGradient></defs><path class="oa-afill" d="'+OA.alan(p,300,130)+'" fill="url(#oaGUsd)"/><path class="oa-draw" d="'+OA.yol(p)+'" fill="none" stroke="#5fe0f5" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>'}},.38);
+ h+=OA.kurKarti({x:'eur',ad:'Euro · EUR/TRY',tip:'çizgi',kaynak:'TCMB',grad:'linear-gradient(160deg,#a5b4fc,#4338ca)',ikon:'para',
+  ciz:function(s){var W=300,H=130,mn=Math.min.apply(null,s),mx=Math.max.apply(null,s),p=OA.seri(s,W,H),son=p[p.length-1];
+   return '<svg class="oa-chart" viewBox="0 0 300 130" preserveAspectRatio="none" aria-hidden="true" style="height:130px"><defs><linearGradient id="oaGEur" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#818cf8" stop-opacity=".38"/><stop offset="1" stop-color="#818cf8" stop-opacity="0"/></linearGradient></defs><path class="oa-afill" d="'+OA.alan(p,W,H)+'" fill="url(#oaGEur)"/><path class="oa-draw" d="'+OA.yol(p)+'" fill="none" stroke="#a5b4fc" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/></svg>'+
+    '<span class="oa-ax"><span>En düşük '+OA.sayi(mn,2)+' ₺</span><span>En yüksek '+OA.sayi(mx,2)+' ₺</span></span>'}},.44);
+ h+='</div>';
+ // --- Satır 3 ---
+ var mx=Math.max.apply(null,F.T.map(function(x){return Math.max(x.gelir,x.gider)}))||1,nv=F.T.map(function(x){return Math.max(0,x.net)}),sc;
+ if(bos0)sc=OA.bos('grafik','Veri bekleniyor','Gelir ve gider kaydı girilince 6 aylık sütunlar çizilir.',150);
+ else{var cg=OA.cubuk(F.T.map(function(x){return x.gelir}),600,150,mx,.1,.34),cb=OA.cubuk(F.T.map(function(x){return x.gider}),600,150,mx,.5,.34),np=F.T.map(function(x,i){return[i*100+50,140-6-Math.max(0,x.net)/mx*128]});
+  sc='<svg class="oa-chart" viewBox="0 0 600 150" preserveAspectRatio="none" aria-hidden="true" style="height:150px"><path d="M 0 140 H 600" stroke="rgba(255,255,255,.12)" stroke-width="1" vector-effect="non-scaling-stroke"/><g class="oa-bars"><path d="'+cg+'" fill="#3ecf5a"/><path d="'+cb+'" fill="#ff8a3d"/></g><path class="oa-draw" d="'+OA.yol(np)+'" fill="none" stroke="#f2f2f3" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg><span class="oa-ax" style="padding:0 4%">'+F.A.map(function(x){return '<span>'+AYK[+x.slice(5)-1]+'</span>'}).join('')+'</span>'}
+ var sw=function(r,t){return '<span style="display:flex;align-items:center;gap:6px"><span class="oa-sw" style="background:'+r+'"></span>'+t+'</span>'};
+ h+=OA.kart(OA.hd(OA.ico('linear-gradient(160deg,#5fe0f5,#3b82f6)','grafik'),'Gelir · Gider · Net (6 ay)','<span style="display:flex;gap:12px;font-size:11.5px;color:#c9c9cf">'+sw('#3ecf5a','Gelir')+sw('#ff8a3d','Gider')+sw('#f2f2f3','Net')+'</span>'),sc,.5);
  h+='</div>';return h};
 OA.fnEkle=function(t){if(typeof fnDlg=='function')fnDlg(t);else toast('Finans kaydı bu sürümde kullanılamıyor')};
 OA.odemeEkle=function(){var b=OA.bugunKey();OA.dlg('<h3>Beklenen ödeme ekle</h3><label class="oa-zl">Ödeme adı<input class="oa-in" id="oaOa" placeholder="ör. Kira"></label><label class="oa-zl">Tutar (₺)<input class="oa-in" id="oaOt" type="number" min="0" step="0.01"></label><label class="oa-zl">Tarih<input class="oa-in" id="oaOd" type="date" value="'+b+'"></label><div class="acts"><button type="button" class="oa-btn ghost" onclick="OA.dlgKapat()">Vazgeç</button><button type="button" class="oa-btn" onclick="OA.odemeKaydet()">Ekle</button></div>')};
 OA.odemeKaydet=function(){var ad=document.getElementById('oaOa').value.trim(),t=Math.round((+String(document.getElementById('oaOt').value).replace(',','.')||0)*100)/100,tr=document.getElementById('oaOd').value;if(!ad||!(t>0)){toast('Ad ve tutarı yaz');return}OA.st().odeme.push({id:uid(),ad:ad.slice(0,40),tutar:t,tarih:/^\d{4}-\d{2}-\d{2}$/.test(tr)?tr:OA.bugunKey(),odendi:false});OA.kaydet();OA.dlgKapat();toast('Beklenen ödeme eklendi');ORV.yenile()};
 OA.odendi=function(id){var o=OA.st().odeme.filter(function(x){return x.id==id})[0];if(!o||o.odendi)return;o.odendi=true;if(typeof fnKaydet=='function')fnKaydet({tur:'gider',kim:'cagla',tutar:o.tutar,kalem:o.ad,tarih:OA.bugunKey(),not:'Beklenen ödeme'});OA.kaydet();toast(o.ad+' ödendi olarak işaretlendi · gidere yazıldı');ORV.yenile()};
 OA.harcamaEkle=function(k){var ad=k=='c'?'Çağlar':'Eşi';OA.dlg('<h3>Cep harçlığı harcaması · '+ad+'</h3><label class="oa-zl">Tutar (₺)<input class="oa-in" id="oaHt" type="number" min="0" step="0.01"></label><label class="oa-zl">Açıklama<input class="oa-in" id="oaHa" placeholder="isteğe bağlı"></label><div class="acts"><button type="button" class="oa-btn ghost" onclick="OA.dlgKapat()">Vazgeç</button><button type="button" class="oa-btn" onclick="OA.harcamaKaydet(\''+k+'\')">Kaydet</button></div>')};
-OA.harcamaKaydet=function(k){var t=document.getElementById('oaHt').value,n=document.getElementById('oaHa').value.trim();var r=typeof fnKaydet=='function'?fnKaydet({tur:'gider',kim:'cagla',tutar:t,kalem:'Cep harçlığı · '+(k=='c'?'Çağlar':'Eşi'),not:n}):null;if(!r)return;r.hk=k;OA.kaydet();OA.dlgKapat();toast('Harcama kaydedildi: '+OA.tl(r.tutar));ORV.yenile()};
+OA.harcamaKaydet=function(k){var t=document.getElementById('oaHt').value,n=document.getElementById('oaHa').value.trim();var r=typeof fnKaydet=='function'?fnKaydet({tur:'gider',kim:'cagla',tutar:t,kalem:'Cep harçlığı · '+(k=='c'?'Çağlar':'Eşi'),not:n}):null;if(!r)return;r.hk=k;var a=OA.st(),bk=a.bak&&a.bak[k=='c'?'cagla':'kubra'];if(bk){bk.t=Math.round((bk.t-r.tutar)*100)/100;bk.ts=Date.now();r.bakDus=1}
+ OA.kaydet();OA.dlgKapat();toast('Harcama kaydedildi: '+OA.tl(r.tutar)+(bk?' · güncel bakiyeden düşüldü':' · güncel bakiye bildirilmedi'));ORV.yenile()};
 ORV.sayfa('anasayfa',{ciz:function(){OA.kurCek();return OA.anasayfa()},sonra:function(){OA.sayAnim(document.getElementById('oaAna'))},baslik:'Anasayfa'});
 })();

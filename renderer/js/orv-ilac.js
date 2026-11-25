@@ -1,6 +1,6 @@
 // ========================================================================
 // GÜNLÜK İLAÇ PLANI (0.8.3) — Ailem › İlaç Planı. Veri Sağlık sayfasıyla ortak: S.orvA.ilac / S.orvA.ilacAl.
-// Bugünün saat dilimlerine göre listesi, "Alındı" işareti, gecikme uyarısı, son 7 gün uyum tablosu, ekle/düzelt/kaldır.
+// Bugünün saat dilimlerine göre listesi, "Alındı" işareti (0.9.3: gecikme işareti yok, yalnız alındı/alınmadı), son 7 gün uyum tablosu, ekle/düzelt/kaldır.
 // Tanı koymaz, doz önermez; yalnız kullanıcının girdiği planı izler.
 // ========================================================================
 var IP={ui:{duz:'',er:'',ok:''}};
@@ -22,9 +22,9 @@ IP.sayfa=function(){var a=OA.st(),U=IP.ui,bk=OA.bugunKey(),L=IP.bugunL(),c=IP.sa
  if(U.er)h+='<div class="ob-uy" role="alert">'+esc(U.er)+'</div>';if(U.ok)h+='<span class="ob-ok" role="status">'+esc(U.ok)+'</span>';
  // Bugün: saat dilimlerine göre
  var gun=IP.DILIM.map(function(D){var dl=L.filter(function(i){return IP.dilim(i.saat)==D[0]});if(!dl.length)return '';
-  return '<div class="ip-dl"><div class="ip-dh">'+OA.ico(D[4],D[5],15)+'<b>'+D[1]+'</b><span class="oa-sub">'+D[2]+'–'+D[3]+'</span></div>'+dl.map(function(i){var t=a.ilacAl[bk+'|'+i.id],gec=!t&&IP.dk(i.saat)+30<sdk;
-   return '<div class="ip-sr'+(t?' ok':gec?' gec':'')+'"><span class="ip-st">'+esc(i.saat)+'</span><span class="ip-ad"><b>'+esc(i.ad)+'</b><span class="oa-sub">'+esc(i.miktar)+(i.actok?' · '+esc((IP.ACTOK.filter(function(x){return x[0]==i.actok})[0]||['',''])[1]):'')+(i.not?' · '+esc(i.not):'')+'</span></span>'+
-    '<button type="button" class="oa-pst2'+(t?' ok':'')+'" onclick="OA.ilacTik(\''+jq(i.id)+'\')" aria-pressed="'+(t?'true':'false')+'">'+(t?'Alındı '+OA.saat(t):gec?'Gecikti · Alındı':'Bekliyor · Alındı')+'</button></div>'}).join('')+'</div>'}).join('');
+  return '<div class="ip-dl"><div class="ip-dh">'+OA.ico(D[4],D[5],15)+'<b>'+D[1]+'</b><span class="oa-sub">'+D[2]+'–'+D[3]+'</span></div>'+dl.map(function(i){var t=a.ilacAl[bk+'|'+i.id];
+   return '<div class="ip-sr'+(t?' ok':'')+'"><span class="ip-st">'+esc(i.saat)+'</span><span class="ip-ad"><b>'+esc(i.ad)+'</b><span class="oa-sub">'+esc(i.miktar)+(i.actok?' · '+esc((IP.ACTOK.filter(function(x){return x[0]==i.actok})[0]||['',''])[1]):'')+(i.not?' · '+esc(i.not):'')+'</span></span>'+
+    '<button type="button" class="oa-pst2'+(t?' ok':'')+'" onclick="OA.ilacTik(\''+jq(i.id)+'\')" aria-pressed="'+(t?'true':'false')+'">'+(t?'Alındı '+OA.saat(t):'Alınmadı')+'</button></div>'}).join('')+'</div>'}).join('');
  var sol=OA.hd(OA.ico('linear-gradient(160deg,#c4b5fd,#7c3aed)','nabiz'),'Bugün',c.top?'<span class="ip-bar" aria-hidden="true"><i style="width:'+Math.round(c.al/c.top*100)+'%"></i></span>':'')+(L.length?gun:OA.bos('nabiz',IP.liste().length?'Bugün için ilaç yok':'Henüz ilaç planı yok',IP.liste().length?'Plandaki ilaçlar bugün tekrarlanmıyor.':'Sağdaki formdan ilacı, miktarı ve saati bir kez gir.',150));
  // Form (ekle / düzelt)
  var e=U.duz?a.ilac.filter(function(x){return x.id==U.duz})[0]:null,v=e||{ad:'',miktar:'',saat:'08:00',tekrar:'gun',actok:'',not:''},

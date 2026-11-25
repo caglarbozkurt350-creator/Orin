@@ -158,7 +158,7 @@ function fark(c: number, p: number, harcama = false) {
 }
 const RENK = ['#f5a524', '#ff5b37', '#3b82f6', '#8b5cf6', '#14b8a6', '#ec4899', '#8a8a92'];
 export function butceHtml(o: Ozet, gecen: boolean) {
-  const A = R.ana, f = o.aile?.fin, bos = { ay: '', gelir: 0, gider: 0, kat: {} as Record<string, number>, hg: [0, 0, 0, 0, 0], hc: [0, 0, 0, 0, 0] };
+  const A = R.ana, f = o.aile?.fin, bos = { ay: '', gelir: 0, gider: 0, kat: {} as Record<string, number>, hg: [0, 0, 0, 0, 0], hc: [0, 0, 0, 0, 0], kd: 0, kdg: 0 };
   const B = (gecen ? f?.once : f?.bu) || bos, O = gecen ? null : f?.once || null;
   const ay = B.ay ? new Date(+B.ay.slice(0, 4), +B.ay.slice(5, 7) - 1, 1) : (() => { const d = new Date(); d.setDate(1); if (gecen) d.setMonth(d.getMonth() - 1); return d; })();
   const onAd = O ? AY[(ay.getMonth() + 11) % 12] : '', kalan = B.gelir - B.gider;

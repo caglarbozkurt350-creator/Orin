@@ -14,10 +14,18 @@ window.__bordroTest=function(){var R=[];
    BR.duzenle('sgkOdenek');var e=document.createElement('input');e.id='brIn0';e.value='2.500,50';document.body.insertBefore(e,document.body.firstChild);var ok=BR.kaydet();e.remove();
    var m=S.bordro.aylar[BR.bul('2030-02')],h=BR.sayfa();return ok&&m.v.sgkOdenek==2500.5&&BR.elToplam(m)==4000.5&&/Net \+ SGK/.test(h)&&/4\.000,50/.test(h)});
   t('Bordro: Net Ödenen Aile Bütçesine eklenir (gelir + Çağlar bakiyesi), düzeltilince fark işlenir, eski ay otomatik eklenmez',function(){var a=OA.st(),f=fnS(),k0=f.kayit.slice(),b0=a.bak.cagla,ok;
-   try{a.bak.cagla={t:1000,ts:1};var m=S.bordro.aylar[BR.bul('2030-02')];delete m.butce;var oto=BR.butceEkle(m);var el=BR.butceEkle(m,true);
+   var ai0=a.bak.aile;try{delete a.bak.aile;a.bak.cagla={t:1000,ts:1};var m=S.bordro.aylar[BR.bul('2030-02')];delete m.butce;var oto=BR.butceEkle(m);var el=BR.butceEkle(m,true);
     var r=f.kayit.filter(function(x){return x.id=='br2030-02'})[0];var a1=a.bak.cagla.t,t1=r&&r.tutar;m.v.net=1600;BR.butceEkle(m);
     ok=!oto&&el&&r&&r.tur=='gelir'&&t1==1500&&a1==2500&&r.tutar==1600&&a.bak.cagla.t==2600&&!BR.butceEkle(m,true)&&/Aile Bütçesine eklendi/.test(BR.sayfa());m.v.net=1500;delete m.butce}
-   finally{f.kayit=k0;if(b0)a.bak.cagla=b0;else delete a.bak.cagla}return ok});
+   finally{f.kayit=k0;if(b0)a.bak.cagla=b0;else delete a.bak.cagla;if(ai0)a.bak.aile=ai0}return ok});
+  t('Bütçe: ortak kasa (Aile Bütçesi) varsa maaş ona eklenir; Kübra %0 iken kartı Aile Bütçesinden, Çağlar kartı bakiyesinden',function(){var a=OA.st(),f=fnS(),k0=f.kayit.slice(),B0=JSON.stringify(a.bak),c0=JSON.stringify(a.cep),ok;
+   try{a.bak.aile={t:24090,ts:1};a.bak.cagla={t:224,ts:1};a.cep.e=0;a.cep.mod='bakiye';var m=S.bordro.aylar[BR.bul('2030-02')];delete m.butce;BR.butceEkle(m,true);
+    ORV.git('anasayfa');var h=document.getElementById('ct').innerHTML;ok=a.bak.aile.t==25590&&a.bak.cagla.t==224&&m.butce.k=='aile'&&/Harcamaları Aile Bütçesinden düşer|harcamaları Aile Bütçesinden düşer/.test(h)&&/224/.test(h)&&!/oa-stepr/.test(h)&&OA.aileden('e')&&!OA.aileden('c');delete m.butce}
+   finally{f.kayit=k0;a.bak=JSON.parse(B0);a.cep=JSON.parse(c0)}return ok});
+  t('İçe Aktar: bakiye + cep ayarı + kayıtlar uygulanır, aynı kayıt iki kez eklenmez',function(){var a=OA.st(),f=fnS(),k0=f.kayit.slice(),B0=JSON.stringify(a.bak),c0=JSON.stringify(a.cep),bb=a.butceBas,h0=a.hareket.length,ok;
+   try{var o={bak:{aile:24090,cagla:224.66,kubra:0},cep:{e:0,mod:'bakiye'},butceBas:'2026-10',kayit:[{id:'tst-1',tur:'gider',kalem:'Market',tutar:120,tarih:'2026-11-25'},{id:'tst-2',tur:'gelir',kalem:'SGK',tutar:56575.32,tarih:'2026-11-16'}]};
+    var n=OA.iceUygula(o),n2=OA.iceUygula({kayit:o.kayit});ok=n.b==3&&n.k==2&&n2.k==0&&n2.a==2&&a.bak.aile.t==24090&&a.bak.cagla.t==224.66&&a.cep.e===0&&a.cep.mod=='bakiye'&&a.butceBas=='2026-10'&&f.kayit.filter(function(x){return x.id=='tst-2'})[0].tutar==56575.32}
+   finally{f.kayit=k0;a.bak=JSON.parse(B0);a.cep=JSON.parse(c0);if(bb)a.butceBas=bb;else delete a.butceBas;a.hareket.splice(h0)}return ok});
   t('Bordro: içe aktarma penceresi son klasörde açılır, seçilen dosyanın klasörü kaydedilir',function(){var A0=API,ist=null,o;S.bordro.yol='C:\\Eski';
    API=Object.assign({},A0,{bordro:{sec:function(y){ist=y;return{then:function(f){f({klasor:'C:\\Bordro\\2030',ad:'b.json',metin:JSON.stringify(ornek)})}}}}});
    try{BR.iceAl();o=ist=='C:\\Eski'&&S.bordro.yol=='C:\\Bordro\\2030'&&/b\.json/.test(BR.ui.ok)}finally{API=A0}return o});

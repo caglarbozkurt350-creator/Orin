@@ -269,6 +269,10 @@ let YZ_ACIK = null;
 function yzAcik() { if (YZ_ACIK === null) { const c = readJSON(YZ_FILE(), null); YZ_ACIK = c && typeof c.acik === 'boolean' ? c.acik : !!SMOKE; } return YZ_ACIK; }
 const yzGerek = fn => (a, e) => { if (!yzAcik()) throw new Error('Yapay zekâ kapalı (Merkez › Ayarlar › Yapay zekâ)'); return fn(a, e); };
 // 0.8.3: Bordro ilk içe aktarma — yalnız Belgeler\Orin\Bordro-gecici\bordro.json okunur (smoke'ta okunmaz)
+// 0.9.7: Belgeler\Orin\İçe Aktar\*.json — bakiye, cep harçlığı ayarı ve banka/harcama kayıtları bir kez işlenir, sonra İşlendi'ye taşınır
+const ICE = () => path.join(app.getPath('documents'), 'Orin', 'İçe Aktar');
+ipcMain.handle('iceaktar:liste', () => { if (SMOKE) return []; try { const d = ICE(); if (!fs.existsSync(d)) return []; return fs.readdirSync(d).filter(f => /\.json$/i.test(f)).map(f => { try { return { ad: f, veri: JSON.parse(fs.readFileSync(path.join(d, f), 'utf8')) }; } catch (e) { return { ad: f, hata: e.message }; } }); } catch (e) { return []; } });
+ipcMain.handle('iceaktar:tamam', (e, ad) => { try { if (!/^[^\\/]+\.json$/i.test(ad || '')) return false; const d = ICE(), h = path.join(d, 'İşlendi'); fs.mkdirSync(h, { recursive: true }); fs.renameSync(path.join(d, ad), path.join(h, new Date().toISOString().slice(0, 10) + ' ' + ad)); return true; } catch (x) { return false; } });
 // 0.9.6: Bordro içe aktarma penceresi son kullanılan klasörde açılır (yol renderer'da S.bordro.yol'da saklanır)
 ipcMain.handle('bordro:sec', async (e, yol) => {
   const d = yol && fs.existsSync(yol) ? yol : path.join(app.getPath('documents'), 'Orin', 'Belgelerim', 'Finans', 'Maaş Bordroları');

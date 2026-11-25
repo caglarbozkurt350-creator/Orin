@@ -28,6 +28,7 @@ contextBridge.exposeInMainWorld('api', {
   openPath: p => ipcRenderer.invoke('fs:open', p),
   external: url => ipcRenderer.invoke('shell:external', url),
   win: (cmd, arg) => ipcRenderer.send('win:cmd', cmd, arg),
+  iceaktar: { liste: () => ipcRenderer.invoke('iceaktar:liste'), tamam: (ad) => ipcRenderer.invoke('iceaktar:tamam', ad) },
   bordro: { oku: () => ipcRenderer.invoke('bordro:oku'), sec: (yol) => ipcRenderer.invoke('bordro:sec', yol) },
   yz: { durum: () => ipcRenderer.invoke('yz:durum'), ayar: o => ipcRenderer.invoke('yz:ayar', o), dene: ch => ipcRenderer.invoke('yz:dene', ch) },
   zeka: {

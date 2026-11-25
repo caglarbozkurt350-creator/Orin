@@ -62,7 +62,10 @@ OAI.uygula=function(e,kaynak){var v=e.veri||{},a=OAI.st(),es=kaynak=='es',kim=es
  if(e.tur=='es_harcama'||e.tur=='es_gelir'){var t=OAI.tutar(v.tutar);if(!t)return false;var gelir=e.tur=='es_gelir',cep=!gelir&&v.kasa=='cep';
   var kat=gelir?(OAI.metin(v.kat,30)||'Gelir'):cep?'Cep harçlığı · Eşi':(OAI.ORTAK_KAT.indexOf(v.kat)>=0?v.kat:'Diğer');
   var r=fnKaydet({tur:gelir?'gelir':'gider',kim:'cagla',tutar:t,kalem:kat,tarih:OAI.tarihOk(v.tarih)?v.tarih:OT9.pad(new Date(e.ts||Date.now())),not:OAI.metin(v.ad,60),kaynak:'es-telefon'},'fn'+e.id);
-  if(r&&cep){r.hk='e';save()}return !!r}
+  if(r&&cep)r.hk='e';
+  // 0.9.7: Kübra'nın cep harçlığı %0 iken bütün harcamaları Aile Bütçesinden düşer
+  if(r&&!gelir&&typeof OA!='undefined'&&OA.aileden&&OA.aileden('e')){var AB=OA.st().bak.aile;AB.t=Math.round((AB.t-t)*100)/100;AB.ts=Date.now();r.bakDus='aile'}
+  if(r)save();return !!r}
  if(e.tur=='es_ilac_kaydet'){if(!v.id||!OAI.metin(v.ad,1))return false;var il=(a.ilac||[]).filter(function(x){return x.id==v.id})[0];if(il&&il.kim!=OAI.ES)return false;
   var o2={ad:OAI.metin(v.ad,40),miktar:OAI.metin(v.miktar,40),saat:/^\d{1,2}:\d{2}$/.test(v.saat||'')?v.saat:'08:00',tekrar:['gun','haftaici','haftasonu'].indexOf(v.tekrar)>=0?v.tekrar:'gun',actok:['ac','tok'].indexOf(v.actok)>=0?v.actok:'',not:OAI.metin(v.not,80)};
   if(v.stok!=null&&v.stok!==''){o2.stok=Math.max(0,Math.round(+v.stok)||0);o2.stokTs=e.ts||Date.now()}

@@ -5,3 +5,6 @@ test-sonuc/
 # kişisel veri: depoya girmez
 renderer/js/kisisel.js
 onizleme/
+
+# Bordro görselleri (kişisel veri, depoya girmez)
+bordro-jpg/

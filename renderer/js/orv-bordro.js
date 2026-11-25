@@ -85,17 +85,17 @@ BR.sil=function(){var L=BR.st().aylar,i=BR.secili();if(i<0)return;var m=L[i];if(
 BR.yukle=function(o){if(!o||!Array.isArray(o.aylar))throw new Error('Bordro dosyası tanınmadı');var L=BR.st().aylar,n=0;
  o.aylar.forEach(function(x){if(!x||!/^\d{4}-\d{2}$/.test(x.ay)||!x.v)return;var i=BR.bul(x.ay),y={ay:x.ay,h:x.h||{},v:x.v,duz:{}};if(i>=0){var e=L[i];if(e.butce)y.butce=e.butce;Object.keys(e.duz||{}).forEach(function(k){y.v[k]=e.v[k];y.duz[k]=e.duz[k]});L[i]=y}else L.push(y);n++});
  if(!n)throw new Error('Dosyada geçerli ay yok');BR.sirala();BR.ui.ay=L[L.length-1].ay;L.forEach(function(m){BR.butceEkle(m)});save();return n};
-// 0.9.6: Net Ödenen Aile Bütçesine otomatik eklenir: gelir kaydı (Maaş · Ay Yıl) + Çağlar güncel bakiyesi artar.
+// 0.9.6: Net Ödenen Aile Bütçesine otomatik eklenir: gelir kaydı (Maaş · Ay Yıl) + bakiye artar (0.9.7: ortak kasa varsa ona, yoksa Çağlar'a).
 // Otomatik yalnız bu ay ve geçen ayın bordrosu için (eski ayların toplu içe aktarılması bakiyeyi şişirmesin); eski aylar düğmeyle eklenir.
 // Net sonradan düzeltilirse gelir kaydı ve bakiye farkı kadar güncellenir. Bağlantı m.butce = {t, id, ts}.
 BR.otoAy=function(ay){var d=new Date(),b=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');d.setDate(1);d.setMonth(d.getMonth()-1);var g=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');return ay==b||ay==g};
-BR.butceEkle=function(m,zorla){if(!m||!m.v||typeof fnS!='function')return false;var net=Math.round((+m.v.net||0)*100)/100,a=OA.st(),bk=a.bak&&a.bak.cagla;
+BR.butceEkle=function(m,zorla){if(!m||!m.v||typeof fnS!='function')return false;var net=Math.round((+m.v.net||0)*100)/100,a=OA.st(),hk=m.butce?(m.butce.k||'cagla'):(a.bak&&a.bak.aile?'aile':'cagla'),bk=a.bak&&a.bak[hk];
  if(m.butce){var fark=Math.round((net-m.butce.t)*100)/100;if(!fark||!(net>0))return false;var r=fnS().kayit.filter(function(x){return x.id==m.butce.id})[0];if(r){r.tutar=net;r.ts=Date.now()}
   if(bk&&m.butce.bak){bk.t=Math.round((bk.t+fark)*100)/100;bk.ts=Date.now()}m.butce.t=net;m.butce.ts=Date.now();return true}
- if(!(net>0)||(!zorla&&!BR.otoAy(m.ay)))return false;var id='br'+m.ay,k=fnS().kayit.filter(function(x){return x.id==id})[0];
+ if(!(net>0)||(!zorla&&(!BR.otoAy(m.ay)||(a.butceBas&&m.ay<=a.butceBas))))return false;var id='br'+m.ay,k=fnS().kayit.filter(function(x){return x.id==id})[0];
  if(!k)k=fnKaydet({tur:'gelir',kim:'cagla',tutar:String(net),kalem:'Maaş · '+BR.ayAd(m.ay),not:'Bordrodan otomatik (Net Ödenen)'},id);if(!k)return false;
- if(bk){bk.t=Math.round((bk.t+net)*100)/100;bk.ts=Date.now()}m.butce={t:net,id:k.id,ts:Date.now(),bak:bk?1:0};return true};
-BR.butceSatir=function(m){var net=+(m.v&&m.v.net)||0,b=m.butce;if(b)return '<div class="br-butce"><span class="oa-sub">✓ Net Ödenen Aile Bütçesine eklendi · '+BR.fmt(b.t)+' ₺ · '+OA.tarihSaat(b.ts)+(b.bak?' · Çağlar bakiyesine işlendi':' · gelir kaydı olarak (bakiye bildirilmemişti)')+'</span></div>';
+ if(bk){bk.t=Math.round((bk.t+net)*100)/100;bk.ts=Date.now()}m.butce={t:net,id:k.id,ts:Date.now(),bak:bk?1:0,k:hk};return true};
+BR.butceSatir=function(m){var net=+(m.v&&m.v.net)||0,b=m.butce;if(b)return '<div class="br-butce"><span class="oa-sub">✓ Net Ödenen Aile Bütçesine eklendi · '+BR.fmt(b.t)+' ₺ · '+OA.tarihSaat(b.ts)+(b.bak?(b.k=='aile'?' · ortak kasaya işlendi':' · Çağlar bakiyesine işlendi'):' · gelir kaydı olarak (bakiye bildirilmemişti)')+'</span></div>';
  if(!(net>0))return '';return '<div class="br-butce"><span class="oa-sub">Net Ödenen ('+BR.fmt(net)+' ₺) Aile Bütçesinde yok.</span><button type="button" class="oa-btn sm ghost" onclick="BR.butceDugme()">Aile Bütçesine ekle</button></div>'};
 BR.butceDugme=function(){var m=BR.st().aylar[BR.secili()];if(BR.butceEkle(m,true)){BR.ui.er='';BR.ui.ok=BR.ayAd(m.ay)+' maaşı Aile Bütçesine eklendi';save()}ORV.yenile()};
 BR.iceAl=function(){if(typeof API!='undefined'&&API&&API.bordro&&API.bordro.sec){var st=BR.st();

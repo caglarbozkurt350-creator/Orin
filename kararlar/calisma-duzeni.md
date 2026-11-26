@@ -10,4 +10,4 @@
 - Dal adları: `ozellik/…`, `duzeltme/…`, `surum/x.y.z`, `claude/…`; birleştirme `main`'e PR ile.
 - Sürüm notu: her sürümde `surum-notlari/<sürüm>.md`; kısa, Türkçe, "Masaüstü / Telefon" başlıkları, telefonda değişiklik yoksa "Değişiklik yok".
 - Bilgi notları kısa: yalnız kimin ne yaptığı.
-- PR'lar kullanıcı onaylamadan birleştirilmez.
+- PR birleştirme, derleme ve yayın yalnız ana sekmede (kullanıcının kalıcı izni, 2026-11-27): ana sekme denetler (testler geçmeli, sürüm notu olmalı) ve yapar. Alt sekmeler birleştirmez, yayınlamaz. Kullanıcıya yalnız önemli olanlar sorulur: gerçek veriyi değiştirmek, yeni APK, onaylı sürüm listesi, özellik silme, geri dönüşü zor işler.

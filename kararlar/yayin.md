@@ -1,5 +1,6 @@
 # Yayın ve sürüm
 
+- Yayını ana sekme yapar (bkz. calisma-duzeni).
 - Masaüstü yayını: GitHub › Actions › "Orvane sürümünü yayınla" (tek tuş, telefondan da olur).
 - Önce testler (`npm run smoke`); biri düşerse yayın yok.
 - GitHub'da kalan sürümler: en yeni 2 + en yeni onaylı sürüm; gerisi silinir.

@@ -1,0 +1,13 @@
+/* Orvane 0.9.12 · Ailem › Altın Hesabım (renderer/js/orv-altin.js). Kart, tablo ve düğmeler orv-butce.css'teki gg-* sınıflarından gelir;
+   burada yalnız altına özgü birkaç ayrıntı var. Renkler tema değişkenlerinden (--yazi*, --cam*); altın tonu sabit. */
+.ah-lg{background:linear-gradient(160deg,#fff1b8,#e0a32e)!important;color:#3a2804!important;font-size:12px!important}
+.ah-kyn{max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ah-kr{background:linear-gradient(160deg,#fff1b8,#e0a32e)!important}
+.ah-not{margin-left:8px;font-size:12px;font-weight:400}
+.ah-dg{font-weight:700;font-size:12px;white-space:nowrap}.ah-dg small{font-weight:600;opacity:.85}
+.ah-fl{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.ah-fs{display:grid;grid-template-columns:1fr auto 74px;align-items:center;gap:10px;font-size:13px;padding:6px 0;border-bottom:1px solid var(--cam-kenar)}
+.ah-fs:last-child{border-bottom:0}.ah-fs b{font-variant-numeric:tabular-nums}.ah-fs .ah-dg{text-align:right}
+.ah-tab td,.ah-tab th{font-variant-numeric:tabular-nums}
+.ah .soluk{color:var(--yazi3)}
+@media (max-width:720px){.ah-fs{grid-template-columns:1fr auto}.ah-fs .ah-dg{grid-column:2}}

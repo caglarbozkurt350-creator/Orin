@@ -57,7 +57,7 @@ contextBridge.exposeInMainWorld('api', {
     gelistir: o => ipcRenderer.invoke('isemri:gelistir', o)
   },
   toplanti: { kaydet: o => ipcRenderer.invoke('toplanti:kaydet', o) },
-  piyasa: { tcmb: zorla => ipcRenderer.invoke('piyasa:tcmb', zorla), gecmis: () => ipcRenderer.invoke('piyasa:gecmis') },
+  piyasa: { tcmb: zorla => ipcRenderer.invoke('piyasa:tcmb', zorla), gecmis: () => ipcRenderer.invoke('piyasa:gecmis'), altin: zorla => ipcRenderer.invoke('piyasa:altin', zorla) },
   gizli: { klasorler: () => ipcRenderer.invoke('gizli:klasorler') },
   apify: { durum: () => ipcRenderer.invoke('apify:durum'), kaydet: t => ipcRenderer.invoke('apify:kaydet', t), sil: () => ipcRenderer.invoke('apify:sil'), calisanlar: L => ipcRenderer.invoke('apify:calisanlar', L), test: () => ipcRenderer.invoke('apify:test') },
   jarvis: { taslaklar: () => ipcRenderer.invoke('jarvis:taslaklar'), sor: o => ipcRenderer.invoke('jarvis:sor', o), kaydet: o => ipcRenderer.invoke('jarvis:kaydet', o) },

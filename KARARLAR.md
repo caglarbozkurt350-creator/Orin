@@ -1,7 +1,7 @@
 # Orvane · Alınan Kararlar
 
 Her oturumun başında okunur. Yeni karar alındıkça ilgili bölüme eklenir (tarih ve sürümle).
-Son güncelleme: 2026-11-27 · Sürüm 0.9.11
+Son güncelleme: 2026-11-27 · Sürüm 0.9.12
 
 ---
 
@@ -54,7 +54,7 @@ Son güncelleme: 2026-11-27 · Sürüm 0.9.11
 - 0.8.0 tasarımı: cam paneller, Inter, 6 tema rengi (Turuncu, Nane, Okyanus, Lavanta, Gül, Altın); tema yalnız vurgu rengini değiştirir.
 - **Hiçbir eski özellik silinmez**; yeni menüde yer bulur ya da "Diğer sayfalar"a gider.
 - Sol menü sırası: Anasayfa · Ailem · İş Günleri (altında Görseller, İzinler en sonda) · Bordro · Merkez · Ekip (altında Görevler, Onaylar; onay rozeti Ekip simgesinde) · Zamanlanmış işler.
-- Ailem sekmelerinde çalışan adı yok: Bütçe, Aylık Bütçe, Sağlık, İlaç Planı, Menü & Market, Satın Alma, Ev İşleri.
+- Ailem sekmelerinde çalışan adı yok: Bütçe, Aylık Bütçe, Altın Hesabım, Sağlık, İlaç Planı, Menü & Market, Satın Alma, Ev İşleri.
 - Animasyonlar "Hareketi azalt" ayarına uyar.
 - Değişim gösterimi: ▲ / ▼; yeşil lehine, kırmızı aleyhine (kesintide artış kırmızı).
 
@@ -67,6 +67,12 @@ Son güncelleme: 2026-11-27 · Sürüm 0.9.11
 - Bordro Net Ödenen → Aile Bütçesine "Maaş · Ay Yıl" geliri; otomatik yalnız bu ay ve geçen ay, eski aylar düğmeyle; aynı ay iki kez eklenmez. Maaş satırında yalnız açıklama ve kişi değişir.
 - **Banka dökümü içe aktarma:** iç transferler (kendi hesapları, Kübra Bozkurt / Kübra Söğüt, QR para yatırma, "Bakiye yükleme 6587…4973") kaydedilmez. FAST/EFT ücreti + BSMV → Banka ücreti; başka kişiye FAST → Havale; ATM → Nakit çekim; faturalar → Fatura. **Geçmiş aylar net 0**; ayın "Kayıt dışı harcama" = gelir − bilinen gider. **İçinde bulunulan aya istenmedikçe ekleme yapılmaz.**
 - İçe Aktar klasörü: `Belgeler\Orin\İçe Aktar` → açılışta bir kez işlenir, `İşlendi`'ye taşınır.
+- **Gelir üst sınırı (2026-11-27 · 0.9.12):** Bir ayın geliri, Bordrodaki Net Ödenen'i geçemez. Tek istisna SGK Rapor Ödeneği: üst sınır = Net Ödenen + SGK ödeneği. Maaş ertesi ayın 5'inde yatar. Bu yüzden A ayının sınırı A−1 bordrosundan gelir. Maaş kaydı da o tarihe yazılır. Elle girilen gelir sınırı aşıyorsa kaydedilmez. Bordrosu olmayan ayda sınır yoktur.
+- **Bakiye bildir (0.9.12 netleşti):** Bildirilen tutar gelire eklenmez. Yalnız beklenenle farkı kayıt dışı olarak yazılır. "Kayıt dışı gelir" mevcut kuraldır ve engellenmez. Gelir sınırını aşarsa Dashboard ve denetim uyarır; karar kullanıcınındır.
+- **Kasaya işleme (0.9.12):** Her yeni kişisel kayıt girildiği anda kasasına ve Aile Bütçesine işlenir. Kapsam: Aylık Bütçe, "+ Gelir / + Gider", Kübra harcaması, ödenen beklenen ödeme ve Çağlar'ın telefonu. Silinince etkisi geri alınır. Kübra harcaması da gider kaydı olur. İçe aktarılan banka kayıtları ve geçmiş ay kayıtları bakiye bildiriminde sayılmaz.
+- **Geçmiş aylar (0.9.12):** Net 0 olan kapanmış aya kayıt eklenir, düzeltilir ya da silinirse bakiye değişmez. Ayın kayıt dışı harcaması farkı karşılar, ay net 0 kalır.
+- **Denetim (0.9.12):** Bütçe denetimi salt okunurdur. Kurala aykırı kayıtları listeler ama veriyi kendiliğinden düzeltmez. Veriyi düzeltmek kullanıcının kararıdır.
+- **Altın Hesabım (0.9.12):** Ailem altında ayrı sekme. Gram türleri gramla, adetli altınlar adetle girilir. Birim fiyat satış fiyatıdır; bozdurma değeri ayrıca gösterilir. Fiyat Truncgil'den gelir. Otto'nun günlük verisi Kapalıçarşı kaynaklıysa gram ve çeyrek fiyatı ondan alınır. Veri `durum.json`'da (`S.orvA.altin`) tutulur; Aile Bütçesine işlenmez, telefona gönderilmez.
 
 ## 7. Sağlık
 

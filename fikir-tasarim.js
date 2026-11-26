@@ -37,6 +37,7 @@ async function baglam(kay) {
     git: kisalt(await gitLog(kay), 4000),
     onerilen: (fk.fikirler || []).map(f => f.baslik).filter(Boolean),
     onaylanan: (on.fikirler || []).map(f => f.baslik + (f.aciklama ? ' — ' + f.aciklama : '')).filter(Boolean),
+    reddedilen: (on.reddedilen || []).map(f => f.baslik + (f.aciklama ? ' — ' + f.aciklama : '')).filter(Boolean),
     temalar: Object.keys(tema.temalar || {}).map(k => tema.temalar[k].ad + ' ' + tema.temalar[k].acc).join(', '),
     adlar: (cl.calisanlar || []).map(c => c.ad).filter(Boolean)
   };
@@ -52,7 +53,7 @@ function istem(b, o) {
     '## Ne yapacaksın\n' +
     '1. Aşağıdaki son sürüm notlarını ve git geçmişini oku; gerekirse kaynak kodu da oku (yalnız okuma: renderer/, mobil/src/, main.js). Programın bugün NE yaptığını ve son düzenlemelerin hangi yöne gittiğini anla.\n' +
     '2. Bunlara dayanarak **5 geliştirme fikri** çıkar. Her fikir son düzenlemelerden birinin üzerine kurulsun (hangisi olduğunu yaz), günlük kullanımda gerçek bir sorunu çözsün ve bugünkü veriyle yapılabilsin.\n' +
-    '   - Aşağıda “Önerilmiş” ve “Onaylanmış” listelerindekileri TEKRAR ÖNERME; onaylanmışların üzerine kurabilirsin.\n' +
+    '   - Aşağıda “Önerilmiş”, “Onaylanmış” ve “İptal edilmiş” listelerindekileri TEKRAR ÖNERME (iptal edilenlerin benzerini de); onaylanmışların üzerine kurabilirsin.\n' +
     '   - Yapay zekâ çalışanları/ekip özelliği büyütülmeyecek; fikirler doğrudan kullanıcıya hizmet etsin.\n' +
     '3. Fikirlerin tasarımlarını **Claude Design** ile yap: Artifact aracında `action: "quickstart"`, `intent: "design"` ile başla, Design tipinden YENİ bir tuval aç ' +
     '(başlık: “Orvane geliştirme fikirleri · ' + tarih + '”) ve tipin talimatlarına uyarak her fikir için bir artboard çiz. Dosyaları yalnız bu çalışma klasörüne yaz.\n' +
@@ -74,6 +75,7 @@ function istem(b, o) {
     '```json\n{"fikirler":[{"id":"kisa-kimlik","baslik":"…","aciklama":"…","onaylanirsa":"…","onaylanmazsa":"…"}]}\n```\n\n' +
     '## Bağlam\n\n### Önerilmiş (tekrar önerme)\n' + (b.onerilen.length ? b.onerilen.map(x => '- ' + x).join('\n') : '- (yok)') + '\n\n' +
     '### Onaylanmış, sırada (tekrar önerme)\n' + (b.onaylanan.length ? b.onaylanan.map(x => '- ' + x).join('\n') : '- (yok)') + '\n\n' +
+    '### İptal edilmiş (Çağlar istemedi; benzerini de önerme)\n' + ((b.reddedilen || []).length ? b.reddedilen.map(x => '- ' + x).join('\n') : '- (yok)') + '\n\n' +
     '### Son sürüm notları (yeniden eskiye)\n' + (b.notlar.length ? b.notlar.map(n => n.metin).join('\n\n') : '(okunamadı)') + '\n\n' +
     '### Git geçmişi (son 40)\n```\n' + (b.git || '(okunamadı)') + '\n```\n';
 }

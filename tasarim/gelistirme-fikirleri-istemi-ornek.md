@@ -1,13 +1,13 @@
 # Görev · Orvane geliştirme fikirleri ve Claude Design tasarımları
 
-Orvane, Çağlar’ın masaüstü (Electron) ve telefon (Expo) uygulaması: iş raporu ve iş günleri, Ailem (bütçe, sağlık/ilaç, market, ev işleri, menü), bordro, piyasa (altın, döviz). Şu anki sürüm: **0.9.10** · Tarih: 26 Kasım 2026
+Orvane, Çağlar’ın masaüstü (Electron) ve telefon (Expo) uygulaması: iş raporu ve iş günleri, Ailem (bütçe, sağlık/ilaç, market, ev işleri, menü), bordro, piyasa (altın, döviz). Şu anki sürüm: **0.9.11** · Tarih: 27 Kasım 2026
 
 ## Ne yapacaksın
 1. Aşağıdaki son sürüm notlarını ve git geçmişini oku; gerekirse kaynak kodu da oku (yalnız okuma: renderer/, mobil/src/, main.js). Programın bugün NE yaptığını ve son düzenlemelerin hangi yöne gittiğini anla.
 2. Bunlara dayanarak **5 geliştirme fikri** çıkar. Her fikir son düzenlemelerden birinin üzerine kurulsun (hangisi olduğunu yaz), günlük kullanımda gerçek bir sorunu çözsün ve bugünkü veriyle yapılabilsin.
-   - Aşağıda “Önerilmiş” ve “Onaylanmış” listelerindekileri TEKRAR ÖNERME; onaylanmışların üzerine kurabilirsin.
+   - Aşağıda “Önerilmiş”, “Onaylanmış” ve “İptal edilmiş” listelerindekileri TEKRAR ÖNERME (iptal edilenlerin benzerini de); onaylanmışların üzerine kurabilirsin.
    - Yapay zekâ çalışanları/ekip özelliği büyütülmeyecek; fikirler doğrudan kullanıcıya hizmet etsin.
-3. Fikirlerin tasarımlarını **Claude Design** ile yap: Artifact aracında `action: "quickstart"`, `intent: "design"` ile başla, Design tipinden YENİ bir tuval aç (başlık: “Orvane geliştirme fikirleri · 26 Kasım 2026”) ve tipin talimatlarına uyarak her fikir için bir artboard çiz. Dosyaları yalnız bu çalışma klasörüne yaz.
+3. Fikirlerin tasarımlarını **Claude Design** ile yap: Artifact aracında `action: "quickstart"`, `intent: "design"` ile başla, Design tipinden YENİ bir tuval aç (başlık: “Orvane geliştirme fikirleri · 27 Kasım 2026”) ve tipin talimatlarına uyarak her fikir için bir artboard çiz. Dosyaları yalnız bu çalışma klasörüne yaz.
    - Masaüstü ekranları 1440 genişlikte sayfa (expand fill), telefon ekranları 390×844. En az bir telefon ekranı olsun.
    - Tasarımı bitirdikten sonra kontrol, ekran görüntüsü ya da tarayıcı açma YOK.
 
@@ -46,6 +46,11 @@ En sonda şu JSON bloğu (Orvane okuyup fikir listesine ekler):
 - Kalan sabit ödemeler — Ay sonuna kadar kalan sabit ödemelerin toplamı ve sayısı.
 - Sabah brifingi — Anasayfa'nın üstünde tek paragraflık günlük özet (eksik süre, ilaç, son günü gelen ödeme, ay sonu durumu) ve tek dokunuşla işlem düğmeleri; çalışan adı geçmez.
 - Yaklaşanlar — Önümüzdeki günlerin fatura son günleri, özel günler ve maaş/bordro hatırlatmaları tek kartta.
+
+### İptal edilmiş (Çağlar istemedi; benzerini de önerme)
+- Ctrl+K komut kutusu — Tek kutuya yazılan cümleyi işlere bölen komut paleti (27 Kasım 2026'da iptal).
+- Gün sonu kapanışı — Zaman çizelgesindeki boşluğu önerilerle doldurup günü kapatma ekranı (27 Kasım 2026'da iptal).
+- Telefonda Cuma özeti ve hızlı ekle — Cuma haftalık özet ekranı ve sesli/yazılı hızlı ekleme çubuğu (27 Kasım 2026'da iptal).
 
 ### Son sürüm notları (yeniden eskiye)
 ## Orvane 0.9.10 · Aile Bütçesi toplam kasa
@@ -162,6 +167,7 @@ En sonda şu JSON bloğu (Orvane okuyup fikir listesine ekler):
 
 ### Git geçmişi (son 40)
 ```
+6bb19b3 2026-11-26 Geliştirme fikri iste: Claude Code ile fikir ve Claude Design tasarımları
 4824a0b 2026-11-26 Sürüm 0.9.10: Aile Bütçesi toplam kasa
 e7dbf26 2026-11-26 Aile Bütçesi toplam kasa: cep ve Kübra harcamaları Aile Bütçesinden de düşer
 d441e04 2026-11-26 Sürüm 0.9.9: eş profili; package.json geri yüklendi
@@ -201,5 +207,4 @@ dae87f0 2026-11-24 0.8.2: gün türü listesi, Ekip menü altta, toplantılar ka
 b86a9e9 2026-11-19 0.8.0 ara: tasarım temeli + yeni kabuk (Aşama 1-3) + mobil yeniden giydirme (Aşama 6)
 d5a6216 2026-11-17 0.7.25: PocketBase oturumu (1. aşama) + Kai/Ada yalnız abonelik
 d6347d7 2026-11-16 Onaylı sürüm 0.7.23 (0.7.2 GitHub'dan silindi); temizlik sahipsiz v* etiketlerini de siler
-e600900 2026-11-16 Yayın akışı: önce derle, sonra tek adımda yayınla (aynı anda yükleme çakışması giderildi); var olan sürümün dosyaları yenilenir
 ```

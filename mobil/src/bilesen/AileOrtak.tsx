@@ -55,7 +55,7 @@ const tarihYaz = (k: string) => { const d = tarihOf(k); return d.getDate() + '.'
 function CepIsteFormu({ rol, kapat }: { rol: Rol; kapat: () => void }) {
   const [tutar, setTutar] = useState(''), [hata, setHata] = useState('');
   const kaydet = () => {
-    const t = Math.round((Number(tutar.replace(/./g, '').replace(',', '.')) || 0) * 100) / 100; if (!(t > 0)) return setHata('Tutarı yaz');
+    const t = Math.round((Number(tutar.replace(/\./g, '').replace(',', '.')) || 0) * 100) / 100; if (!(t > 0)) return setHata('Tutarı yaz');
     olayEkle(rol === 'es' ? 'es_cep_iste' : 'cep_iste', { tutar: t }); esitleSonra(); kapat();
   };
   return (

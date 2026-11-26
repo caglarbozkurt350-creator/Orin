@@ -63,7 +63,7 @@ OAI.uygula=function(e,kaynak){var v=e.veri||{},a=OAI.st(),es=kaynak=='es',kim=es
  if(e.tur=='ozel_gun_sil'){var n1=a.ozel.length;a.ozel=a.ozel.filter(function(x){return x.id!=v.id||(es&&x.kim!=OAI.ES)});OA.kaydet();return a.ozel.length<n1}
  // Harcama: kasa 'cep' → harcayanın cep harçlığından (hk e/c), 'ortak' → ortak bütçeden (kategori: Market, Ev…)
  // 0.9.11: eş cep harçlığı ister → doğrudan Kübra'nın cep bakiyesine (Aile Bütçesi ve gelir değişmez)
- if(e.tur=='es_cep_iste'){var tc=OAI.tutar(v.tutar);if(!tc||typeof OA=='undefined'||!OA.cepIste)return false;return !!OA.cepIste('e',tc,'Kübra telefondan istedi')}
+ if(e.tur=='es_cep_iste'){var tc=OAI.tutar(v.tutar);if(!tc||typeof OA=='undefined'||!OA.cepIste)return false;return !!OA.cepIste('e',tc,'Kübra telefondan istedi',e.id)}
  if(e.tur=='es_harcama'||e.tur=='es_gelir'){var t=OAI.tutar(v.tutar);if(!t)return false;var gelir=e.tur=='es_gelir',cep=!gelir&&v.kasa=='cep';
   var kat=gelir?(OAI.metin(v.kat,30)||'Gelir'):cep?'Cep harçlığı · Eşi':(OAI.ORTAK_KAT.indexOf(v.kat)>=0?v.kat:'Diğer');
   var r=fnKaydet({tur:gelir?'gelir':'gider',kim:'cagla',tutar:t,kalem:kat,tarih:OAI.tarihOk(v.tarih)?v.tarih:OT9.pad(new Date(e.ts||Date.now())),not:OAI.metin(v.ad,60),kaynak:'es-telefon'},'fn'+e.id);
@@ -83,7 +83,7 @@ OAI.uygula=function(e,kaynak){var v=e.veri||{},a=OAI.st(),es=kaynak=='es',kim=es
 // Çağlar'ın telefonu: takvim / özel gün; finans_kayit'te kasa 'cep' ise Çağlar'ın cep harçlığına (hk:'c') yazılır
 var _oaiBu=bulutUygula;bulutUygula=function(e){
  if(/^(etkinlik|etkinlik_sil|ozel_gun|ozel_gun_sil)$/.test(e.tur)){OAI.uygula(e,'ben');return}
- if(e.tur=='cep_iste'){var tc=OAI.tutar((e.veri||{}).tutar);if(tc&&typeof OA!='undefined'&&OA.cepIste)OA.cepIste('c',tc,'Çağlar telefondan istedi');return}
+ if(e.tur=='cep_iste'){var tc=OAI.tutar((e.veri||{}).tutar);if(tc&&typeof OA!='undefined'&&OA.cepIste)OA.cepIste('c',tc,'Çağlar telefondan istedi',e.id);return}
  var r=_oaiBu(e);if(e.tur=='finans_kayit'&&e.veri&&e.veri.hk=='c'){var k=(fnS().kayit||[]).filter(function(x){return x.id==e.id})[0];if(k&&k.tur=='gider'&&!k.bakDus){k.hk='c';if(OA.bakIsle&&OA.bakIsle('cagla',-(+k.tutar||0)).length)k.bakDus=1;save()}}return r};
 
 // ---------- Eşitleme: eşin özeti + eşin olayları ----------

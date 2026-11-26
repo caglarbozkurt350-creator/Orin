@@ -572,6 +572,24 @@ ipcMain.handle('piyasa:altin', wrap(async zorla => { const f = path.join(DATA(),
     const j = await r.json(), ham = {}; Object.keys(j || {}).forEach(k => { const v = j[k]; if (v && typeof v == 'object' && (v.Type == 'Gold' || /ALTIN|GRA|HAS|YIA/.test(k))) ham[k] = { Buying: +v.Buying || 0, Selling: +v.Selling || 0, Change: +v.Change || 0 }; });
     if (!ham.GRA) throw new Error('Altın fiyatı okunamadı'); const v = { ham, kaynak: 'Truncgil', tarih: String(j.Update_Date || ''), alindi: Date.now() }; writeJSON(f, v); return v;
   } catch (e) { if (o && o.ham) return Object.assign({}, o, { eski: true, hata: e.message }); throw e; } }));
+// 0.9.12: Altın Hesabım · alım gücü karşılaştırması. Anahtarsız, ücretsiz kaynaklar:
+//  • TÜFE: TÜİK genel endeksi, BIS veri servisi üzerinden (WS_LONG_CPI, M.TR.628; aylık, 24 saat önbellek). EVDS anahtar ister, OECD ~1 yıl geriden gelir.
+//  • Kur: ECB referans kurları (Frankfurter) — işlem tarihindeki ve bugünkü USD/TRY, EUR/TRY. Geçmiş tarihli kur kalıcı önbellekte.
+// Bir kaynak alınamazsa o kısım boş döner ve hata yazılır; uydurma değer yok.
+async function ecbGun(t) { const r = await fetch('https://api.frankfurter.dev/v1/' + t + '?base=USD&symbols=TRY,EUR', { cache: 'no-store', signal: AbortSignal.timeout(10000) }); if (!r.ok) throw new Error('ECB ' + r.status);
+  const j = await r.json(), u = j && j.rates && +j.rates.TRY, e = j && j.rates && +j.rates.EUR; if (!(u > 0)) throw new Error('Kur okunamadı'); return { usd: Math.round(u * 10000) / 10000, eur: e > 0 ? Math.round(u / e * 10000) / 10000 : null, d: String(j.date || t) }; }
+ipcMain.handle('piyasa:alimgucu', wrap(async o => { if (SMOKE) throw new Error('Testte ağ yok');
+  const f = path.join(DATA(), 'alim-gucu.json'), c = readJSON(f, null) || {}; c.kur = c.kur || {};
+  const bugun = new Date().toISOString().slice(0, 10), tarihler = Array.from(new Set(((o && o.tarihler) || []).filter(t => /^\d{4}-\d{2}-\d{2}$/.test(t) && t >= '1999-01-04' && t <= bugun))).slice(0, 120);
+  const v = { tufe: null, tufeKaynak: 'TÜİK (BIS veri servisi)', tufeHata: '', kur: {}, kurHata: '', bugun: null, kurKaynak: 'ECB (Frankfurter)' };
+  if (c.tufe && Date.now() - (c.tufeAlindi || 0) < 24 * 3600e3) v.tufe = c.tufe;
+  else try { const r = await fetch('https://stats.bis.org/api/v2/data/dataflow/BIS/WS_LONG_CPI/1.0/M.TR.628?startPeriod=2003-01&format=csv', { cache: 'no-store', signal: AbortSignal.timeout(20000) }); if (!r.ok) throw new Error('BIS ' + r.status);
+    const L = (await r.text()).split(/\r?\n/), b = (L[0] || '').split(','), it = b.indexOf('TIME_PERIOD'), iv = b.indexOf('OBS_VALUE'), tufe = {}; if (it < 0 || iv < 0) throw new Error('TÜFE biçimi tanınmadı');
+    L.slice(1).forEach(l => { const p = l.split(','); if (/^\d{4}-\d{2}$/.test(p[it]) && +p[iv] > 0) tufe[p[it]] = +p[iv]; }); if (!Object.keys(tufe).length) throw new Error('TÜFE verisi boş');
+    c.tufe = tufe; c.tufeAlindi = Date.now(); v.tufe = tufe; } catch (e) { v.tufeHata = e.message; if (c.tufe) { v.tufe = c.tufe; v.tufeEski = true; } }
+  try { if (!c.bugun || Date.now() - (c.bugunAlindi || 0) > 6 * 3600e3) { c.bugun = await ecbGun('latest'); c.bugunAlindi = Date.now(); } v.bugun = c.bugun;
+    for (const t of tarihler) { if (!c.kur[t]) c.kur[t] = await ecbGun(t); v.kur[t] = c.kur[t]; } } catch (e) { v.kurHata = e.message; if (!v.bugun && c.bugun) v.bugun = c.bugun; tarihler.forEach(t => { if (c.kur[t]) v.kur[t] = c.kur[t]; }); }
+  try { writeJSON(f, c); } catch (e) {} return v; }));
 function ecbAyikla(j) { const t = j && j.rates && +j.rates.TRY; if (!t) throw new Error('ECB kur listesi okunamadı'); const kur = { usd: { alis: null, satis: Math.round(t * 10000) / 10000 } };
   if (j.rates.EUR) kur.eur = { alis: null, satis: Math.round(t / j.rates.EUR * 10000) / 10000 }; if (j.rates.GBP) kur.gbp = { alis: null, satis: Math.round(t / j.rates.GBP * 10000) / 10000 };
   const d = String(j.date || ''); return { tarih: d.split('-').reverse().join('.'), kur, kaynak: 'ECB (Frankfurter)', alindi: Date.now() }; }

@@ -35,12 +35,18 @@ const Alan = ({ et, v, d, ph, k }: { et: string; v: string; d: (x: string) => vo
   <View style={[s.giris, { flex: 1 }]}><Text style={s.girisEt}>{et}</Text><TextInput value={v} onChangeText={d} placeholder={ph} placeholderTextColor={R.solukk} keyboardType={k} style={s.girisY} accessibilityLabel={et} /></View>
 );
 const bugunTam = () => tamAnahtar(new Date());
-const tarihGecerli = (t: string) => /^\d{4}-\d{2}-\d{2}$/.test(t) && !isNaN(tarihOf(t).getTime());
-/** "24.11.2026", "24/11", "2026-11-24" → "2026-11-24" */
-function tarihCoz(x: string): string {
+/** Biçim ve gerçek gün denetimi: 31.02 gibi taşan tarihler reddedilir (Date onları Mart'a kaydırıyordu) */
+export const tarihGecerli = (t: string) => { if (!/^\d{4}-\d{2}-\d{2}$/.test(t)) return false; const d = tarihOf(t); return !isNaN(d.getTime()) && tamAnahtar(d) === t; };
+/** "24.11.2026", "24/11", "2026-11-24" → "2026-11-24".
+ *  ileri (takvim/randevu): "24.11.26" de kabul edilir; yıl yazılmazsa ve gün bu yıl için geçmişte kalıyorsa gelecek yıl alınır
+ *  (Kasım'da "5.1" → gelecek Ocak; önceden geçen Ocak'a yazılıyor, takvimde hiç görünmüyordu). Özel günlerde (doğum tarihi) eski davranış. */
+export function tarihCoz(x: string, ileri = false, bugun = new Date()): string {
   const t = x.trim(); if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(t)) { const a = t.split('-'); return a[0] + '-' + a[1].padStart(2, '0') + '-' + a[2].padStart(2, '0'); }
-  const m = t.match(/^(\d{1,2})[./](\d{1,2})(?:[./](\d{4}))?$/); if (!m) return '';
-  return (m[3] || String(new Date().getFullYear())) + '-' + m[2].padStart(2, '0') + '-' + m[1].padStart(2, '0');
+  const m = t.match(ileri ? /^(\d{1,2})[./](\d{1,2})(?:[./](\d{2}|\d{4}))?$/ : /^(\d{1,2})[./](\d{1,2})(?:[./](\d{4}))?$/); if (!m) return '';
+  const gun = m[1].padStart(2, '0'), ay = m[2].padStart(2, '0');
+  if (m[3]) return (m[3].length === 2 ? '20' + m[3] : m[3]) + '-' + ay + '-' + gun;
+  const y = bugun.getFullYear(), k = y + '-' + ay + '-' + gun;
+  return ileri && k < tamAnahtar(bugun) ? y + 1 + '-' + ay + '-' + gun : k;
 }
 const tarihYaz = (k: string) => { const d = tarihOf(k); return d.getDate() + '.' + (d.getMonth() + 1) + '.' + d.getFullYear(); };
 
@@ -78,7 +84,9 @@ export function EtkinlikFormu({ rol, e, randevu0, kapat }: { rol: Rol; e?: Etkin
   const [tur, setTur] = useState<'etkinlik' | 'randevu'>(e?.tur || (randevu0 ? 'randevu' : 'etkinlik')), [ad, setAd] = useState(e?.ad || ''), [tarih, setTarih] = useState(e ? tarihYaz(e.tarih) : '');
   const [saat, setSaat] = useState(e?.saat || ''), [yer, setYer] = useState(e?.yer || ''), [kisi, setKisi] = useState<Kisi | 'aile'>(e?.kisi || benKimim(rol)), [hata, setHata] = useState(''), [sil, setSil] = useState(false);
   const kaydet = () => {
-    const t = tarihCoz(tarih); if (!ad.trim()) return setHata(tur === 'randevu' ? 'Bölümü ya da doktoru yaz' : 'Etkinlik adını yaz'); if (!tarihGecerli(t)) return setHata('Tarihi 24.11.2026 gibi yaz');
+    const t = tarihCoz(tarih, true); if (!ad.trim()) return setHata(tur === 'randevu' ? 'Bölümü ya da doktoru yaz' : 'Etkinlik adını yaz'); if (!tarihGecerli(t)) return setHata('Tarihi 24.11.2026 gibi yaz');
+    // Liste bugünden başlar, masaüstü 30 günden eskisini yayınlamaz: geçmiş tarihli yeni kayıt "eklenmedi" gibi görünürdü
+    if (!e && t < bugunTam()) return setHata('Bu tarih geçmişte kaldı; takvim bugünden sonrasını gösterir. Yılı kontrol et.');
     if (saat && !/^\d{1,2}[:.]\d{2}$/.test(saat.trim())) return setHata('Saati 10:30 gibi yaz');
     olayEkle('etkinlik', { id: e?.id || 'tk' + uid(), ad: ad.trim(), tarih: t, saat: saat.trim().replace('.', ':'), tur, yer: yer.trim(), kisi }); esitleSonra(); kapat();
   };
@@ -190,10 +198,11 @@ export function OrtakBolum() {
   const ac = (p: NonNullable<typeof pen>) => { setPen(p); setN((x) => x + 1); };
   const tr = O.trend[O.trend.length - 1] || ['', o.aile?.fin.bu.gelir || 0, o.aile?.fin.bu.gider || 0], once = O.trend[O.trend.length - 2];
   const kalan = tr[1] - tr[2], kat = Object.entries(O.kat).sort((a, b) => b[1] - a[1]), kmax = kat.length ? kat[0][1] : 1;
-  // Yaklaşan 30 gün: takvim + izin + özel gün
+  // Yaklaşanlar: bütün gelecek etkinlik ve randevular (önceden 30 günden ilerisi özette sayılıyor ama listede görünmüyordu)
+  // + 30 gün içindeki izin ve özel günler
   const yak = useMemo(() => {
     const b = new Date(); b.setHours(0, 0, 0, 0); const son = new Date(b.getTime() + 30 * 86400000), r: { k: string; tip: 'etk' | 'izin' | 'ozel'; e?: Etkinlik; g?: OzelGun; baslik: string; alt: string; renk: string; ikon: string }[] = [];
-    O.takvim.forEach((e) => { const d = tarihOf(e.tarih); if (d < b || d > son) return; r.push({ k: e.tarih + (e.saat || '') + e.id, tip: 'etk', e, baslik: (e.tur === 'randevu' ? 'Randevu · ' : '') + e.ad, alt: [e.saat, e.yer, e.kisi === 'aile' ? 'Aile' : AD[(e.kisi || e.kim) as Kisi]].filter(Boolean).join(' · '), renk: e.tur === 'randevu' ? RANDEVU : KISI_RENK[e.kim], ikon: e.tur === 'randevu' ? 'ilac' : 'gun' }); });
+    O.takvim.forEach((e) => { const d = tarihOf(e.tarih); if (d < b) return; r.push({ k: e.tarih + (e.saat || '') + e.id, tip: 'etk', e, baslik: (e.tur === 'randevu' ? 'Randevu · ' : '') + e.ad, alt: [e.saat, e.yer, e.kisi === 'aile' ? 'Aile' : AD[(e.kisi || e.kim) as Kisi]].filter(Boolean).join(' · '), renk: e.tur === 'randevu' ? RANDEVU : KISI_RENK[e.kim], ikon: e.tur === 'randevu' ? 'ilac' : 'gun' }); });
     izinAraliklari(O.izin).forEach((z) => { if (tarihOf(z.b) > son) return; r.push({ k: tamAnahtar(tarihOf(z.b)) + 'z', tip: 'izin', baslik: ad.cagla + ' · ' + (IZIN_AD[z.t] || 'İzin'), alt: kisaTarih(z.b) + (z.s !== z.b ? ' – ' + kisaTarih(z.s) : ''), renk: '#5fe0f5', ikon: 'izin' }); });
     O.ozel.forEach((g) => { const x = ozelSonraki(g); if (x.kalan > 30) return; r.push({ k: tamAnahtar(x.d) + 'o' + g.id, tip: 'ozel', g, baslik: ozelAd(g, rol) + (g.tur === 'yildonumu' && x.yil > 0 ? ' · ' + x.yil + '. yıl' : ''), alt: x.kalan === 0 ? 'bugün' : x.kalan + ' gün sonra', renk: '#fbbf24', ikon: 'yildiz' }); });
     return r.sort((a, z) => a.k.localeCompare(z.k));
@@ -265,7 +274,7 @@ export function OrtakBolum() {
             <View style={{ width: 3, alignSelf: 'stretch', marginVertical: 8, borderRadius: 2, backgroundColor: x.renk }} />
             <View style={{ flex: 1 }}><Text numberOfLines={1} style={{ color: R.yazi, fontSize: 13.5, fontWeight: '600' }}>{x.baslik}</Text><Text numberOfLines={1} style={[s.sub, { fontSize: 11.5 }]}>{x.alt}</Text></View>
             {sahip ? <Ikon ad="kalem" boy={14} renk={R.yazi2} kalin={2} /> : <Ikon ad={x.ikon} boy={15} renk={x.renk} kalin={2} />}
-          </Pressable>); }) : <Bos yazi="Önümüzdeki 30 günde etkinlik, randevu, izin ya da özel gün yok." ikon="gun" />}
+          </Pressable>); }) : <Bos yazi="Yaklaşan etkinlik ya da randevu yok; önümüzdeki 30 günde izin ya da özel gün de yok." ikon="gun" />}
         <View style={{ flexDirection: 'row', gap: 8 }}>
           <Dugme yazi="Etkinlik" ikon="arti" tur="ikinci" onPress={() => ac({ t: 'etk' })} stil={{ flex: 1 }} />
           <Dugme yazi="Randevu" ikon="arti" tur="ikinci" onPress={() => ac({ t: 'etk', randevu: true })} stil={{ flex: 1 }} />

@@ -1,6 +1,6 @@
 // Bildirim (0.9.0): Piyasa (gram altın, dolar, euro; ▲ yeşil ▼ kırmızı, dokun → fiyat alarmı), sessiz saat,
-// Ekip şeridi (→ Ekip sayfası), GÖZDEN KAÇANLAR (görev/onay/mesaj/eşitleme), TAKİP EDİLEN HABERLER (Google Haberler,
-// anahtar kelimeyle), oyun haberleri (takip ettiğin oyunların çıkışı yaklaşınca). Dış veriler lib/dis.ts.
+// TAKİP EDİLEN HABERLER (Google Haberler, anahtar kelimeyle), oyun haberleri (takip ettiğin oyunların çıkışı yaklaşınca),
+// en altta daraltılmış: EKİP (→ Ekip sayfası) ve GÖZDEN KAÇANLAR (görev/onay/mesaj/eşitleme). Dış veriler lib/dis.ts.
 import { useState } from 'react';
 import { ActivityIndicator, Linking, Pressable, Switch, Text, TextInput, View } from 'react-native';
 import { AltPencere, Bos } from '@/bilesen/formlar';
@@ -27,9 +27,9 @@ function AlarmFormu({ kod, ad, fiyat, kapat }: { kod: Kod; ad: string; fiyat: nu
     <View style={{ gap: 12 }}>
       <Text style={{ color: R.yazi, fontSize: 17, fontWeight: '700' }}>{ad} · fiyat alarmı</Text>
       <Text style={s.sub}>Şu an {sayi(fiyat, 2)} ₺. Sınır geçilince Bildirim sekmesinin üstünde uyarı çıkar (sessiz saatte gösterilmez).</Text>
-      <View style={[s.seg, { height: 38 }]}>
+      <View style={s.seg}>
         {([['ust', 'Üstüne çıkınca'], ['alt', 'Altına inince']] as const).map(([k, y]) => (
-          <Pressable key={k} onPress={() => setYon(k)} accessibilityRole="tab" accessibilityState={{ selected: yon === k }} style={[s.segb, yon === k && { backgroundColor: R.ana }]}><Text style={{ color: yon === k ? '#fff' : '#cfcfd4', fontSize: 13, fontWeight: '600' }}>{y}</Text></Pressable>
+          <Pressable key={k} onPress={() => setYon(k)} accessibilityRole="tab" accessibilityState={{ selected: yon === k }} style={[s.segb, { height: 32 }, yon === k && { backgroundColor: R.ana }]}><Text style={{ color: yon === k ? '#fff' : '#cfcfd4', fontSize: 13, fontWeight: '600' }}>{y}</Text></Pressable>
         ))}
       </View>
       <View style={s.giris}><Text style={s.girisEt}>Sınır (₺)</Text><TextInput value={sinir} onChangeText={setSinir} keyboardType="decimal-pad" style={s.girisY} accessibilityLabel="Alarm sınırı" /></View>
@@ -86,24 +86,6 @@ export function BildirimSekmesi() {
         <Switch value={tercih.sessiz} onValueChange={sessizDegis} trackColor={{ true: R.ana, false: '#3a3a40' }} thumbColor="#fff" accessibilityLabel="Sessiz saat" />
       </View>
 
-      {!es && <Pressable onPress={() => sekmeGit(SEKME_EKIP)} accessibilityRole="button" accessibilityLabel="Ekip sayfasını aç"
-        style={({ pressed }) => [s.cam, { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, transform: [{ scale: pressed ? 0.98 : 1 }] }]}>
-        <View style={{ width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: saydam(R.ana, 0.16) }}><Ikon ad="ekip" boy={20} renk={R.ana2} kalin={2} /></View>
-        <View style={{ flex: 1 }}><Text style={{ color: R.yazi, fontSize: 14, fontWeight: '600' }}>Ekip{pasif ? ' · pasif' : ''}</Text><Text style={s.sub}>{pasif ? 'Yapay zekâ kapalı · ' : aktif + ' aktif · '}{acik} açık görev{onay ? ' · ' + onay + ' onay bekliyor' : ''}</Text></View>
-        <Ikon ad="sag" boy={18} renk={R.yazi2} kalin={2} />
-      </Pressable>}
-
-      <KartK ad="kacan" baslik="GÖZDEN KAÇANLAR" ozet={okunmamis ? okunmamis + ' okunmamış' : 'hepsi okundu'} sag={okunmamis ? <Pressable onPress={() => okunduYap(liste.map((b) => b.id))} accessibilityRole="button" hitSlop={4} style={{ height: 32, paddingHorizontal: 12, borderRadius: 16, backgroundColor: saydam(R.ana, 0.16), justifyContent: 'center' }}><Text style={{ color: R.ana2, fontSize: 12, fontWeight: '600' }}>Okundu</Text></Pressable> : undefined}>
-        {gorunen.length ? gorunen.map((b) => { const yeni = !okundu[b.id]; return (
-          <Pressable key={b.id} onPress={() => { okunduYap([b.id]); if (b.kanal === 'Onay') sekmeGit(SEKME_GOREV, { gorev: 'onay' }); else if (b.kanal === 'Görev') sekmeGit(SEKME_GOREV, { gorev: 'gorev' }); else if (b.kanal === 'Mesaj') sekmeGit(SEKME_EKIP); }}
-            accessibilityRole="button" style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 52, paddingHorizontal: 10, borderRadius: 14, backgroundColor: yeni ? 'rgba(255,255,255,0.06)' : 'transparent' }}>
-            <View style={{ width: 34, height: 34, borderRadius: 11, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.07)' }}><Ikon ad={KANAL_IKON[b.kanal] || 'bilgi'} boy={17} renk={yeni ? R.ana2 : R.yazi2} kalin={2} /></View>
-            <View style={{ flex: 1, gap: 1 }}><Text numberOfLines={1} style={{ color: R.yazi, fontSize: 13.5, fontWeight: yeni ? '700' : '500' }}>{b.baslik}</Text><Text numberOfLines={1} style={s.sub}>{b.alt}</Text></View>
-            <Text style={[s.sub, { fontSize: 11 }]}>{once(b.ts)}</Text>
-          </Pressable>); }) : <Bos yazi="Kaçırdığın bir şey yok." ikon="tik" />}
-        {liste.length > 5 && <Pressable onPress={() => setTum(!tum)} accessibilityRole="button"><Text style={{ color: R.ana2, fontSize: 13, fontWeight: '600', textAlign: 'center' }}>{tum ? 'Daha az' : 'Tümünü göster (' + liste.length + ')'}</Text></Pressable>}
-      </KartK>
-
       <KartK ad="haber" baslik="TAKİP EDİLEN HABERLER" ozet={yeniHaber + ' yeni · ' + tercih.kelime.length + ' kelime'}>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
           {tercih.kelime.map((k) => (
@@ -138,6 +120,27 @@ export function BildirimSekmesi() {
             <Text style={{ color: R.ana2, fontSize: 12.5, fontWeight: '700' }}>{t.kg === 0 ? 'bugün çıkıyor' : t.kg + ' gün kaldı'}</Text>
           </View>
         )) : <Text style={s.soluk}>Takip ettiğin oyunlardan 14 gün içinde çıkan yok. Bana Özel › Yeni çıkacak oyunlar’dan takip et.</Text>}
+      </KartK>
+
+      {/* Ekip ve Gözden kaçanlar en altta, varsayılan daraltılmış (başlığa dokununca açılır) */}
+      {!es && <KartK ad="ekipSerit" kapali baslik={'EKİP' + (pasif ? ' · PASİF' : '')} ozet={(pasif ? 'yapay zekâ kapalı · ' : aktif + ' aktif · ') + acik + ' açık görev' + (onay ? ' · ' + onay + ' onay' : '')}>
+        <Pressable onPress={() => sekmeGit(SEKME_EKIP)} accessibilityRole="button" accessibilityLabel="Ekip sayfasını aç"
+          style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 10, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.05)', transform: [{ scale: pressed ? 0.98 : 1 }] })}>
+          <View style={{ width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: saydam(R.ana, 0.16) }}><Ikon ad="ekip" boy={20} renk={R.ana2} kalin={2} /></View>
+          <View style={{ flex: 1 }}><Text style={{ color: R.yazi, fontSize: 14, fontWeight: '600' }}>Ekip{pasif ? ' · pasif' : ''}</Text><Text style={s.sub}>{pasif ? 'Yapay zekâ kapalı · ' : aktif + ' aktif · '}{acik} açık görev{onay ? ' · ' + onay + ' onay bekliyor' : ''}</Text></View>
+          <Ikon ad="sag" boy={18} renk={R.yazi2} kalin={2} />
+        </Pressable>
+      </KartK>}
+
+      <KartK ad="kacan" kapali baslik="GÖZDEN KAÇANLAR" ozet={okunmamis ? okunmamis + ' okunmamış' : 'hepsi okundu'} sag={okunmamis ? <Pressable onPress={() => okunduYap(liste.map((b) => b.id))} accessibilityRole="button" hitSlop={4} style={{ height: 32, paddingHorizontal: 12, borderRadius: 16, backgroundColor: saydam(R.ana, 0.16), justifyContent: 'center' }}><Text style={{ color: R.ana2, fontSize: 12, fontWeight: '600' }}>Okundu</Text></Pressable> : undefined}>
+        {gorunen.length ? gorunen.map((b) => { const yeni = !okundu[b.id]; return (
+          <Pressable key={b.id} onPress={() => { okunduYap([b.id]); if (b.kanal === 'Onay') sekmeGit(SEKME_GOREV, { gorev: 'onay' }); else if (b.kanal === 'Görev') sekmeGit(SEKME_GOREV, { gorev: 'gorev' }); else if (b.kanal === 'Mesaj') sekmeGit(SEKME_EKIP); }}
+            accessibilityRole="button" style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 52, paddingHorizontal: 10, borderRadius: 14, backgroundColor: yeni ? 'rgba(255,255,255,0.06)' : 'transparent' }}>
+            <View style={{ width: 34, height: 34, borderRadius: 11, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.07)' }}><Ikon ad={KANAL_IKON[b.kanal] || 'bilgi'} boy={17} renk={yeni ? R.ana2 : R.yazi2} kalin={2} /></View>
+            <View style={{ flex: 1, gap: 1 }}><Text numberOfLines={1} style={{ color: R.yazi, fontSize: 13.5, fontWeight: yeni ? '700' : '500' }}>{b.baslik}</Text><Text numberOfLines={1} style={s.sub}>{b.alt}</Text></View>
+            <Text style={[s.sub, { fontSize: 11 }]}>{once(b.ts)}</Text>
+          </Pressable>); }) : <Bos yazi="Kaçırdığın bir şey yok." ikon="tik" />}
+        {liste.length > 5 && <Pressable onPress={() => setTum(!tum)} accessibilityRole="button"><Text style={{ color: R.ana2, fontSize: 13, fontWeight: '600', textAlign: 'center' }}>{tum ? 'Daha az' : 'Tümünü göster (' + liste.length + ')'}</Text></Pressable>}
       </KartK>
 
       <AltPencere acik={!!alarm} kapat={() => setAlarm(null)}>{alarm && <AlarmFormu {...alarm} kapat={() => setAlarm(null)} />}</AltPencere>

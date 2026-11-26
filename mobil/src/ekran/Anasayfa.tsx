@@ -1,6 +1,7 @@
 // Anasayfa (0.9.0): İş günü göstergesi (hafta günü · ayın haftası · ay dakikası), bu ay gelir–gider (kalan bakiye çizgisi /
-// kategoriler, geçen aya göre uyarı), bugünkü görevler (2), günlük ilaç takibi ve sabah açlık şekeri.
-// Kaynak: masaüstü özeti (o.gun, o.aile, o.ekip.gorev) + telefondaki bekleyen olaylar.
+// kategoriler, geçen aya göre uyarı), günlük ilaç takibi, sabah açlık şekeri ve şeker grafiği.
+// Bugünkü görevler kartı kaldırıldı (görevler Ekip › Görevler'de).
+// Kaynak: masaüstü özeti (o.gun, o.aile) + telefondaki bekleyen olaylar.
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import Svg, { Circle, Line, Path, Polyline } from 'react-native-svg';
@@ -9,8 +10,7 @@ import { Hap, Ikon, KartK, SayfaBasligi, s } from '@/bilesen/ortak';
 import { bugunIlac, alindiMi, IlacSatiri, SekerSatiri } from '@/bilesen/Saglik';
 import { useBugun } from '@/lib/bugun';
 import type { ButceAy, Ozet } from '@/lib/depo';
-import { KISA } from '@/lib/ekipMeta';
-import { SEKME_GOREV, sekmeGit } from '@/lib/gezinti';
+import { sekmeGit } from '@/lib/gezinti';
 import { bugunYazi, useEkip } from '@/lib/kullan';
 import { IZIN_AD } from '@/ekran/IzinGirisi';
 import { AD, useRol } from '@/lib/rol';
@@ -58,26 +58,35 @@ function isGunuOlcu(o: Ozet) {
   return { dolu, isg: isg || 5, hi, hn: hl.length, girilen, toplam, eksik, bg };
 }
 
-/** Kalan bakiye çizgisi: ay başı gelir, her hafta gider düşülür. Kesikli çizgi geçen ay. */
-function BakiyeCizgi({ bu, once }: { bu: ButceAy; once: ButceAy }) {
-  const [W, setW] = useState(0), H = 120;
+/** Para yazısı: eksi değerde gerçek eksi işareti (−), tutar ayraçlı */
+const para = (n: number) => (Math.round(n) < 0 ? '−' : '') + tl(Math.abs(n));
+/** Yüzde değişim: geçen ay değeri çok küçükse dört basamaklı yüzde satırı taşırmasın */
+const yuzde = (v: number, p: number) => { const x = Math.abs(Math.round(((v - p) / p) * 100)); return x > 999 ? '999+' : String(x); };
+const ETIKET = ['Başı', '1.h', '2.h', '3.h', '4.h', 'Sonu'];
+
+/** Kalan bakiye çizgisi: ay başı gelir, her hafta gider düşülür. Kesikli çizgi geçen ay (yalnız geçen ay verisi varsa). */
+function BakiyeCizgi({ bu, once }: { bu: ButceAy; once?: ButceAy }) {
+  const [W, setW] = useState(0), H = 120, YAN = 14;
   const birik = (x: ButceAy) => { const r = [x.gelir]; x.hc.forEach((g) => r.push(r[r.length - 1] - g)); return r; };
-  const hafta = Math.min(5, Math.ceil(new Date().getDate() / 7)), KB = birik(bu).slice(0, hafta + 1), KO = once.gelir || once.gider ? birik(once) : null;
-  const hepsi = [...KB, ...(KO || []), 0], mx = Math.max(...hepsi) || 1, mn = Math.min(...hepsi);
-  const px = (i: number) => 8 + (i * (W - 16)) / 5, py = (v: number) => 14 + (1 - (v - mn) / (mx - mn || 1)) * (H - 28);
+  const hafta = Math.min(5, Math.ceil(new Date().getDate() / 7)), KB = birik(bu).slice(0, hafta + 1), KO = once && (once.gelir || once.gider) ? birik(once) : null;
+  const hepsi = [...KB, ...(KO || []), 0], mx = Math.max(...hepsi), mn = Math.min(...hepsi);
+  // Kenarlarda nokta ve etiket yarım kalmasın: yatayda YAN kadar pay
+  const px = (i: number) => YAN + (i * (W - 2 * YAN)) / 5, py = (v: number) => 10 + (1 - (v - mn) / (mx - mn || 1)) * (H - 20);
   const nk = (l: number[]) => l.map((v, i) => `${px(i).toFixed(1)},${py(v).toFixed(1)}`).join(' ');
+  const taban = py(Math.min(Math.max(0, mn), mx));
   return (
     <View onLayout={(e) => setW(e.nativeEvent.layout.width)} style={{ height: H + 18 }}>
-      {W > 0 && <Svg width={W} height={H}>
-        <Line x1={0} x2={W} y1={py(0)} y2={py(0)} stroke="rgba(255,255,255,0.12)" strokeDasharray="3 4" />
-        <Path d={`M${px(0)} ${py(Math.max(0, mn))} ${KB.map((v, i) => `L${px(i)} ${py(v)}`).join(' ')} L${px(KB.length - 1)} ${py(Math.max(0, mn))} Z`} fill={saydam(R.ana, 0.14)} />
-        {KO && <Polyline points={nk(KO)} fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth={1.5} strokeDasharray="5 4" />}
-        <Polyline points={nk(KB)} fill="none" stroke={R.ana} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />
-        {KB.map((v, i) => <Circle key={i} cx={px(i)} cy={py(v)} r={i === KB.length - 1 ? 4.5 : 3} fill={i === KB.length - 1 ? R.ana2 : R.ana} stroke="#1c1c1f" strokeWidth={1.5} />)}
-      </Svg>}
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-        {['Başı', '1.h', '2.h', '3.h', '4.h', 'Sonu'].map((x, i) => <Text key={x} style={[s.sub, { fontSize: 10.5, color: i === hafta ? R.ana2 : R.yazi2 }]}>{x}</Text>)}
-      </View>
+      {W > 0 && <>
+        <Svg width={W} height={H}>
+          <Line x1={0} x2={W} y1={py(0)} y2={py(0)} stroke="rgba(255,255,255,0.12)" strokeDasharray="3 4" />
+          <Path d={`M${px(0)} ${taban} ${KB.map((v, i) => `L${px(i)} ${py(v)}`).join(' ')} L${px(KB.length - 1)} ${taban} Z`} fill={saydam(R.ana, 0.14)} />
+          {KO && <Polyline points={nk(KO)} fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth={1.5} strokeDasharray="5 4" />}
+          <Polyline points={nk(KB)} fill="none" stroke={R.ana} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />
+          {KB.map((v, i) => <Circle key={i} cx={px(i)} cy={py(v)} r={i === KB.length - 1 ? 4.5 : 3} fill={v < 0 ? '#f4a3a3' : i === KB.length - 1 ? R.ana2 : R.ana} stroke="#1c1c1f" strokeWidth={1.5} />)}
+        </Svg>
+        {/* Etiketler noktaların tam altında (space-between ile noktalardan kayıyordu) */}
+        {ETIKET.map((x, i) => <Text key={x} numberOfLines={1} style={[s.sub, { position: 'absolute', top: H + 2, left: px(i) - 20, width: 40, textAlign: 'center', fontSize: 10.5, color: i === hafta ? R.ana2 : R.yazi2 }]}>{x}</Text>)}
+      </>}
     </View>
   );
 }
@@ -91,51 +100,53 @@ function ButceKart({ o }: { o: Ozet }) {
     </KartK>
   );
   const kalan = bu.gelir - bu.gider, ay = AY[new Date().getMonth()], onAd = AY[(new Date().getMonth() + 11) % 12];
-  const kat = Object.entries(bu.kat).sort((a, b) => b[1] - a[1]), kmax = kat.length ? kat[0][1] : 1;
+  const kat = Object.entries(bu.kat).filter((x) => x[1] > 0).sort((a, b) => b[1] - a[1]), kmax = kat.length ? kat[0][1] : 1;
   // Uyarı: geçen aya göre en çok artan kategori (sınır yok; kıyas geçen ay)
   const artis = kat.map(([k, v]) => [k, v, once?.kat[k] || 0] as [string, number, number]).filter((x) => x[2] > 0 && x[1] > x[2] * 1.1).sort((a, b) => b[1] - b[2] - (a[1] - a[2]))[0];
   const gun = new Date().getDate(), onceAyniGun = once ? once.hc.slice(0, Math.ceil(gun / 7)).reduce((a, b) => a + b, 0) : 0;
   return (
-    <KartK ad="butce" baslik="BU AY GELİR · GİDER" ozet={'Kalan ' + tl(kalan)} sag={<Tumu git={() => sekmeGit(1)} yazi="Ailem" />}>
-      <View style={{ flexDirection: 'row', gap: 8 }}>
+    <KartK ad="butce" baslik="BU AY GELİR · GİDER" ozet={'Kalan ' + para(kalan)} sag={<Tumu git={() => sekmeGit(1)} yazi="Ailem" />}>
+      <View style={{ flexDirection: 'row', gap: 6 }}>
         {[['Gelir', bu.gelir, R.yesil], ['Gider', bu.gider, '#f4a3a3'], ['Kalan', kalan, kalan >= 0 ? R.yazi : '#f4a3a3']].map(([y, v, r]) => (
-          <View key={y as string} style={{ flex: 1, padding: 10, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.05)', gap: 2 }}>
+          <View key={y as string} style={{ flex: 1, minWidth: 0, paddingVertical: 10, paddingHorizontal: 8, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.05)', gap: 2 }} accessible accessibilityLabel={y + ' ' + para(v as number)}>
             <Text style={[s.sub, { fontSize: 11.5 }]}>{y as string}</Text>
-            <Text adjustsFontSizeToFit numberOfLines={1} style={{ color: r as string, fontSize: 17, fontWeight: '700' }}>{tl(v as number)}</Text>
+            <Text adjustsFontSizeToFit minimumFontScale={0.5} numberOfLines={1} style={{ color: r as string, fontSize: 17, fontWeight: '700', fontVariant: ['tabular-nums'] }}>{para(v as number)}</Text>
           </View>
         ))}
       </View>
-      <View style={[s.seg, { height: 36 }]} accessibilityRole="tablist">
+      {/* s.seg düğmeleri 40 px; kutuya 36 px yükseklik verilince düğmeler taşıp grafiğin üstüne biniyordu */}
+      <View style={s.seg} accessibilityRole="tablist">
         {([['hafta', 'Kalan bakiye'], ['kat', 'Kategori']] as const).map(([k, y]) => (
-          <Pressable key={k} onPress={() => setGor(k)} accessibilityRole="tab" accessibilityState={{ selected: gor === k }} style={[s.segb, gor === k && { backgroundColor: R.ana }]}>
-            <Text style={{ color: gor === k ? '#fff' : '#cfcfd4', fontSize: 13, fontWeight: '600' }}>{y}</Text>
+          <Pressable key={k} onPress={() => setGor(k)} accessibilityRole="tab" accessibilityState={{ selected: gor === k }} style={[s.segb, { height: 32 }, gor === k && { backgroundColor: R.ana }]}>
+            <Text numberOfLines={1} style={{ color: gor === k ? '#fff' : '#cfcfd4', fontSize: 13, fontWeight: '600' }}>{y}</Text>
           </Pressable>
         ))}
       </View>
       {gor === 'hafta' ? <>
-        <BakiyeCizgi bu={bu} once={once || bu} />
-        <View style={{ flexDirection: 'row', gap: 14, flexWrap: 'wrap' }}>
+        <BakiyeCizgi bu={bu} once={once} />
+        <View style={{ flexDirection: 'row', columnGap: 14, rowGap: 4, flexWrap: 'wrap' }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><View style={{ width: 14, height: 3, borderRadius: 2, backgroundColor: R.ana }} /><Text style={s.sub}>{ay}: gelir − haftalık gider</Text></View>
-          {!!once?.gider && <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><View style={{ width: 14, height: 0, borderTopWidth: 1.5, borderStyle: 'dashed', borderColor: 'rgba(255,255,255,0.45)' }} /><Text style={s.sub}>{onAd}</Text></View>}
+          {!!(once?.gelir || once?.gider) && <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><View style={{ width: 14, height: 0, borderTopWidth: 1.5, borderStyle: 'dashed', borderColor: 'rgba(255,255,255,0.45)' }} /><Text style={s.sub}>{onAd}</Text></View>}
         </View>
       </> : (
         <View style={{ gap: 8 }}>
-          {kat.slice(0, 6).map(([k, v]) => { const p = once?.kat[k] || 0, up = p && v > p; return (
+          {kat.slice(0, 6).map(([k, v]) => { const p = once?.kat[k] || 0, up = p > 0 && v > p; return (
             <View key={k} style={{ gap: 4 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={{ flex: 1, color: R.yazi, fontSize: 13 }}>{k}</Text>
-                {!!p && <Text style={{ color: up ? '#f4a3a3' : '#6be585', fontSize: 11.5, fontWeight: '700' }}>{up ? '▲' : '▼'} %{Math.abs(Math.round(((v - p) / p) * 100))}</Text>}
-                <Text style={{ color: R.yazi, fontSize: 13, fontWeight: '600' }}>{tl(v)}</Text>
+                <Text numberOfLines={1} style={{ flex: 1, minWidth: 0, color: R.yazi, fontSize: 13 }}>{k}</Text>
+                {p > 0 && v !== p && <Text style={{ color: up ? '#f4a3a3' : '#6be585', fontSize: 11.5, fontWeight: '700' }}>{up ? '▲' : '▼'} %{yuzde(v, p)}</Text>}
+                <Text style={{ color: R.yazi, fontSize: 13, fontWeight: '600', fontVariant: ['tabular-nums'] }}>{para(v)}</Text>
               </View>
-              <View style={{ height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.07)' }}><View style={{ width: (v / kmax) * 100 + '%', height: '100%', borderRadius: 3, backgroundColor: up ? R.ana : saydam(R.ana2, 0.7) }} /></View>
+              <View style={{ height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.07)', overflow: 'hidden' }}><View style={{ width: `${Math.max(2, Math.min(100, (v / (kmax || 1)) * 100))}%`, height: '100%', borderRadius: 3, backgroundColor: up ? R.ana : saydam(R.ana2, 0.7) }} /></View>
             </View>); })}
+          {kat.length > 6 && <Text style={s.sub}>+{kat.length - 6} kategori daha · Ailem’de</Text>}
           {!kat.length && <Text style={s.soluk}>Bu ay gider yok.</Text>}
         </View>
       )}
       {artis ? (
         <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', padding: 10, borderRadius: 12, backgroundColor: 'rgba(245,165,36,0.12)' }}>
           <Ikon ad="bilgi" boy={16} renk="#f7bd55" kalin={2.1} />
-          <Text style={{ flex: 1, color: '#f7bd55', fontSize: 12.5 }}>{artis[0]} {ayaGore(onAd)} göre ▲ %{Math.round(((artis[1] - artis[2]) / artis[2]) * 100)} ({tl(artis[1] - artis[2])} fazla)</Text>
+          <Text style={{ flex: 1, color: '#f7bd55', fontSize: 12.5 }}>{artis[0]} {ayaGore(onAd)} göre ▲ %{yuzde(artis[1], artis[2])} ({para(artis[1] - artis[2])} fazla)</Text>
         </View>
       ) : !!onceAyniGun && bu.gider < onceAyniGun ? <Text style={{ color: '#9fd8b8', fontSize: 12.5 }}>Harcama {ayin(onAd)} aynı dönemine göre daha düşük.</Text> : null}
     </KartK>
@@ -145,10 +156,8 @@ function ButceKart({ o }: { o: Ozet }) {
 // 0.9.9: Eş profilinde Anasayfa üst kartı (BU HAFTA) kaldırıldı; aile takvimi Ailem sekmesinde.
 
 export function Anasayfa() {
-  const { o, hepsi, cevrim, senk, pasif } = useEkip(), es = useRol() === 'es';
+  const { o, cevrim, senk } = useEkip(), es = useRol() === 'es';
   const g = isGunuOlcu(o), bH = (g.bg?.L || 0) + (g.bg?.OT || 0);
-  const acik = o.ekip.gorev.filter((x) => x.durum !== 'bitti');
-  const gorevler = acik.slice().sort((a, b) => Number(b.onc === 'acil') - Number(a.onc === 'acil') || b.ts - a.ts).slice(0, 2);
   const bugun = useBugun(), ilac = bugunIlac(o, bugun, es ? 'kubra' : 'cagla'), alinan = ilac.filter((i) => alindiMi(o, i, bugun)).length; // 00:00'da yeni güne geçer
   const bugunYazisi = !o.ts ? 'Masaüstü Orvane ile eşitlenince iş günü kayıtların burada görünür.' : g.bg?.D ? 'Bugün izin günü, tam gün sayılır.' : bH ? 'Bugün ' + (g.bg?.T || 0) + ' / ' + bH + ' dk girildi' + (g.eksik ? ' · bu ay ' + g.eksik + ' eksik gün' : '') : 'Bugün için iş süresi yok.';
   return (
@@ -165,17 +174,6 @@ export function Anasayfa() {
       </KartK>}
 
       <ButceKart o={o} />
-
-      {!es && <KartK ad="gorev" baslik="BUGÜNKÜ GÖREVLER" ozet={acik.length + ' açık görev'} sag={<Tumu git={() => sekmeGit(SEKME_GOREV, { gorev: 'gorev' })} />}>
-        {gorevler.length ? gorevler.map((x) => (
-          <View key={x.id} style={s.satir}>
-            <View style={{ width: 36, height: 36, borderRadius: 11, backgroundColor: 'rgba(255,255,255,0.07)', alignItems: 'center', justifyContent: 'center' }}><Ikon ad="gorev" boy={18} renk={R.yazi2} kalin={2} /></View>
-            <View style={{ flex: 1, gap: 2 }}><Text numberOfLines={2} style={{ color: R.yazi, fontSize: 14, fontWeight: '600' }}>{x.metin}</Text><Text style={s.sub}>{pasif ? KISA[x.kim] || 'Görev' : hepsi.find((c) => c.id === x.kim)?.ad}{x.son ? ' · ' + x.son : ''}</Text></View>
-            <Hap yazi={x.onc === 'acil' ? 'Acil' : x.durum === 'calisiyor' ? 'Çalışıyor' : 'Bekliyor'} t={x.onc === 'acil' ? 'r' : x.durum === 'calisiyor' ? 'g' : 'o'} />
-          </View>
-        )) : <Bos yazi="Açık görev yok." ikon="gorev" />}
-        {acik.length > 2 && <Text style={s.sub}>+{acik.length - 2} görev daha · Tümü’nde</Text>}
-      </KartK>}
 
       <KartK ad="ilac" baslik="GÜNLÜK İLAÇ TAKİBİ" ozet={ilac.length ? alinan + '/' + ilac.length + ' alındı' : 'ilaç yok'} sag={<Tumu git={() => sekmeGit(3)} yazi={es ? 'Sağlık' : 'İlaçlarım'} />}>
         {ilac.length ? ilac.map((i, n) => <IlacSatiri key={i.id} o={o} i={i} no={n + 1} />) : <Text style={s.soluk}>Bugün alınacak ilaç yok. Bana Özel › İlaçlar’dan eklenir.</Text>}

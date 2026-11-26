@@ -33,3 +33,10 @@ export function useBugun(): string {
 }
 /** Bugün atılmış kendi ilaç işareti mi (gece yarısına kadar telefonda tutulur) */
 export const bugunIsareti = (o: { tur: string; veri: any }, k = bugunAnahtari()) => (o.tur === 'ilac_al' || o.tur === 'es_ilac_al') && o.veri?.k === k;
+/** Şeker ölçümleri telefonda 62 gün tutulur (masaüstü özeti de 62 gün yayınlar). */
+export const SEKER_GUN = 62;
+export const sekerSiniri = (d = new Date()) => bugunAnahtari(new Date(d.getFullYear(), d.getMonth(), d.getDate() - SEKER_GUN));
+/** Bu telefonda girilmiş, son 62 günün şeker ölçümü mü. Eşitlemede silinmez ve masaüstü özetinin üstüne yeniden uygulanır:
+ *  özet bir günü içermese bile (eski özet, masaüstünde işlenmemiş olay) aylık PDF çizelgesi ve şeker grafiği o ölçümü gösterir.
+ *  Önceden olay özete girer girmez telefondan siliniyordu; özette olmayan günler kayboluyordu. */
+export const yerelSeker = (o: { tur: string; veri: any }, sinir = sekerSiniri()) => o.tur === 'seker' && typeof o.veri?.k === 'string' && o.veri.k >= sinir;

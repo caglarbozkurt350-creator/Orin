@@ -6,7 +6,7 @@ import { Platform } from 'react-native';
 import type { Ozet } from '@/lib/depo';
 import { IZIN_AD } from '@/ekran/IzinGirisi';
 import { R } from '@/lib/tema';
-import { AY, GK, ayAnahtari, ayaGore, gunAnahtari, tamAnahtar } from '@/lib/zaman';
+import { AY, GK, ayAnahtari, ayaGore, gunAnahtari, haftaBasi, tamAnahtar } from '@/lib/zaman';
 
 export type PdfTur = 'is' | 'ilac' | 'butce';
 export const PDF_AD: Record<PdfTur, string> = { is: 'Aylık İş Günü Raporu', ilac: 'Aylık İlaç Takibi', butce: 'Aylık Bütçe Raporu' };
@@ -37,6 +37,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 .bar{height:6px;border-radius:3px;background:#f0f0f2;overflow:hidden}.bar i{display:block;height:100%;border-radius:3px}
 .alt2{display:flex;gap:16px}.blok{display:flex;flex-direction:column;gap:6px}
 .not{border:1px dashed #d0d0d6;border-radius:8px;padding:8px 10px;color:#6b6b73}
+tr.hb td{padding:6px 6px 2px;border-top:1px solid #c9c9cf;border-bottom:1px solid #ececf0;color:#8a8a92;font-size:7.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;page-break-after:avoid}
 .ayak{margin-top:auto;display:flex;justify-content:space-between;color:#9a9aa2;font-size:8px;border-top:1px solid #ececf0;padding-top:6px}
 .uyari{display:flex;gap:8px;align-items:center;background:#fff4ea;border:1px solid #ffd7bf;color:#8a3b14;border-radius:8px;padding:6px 10px}
 .lej{display:flex;gap:12px;flex-wrap:wrap;color:#6b6b73;font-size:8.5px}`;
@@ -58,23 +59,39 @@ const bugun0 = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }
 export function isGunuHtml(o: Ozet, ay: Date) {
   const A = R.ana, b0 = bugun0(); let satir = '', top = 0, plan = 0, calisilan = 0, isGunu = 0, fm = 0, fmGun: number[] = [];
   const proje: Record<string, number> = {}, izin: Record<string, number> = {}; let veriYok = 0;
-  gunleri(ay).forEach((d) => {
-    const k = gunAnahtari(d), g = o.gun[k], hs = d.getDay() === 0 || d.getDay() === 6;
-    if (hs && !g?.e?.length) return;
+  // Günler haftalara ayrılır (pazartesi başlangıçlı): her haftanın üstünde ince çizgili küçük başlık ve o haftanın girilen süresi
+  let hKey = -1, hNo = 0, hBas: Date | null = null, hSon: Date | null = null, hSatir = '', hDk = 0;
+  const haftaKapat = () => {
+    // Numara yalnız satırı olan haftaya verilir (ay pazar başlarsa o tek günlük boş hafta sayılmaz; ayinHaftalari ile aynı)
+    if (hSatir && hBas && hSon) satir += `<tr class="hb"><td colspan="5">${++hNo}. hafta · ${hBas.getDate() === hSon.getDate() ? '' : hBas.getDate() + '–'}${hSon.getDate()} ${AY[hSon.getMonth()].slice(0, 3)}</td><td class="n">${hDk ? tl(hDk) + ' dk' : ''}</td></tr>` + hSatir;
+    hSatir = ''; hDk = 0;
+  };
+  /** Bir günün satırları (HTML); toplamlar burada birikir */
+  const gunSatiri = (d: Date, g: Ozet['gun'][string] | undefined, hs: boolean): string => {
+    let out = '';
+    if (hs && !g?.e?.length) return out;
     const tarih = `${d.getDate()} ${AY[d.getMonth()].slice(0, 3)} <span style="color:#9a9aa2">${GK[d.getDay()]}</span>`;
     const gelecek = d > b0;
     if (!hs) isGunu++;
-    if (!g) { if (!gelecek) veriYok++; satir += `<tr class="soluk"><td>${tarih}</td><td colspan="4">${gelecek ? 'henüz gelmedi' : 'veri yok (eşitleme aralığı dışında)'}</td><td class="n">—</td></tr>`; return; }
-    if (g.D) { izin[g.D] = (izin[g.D] || 0) + 1; satir += `<tr><td>${tarih}</td><td colspan="4"><span class="et" style="background:#e2f6fa;color:#11717f">İzin</span> ${esc(IZIN_AD[g.D] || 'İzin')}${gelecek ? ' · planlı' : ''}</td><td class="n">${g.L || '—'}</td></tr>`; return; }
+    if (!g) { if (!gelecek) veriYok++; return `<tr class="soluk"><td>${tarih}</td><td colspan="4">${gelecek ? 'henüz gelmedi' : 'veri yok (eşitleme aralığı dışında)'}</td><td class="n">—</td></tr>`; }
+    if (g.D) { izin[g.D] = (izin[g.D] || 0) + 1; return `<tr><td>${tarih}</td><td colspan="4"><span class="et" style="background:#e2f6fa;color:#11717f">İzin</span> ${esc(IZIN_AD[g.D] || 'İzin')}${gelecek ? ' · planlı' : ''}</td><td class="n">${g.L || '—'}</td></tr>`; }
     const H = (g.L || 0) + (g.OT || 0); if (!gelecek) plan += H;
-    if (!g.e.length) { satir += `<tr class="soluk"><td>${tarih}</td><td colspan="4">${gelecek ? 'henüz gelmedi' : 'girilmedi'}</td><td class="n">${H ? '0 / ' + H : '—'}</td></tr>`; return; }
-    const gt = g.e.reduce((a, r) => a + r[2], 0); top += gt; calisilan++;
+    if (!g.e.length) return `<tr class="soluk"><td>${tarih}</td><td colspan="4">${gelecek ? 'henüz gelmedi' : 'girilmedi'}</td><td class="n">${H ? '0 / ' + H : '—'}</td></tr>`;
+    const gt = g.e.reduce((a, r) => a + r[2], 0); top += gt; hDk += gt; calisilan++;
     if (g.L && gt > g.L) { fm += gt - g.L; fmGun.push(d.getDate()); }
     g.e.forEach((r, i) => {
       proje[r[0]] = (proje[r[0]] || 0) + r[2]; const du = DUR[r[3] || ''];
-      satir += `<tr><td>${i ? '' : tarih}</td><td style="font-variant-numeric:tabular-nums">${esc(r[0])}</td><td>${esc(r[1])}</td><td class="n">${r[2]}</td><td>${du ? `<span class="et" style="background:${du[1]};color:${du[2]}">${du[0]}</span>` : ''}</td><td class="n">${i ? '' : `<b>${gt}</b>${g.L && gt > g.L ? ` <span style="color:${A}">+${gt - g.L}</span>` : ''}`}</td></tr>`;
+      out += `<tr><td>${i ? '' : tarih}</td><td style="font-variant-numeric:tabular-nums">${esc(r[0])}</td><td>${esc(r[1])}</td><td class="n">${r[2]}</td><td>${du ? `<span class="et" style="background:${du[1]};color:${du[2]}">${du[0]}</span>` : ''}</td><td class="n">${i ? '' : `<b>${gt}</b>${g.L && gt > g.L ? ` <span style="color:${A}">+${gt - g.L}</span>` : ''}`}</td></tr>`;
     });
+    return out;
+  };
+  gunleri(ay).forEach((d) => {
+    const hb = haftaBasi(d).getTime();
+    if (hb !== hKey) { haftaKapat(); hKey = hb; hBas = d; } // ayın ilk haftası ayın 1'inden başlar
+    hSon = d;
+    hSatir += gunSatiri(d, o.gun[gunAnahtari(d)], d.getDay() === 0 || d.getDay() === 6);
   });
+  haftaKapat();
   const pl = Object.entries(proje).sort((a, b) => b[1] - a[1]), pmax = pl.length ? pl[0][1] : 1;
   const projeHtml = pl.length ? pl.slice(0, 8).map(([k, v]) => `<div style="display:flex;align-items:center;gap:8px"><span style="width:78px;font-variant-numeric:tabular-nums">${esc(k)}</span><div class="bar" style="flex:1"><i style="width:${Math.round((v / pmax) * 100)}%;background:${A}"></i></div><b style="width:62px;text-align:right">${tl(v)} dk</b><span style="width:30px;text-align:right;color:#6b6b73">%${Math.round((v / (top || 1)) * 100)}</span></div>`).join('') : '<span style="color:#9a9aa2">Bu ay kayıt yok.</span>';
   const izinTop = Object.values(izin).reduce((a, b) => a + b, 0), izinAlt = Object.entries(izin).map(([t, n]) => (IZIN_AD[t] || 'İzin').toLocaleLowerCase('tr') + ' ' + n).join(' · ') || 'yok';

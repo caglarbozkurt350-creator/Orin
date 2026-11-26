@@ -1,0 +1,57 @@
+{
+ "aciklama": "Çağlar'ın Claude Design tasarımlarından onayladığı (fikirler) ve iptal ettiği (reddedilen) parçalar. Geliştirme fikirleri prompt'u (fikir-tasarim.js) ikisini de tekrar önermez. Onaylanan yapılınca buradan çıkar ve sürüm notuna yaz.",
+ "tasarim": "https://claude.ai/artifact/SE7rSNsHW2kgjvEsxsFPvm",
+ "fikirler": [
+  {
+   "id": "butce-harcama-hizi",
+   "baslik": "Günlük harcama hızı",
+   "aciklama": "Ayın başından bugüne günlük ortalama harcama ve geçen ayın aynı günlerine göre değişim (Ailem › Bütçe ve Anasayfa)."
+  },
+  {
+   "id": "butce-ay-sonu-tahmini",
+   "baslik": "Ay sonu tahmini",
+   "aciklama": "Kasa bakiyesi, kalan ödemeler ve harcama hızından ayın son günü tahmini; olası aralıkla birlikte."
+  },
+  {
+   "id": "butce-kalan-odemeler",
+   "baslik": "Kalan ödemeler",
+   "aciklama": "Ay sonuna kadar ödenecek kalemler, tarih ve tutarlarıyla liste; bugün son günü olan vurgulu."
+  },
+  {
+   "id": "butce-kalan-sabit",
+   "baslik": "Kalan sabit ödemeler",
+   "aciklama": "Ay sonuna kadar kalan sabit ödemelerin toplamı ve sayısı."
+  },
+  {
+   "id": "ana-sabah-brifingi",
+   "baslik": "Sabah brifingi",
+   "aciklama": "Anasayfa'nın üstünde tek paragraflık günlük özet (eksik süre, ilaç, son günü gelen ödeme, ay sonu durumu) ve tek dokunuşla işlem düğmeleri; çalışan adı geçmez."
+  },
+  {
+   "id": "ana-yaklasanlar",
+   "baslik": "Yaklaşanlar",
+   "aciklama": "Önümüzdeki günlerin fatura son günleri, özel günler ve maaş/bordro hatırlatmaları tek kartta."
+  }
+ ],
+ "onaylananTasarimlar": [
+  "1 · Anasayfa: Sabah Brifingi ve Bütçe",
+  "4 · Ay Sonu Tahmini"
+ ],
+ "reddedilen": [
+  {
+   "id": "ctrl-k-komut",
+   "baslik": "Ctrl+K komut kutusu",
+   "aciklama": "Tek kutuya yazılan cümleyi işlere bölen komut paleti (27 Kasım 2026'da iptal)."
+  },
+  {
+   "id": "gun-sonu-kapanis",
+   "baslik": "Gün sonu kapanışı",
+   "aciklama": "Zaman çizelgesindeki boşluğu önerilerle doldurup günü kapatma ekranı (27 Kasım 2026'da iptal)."
+  },
+  {
+   "id": "tel-cuma-ozet-hizli-ekle",
+   "baslik": "Telefonda Cuma özeti ve hızlı ekle",
+   "aciklama": "Cuma haftalık özet ekranı ve sesli/yazılı hızlı ekleme çubuğu (27 Kasım 2026'da iptal)."
+  }
+ ]
+}

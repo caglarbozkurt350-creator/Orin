@@ -2,13 +2,15 @@
 // kategoriler, geçen aya göre uyarı), bugünkü görevler (2), günlük ilaç takibi ve sabah açlık şekeri.
 // Kaynak: masaüstü özeti (o.gun, o.aile, o.ekip.gorev) + telefondaki bekleyen olaylar.
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Linking, Pressable, Text, View } from 'react-native';
 import Svg, { Circle, Line, Path, Polyline } from 'react-native-svg';
 import { Bos } from '@/bilesen/formlar';
-import { Hap, Ikon, KartK, SayfaBasligi, s } from '@/bilesen/ortak';
+import { Dugme, Hap, Ikon, KartK, SayfaBasligi, s } from '@/bilesen/ortak';
 import { bugunIlac, alindiMi, IlacSatiri, SekerSatiri } from '@/bilesen/Saglik';
 import { useBugun } from '@/lib/bugun';
+import { olayEkle, useDurum } from '@/lib/depo';
 import type { ButceAy, Ozet } from '@/lib/depo';
+import { esitleSonra, hizliBekle } from '@/lib/senk';
 import { KISA } from '@/lib/ekipMeta';
 import { SEKME_GOREV, sekmeGit } from '@/lib/gezinti';
 import { bugunYazi, useEkip } from '@/lib/kullan';
@@ -144,6 +146,28 @@ function ButceKart({ o }: { o: Ozet }) {
 
 // 0.9.9: Eş profilinde Anasayfa üst kartı (BU HAFTA) kaldırıldı; aile takvimi Ailem sekmesinde.
 
+/** 0.9.11 · Geliştirme fikri iste: telefondan masaüstüne fikir_tasarim olayı gider; masaüstü Claude Code ile fikirleri ve
+ * Claude Design tasarımlarını hazırlar, sonuç özetle (o.fikirTasarim) geri gelir. Masaüstü karşılığı: renderer/js/orv-fikir.js */
+const FT_DUR: Record<string, string> = { calisiyor: 'Bilgisayarda hazırlanıyor (~15–30 dk)', hazir: 'Hazır', tasarimsiz: 'Fikirler hazır · tasarım yayınlanamadı', hata: 'Yapılamadı', istem: 'Prompt hazır · bilgisayardan kopyala' };
+function FikirTasarimKart({ o }: { o: Ozet }) {
+  const ft = o.fikirTasarim, bekleyen = useDurum((d) => d.olaylar.some((x) => x.tur === 'fikir_tasarim' && !x.gitti));
+  const [istendi, setIstendi] = useState(0);
+  const sirada = bekleyen || (istendi > (ft?.ts || 0) && Date.now() - istendi < 10 * 60000), calis = ft?.durum === 'calisiyor';
+  const iste = () => { olayEkle('fikir_tasarim', { ts: Date.now() }); setIstendi(Date.now()); esitleSonra(); hizliBekle(90); };
+  const durum = sirada ? 'İstek gönderildi · bilgisayardaki Orvane açılınca başlar' : ft?.durum ? FT_DUR[ft.durum] || ft.durum : 'Son düzenlemelere göre yeni fikirler ve tasarımlar hazırlatır';
+  return (
+    <KartK ad="fikir" baslik="GELİŞTİRME FİKİRLERİ" ozet={ft?.durum === 'hazir' ? (ft.fikirler?.length || 0) + ' fikir · tasarım hazır' : sirada || calis ? 'hazırlanıyor' : 'iste'}>
+      <Text style={s.sub}>{durum}{ft?.ts && !sirada ? ' · ' + new Date(ft.ts).toLocaleString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}</Text>
+      {!!ft?.hata && !sirada && !calis && <Text style={{ color: R.turuncu, fontSize: 12.5 }}>{ft.hata}</Text>}
+      {!sirada && !calis && (ft?.fikirler || []).slice(0, 5).map((f, i) => <Text key={i} style={{ color: R.yazi, fontSize: 14 }}>{i + 1}. {f}</Text>)}
+      <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+        {!!ft?.link && ft.link.startsWith('https://claude.ai/') &&!sirada && !calis && <Dugme yazi="Tasarımları aç" onPress={() => { Linking.openURL(ft.link!).catch(() => {}); }} />}
+        <Dugme yazi={sirada || calis ? 'Hazırlanıyor…' : 'Geliştirme fikri iste'} tur={ft?.link ? 'ikinci' : 'ana'} kapali={sirada || calis || !o.ts} onPress={iste} />
+      </View>
+    </KartK>
+  );
+}
+
 export function Anasayfa() {
   const { o, hepsi, cevrim, senk, pasif } = useEkip(), es = useRol() === 'es';
   const g = isGunuOlcu(o), bH = (g.bg?.L || 0) + (g.bg?.OT || 0);
@@ -181,6 +205,7 @@ export function Anasayfa() {
         {ilac.length ? ilac.map((i, n) => <IlacSatiri key={i.id} o={o} i={i} no={n + 1} />) : <Text style={s.soluk}>Bugün alınacak ilaç yok. Bana Özel › İlaçlar’dan eklenir.</Text>}
         <SekerSatiri key={o.ts + '|' + (o.aile?.seker[Object.keys(o.aile?.seker || {}).sort().pop() || ''] ?? '')} o={o} />
       </KartK>
+      {!es && <FikirTasarimKart o={o} />}
       {!o.ts && <Text style={[s.sub, { textAlign: 'center' }]}>Son eşitleme yok · veriler masaüstünden gelir · Ayarlar › Eşitleme</Text>}
     </View>
   );

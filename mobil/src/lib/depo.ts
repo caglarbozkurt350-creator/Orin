@@ -54,6 +54,8 @@ export type Ozet = {
   /** yz: masaüstünde yapay zekâ çalışanları açık mı (manuel mod varsayılan; alan yoksa kapalı sayılır) */
   zeka?: { bagli: boolean; usd: number; butce: number; yz?: boolean };
   aile?: Aile;
+  /** 0.9.11: masaüstündeki “Geliştirme fikri iste” işinin son durumu (Claude Design tuval linki ve fikir başlıkları) */
+  fikirTasarim?: { durum: '' | 'calisiyor' | 'hazir' | 'tasarimsiz' | 'hata' | 'istem'; ts: number; link?: string; hata?: string; kaynak?: string; fikirler?: string[] };
   /** 'es': eşin telefonu (masaüstünün orvane_aile özeti; iş/ekip verisi yok, Çağlar'ın verileri salt okunur) */
   rol?: 'es';
 };

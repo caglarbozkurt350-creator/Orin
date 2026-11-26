@@ -523,6 +523,13 @@ ipcMain.handle('isemri:yaz', wrap(o => gelistir.emirYaz(o)));
 ipcMain.handle('isemri:liste', wrap(() => gelistir.emirler()));
 ipcMain.handle('isemri:durum', wrap(() => gelistir.durum()));
 ipcMain.handle('isemri:gelistir', wrap(yzGerek(o => { if (SMOKE) throw new Error('Testte geliştirme çalıştırılmaz'); return gelistir.gelistir(o); })));
+// 0.9.11 · Geliştirme fikirleri + Claude Design (tek düğme; telefondan gelen istek de buraya düşer)
+const fikirTasarim = require('./fikir-tasarim');
+fikirTasarim.init(SMOKE ? DATA() : app.getPath('documents'), abonelik, kay => [dataDir(), DATA(), path.join(app.getPath('documents'), 'Orin', 'Veriler'), path.join(app.getPath('documents'), 'Orin', 'Belgelerim'), kay && path.join(kay, 'renderer', 'js', 'kisisel.js')].filter(Boolean));
+ipcMain.handle('fikirTasarim:baslat', wrap(yzGerek(o => { if (SMOKE) throw new Error('Testte abonelik çalıştırılmaz'); return fikirTasarim.calistir(o); })));
+ipcMain.handle('fikirTasarim:hazirla', wrap(o => fikirTasarim.hazirla(o).then(h => ({ ad: h.ad, md: h.md }))));
+ipcMain.handle('fikirTasarim:durum', wrap(() => fikirTasarim.durum()));
+ipcMain.handle('fikirTasarim:kopyala', wrap(ad => { require('electron').clipboard.writeText(fikirTasarim.istemOku(ad)); if (!SMOKE) shell.openExternal('https://claude.ai/new'); return true; }));
 // Jarvis (0.7.14): Jarvis projesinin giden/ klasöründeki prompt taslakları (yalnız okuma; şirkete yalnız Çağlar'ın düğmesiyle gider)
 const JARVIS_DIR = () => path.join(app.getPath('documents'), 'Cloude Dosyaları', 'Jarvis');
 const JARVIS = () => path.join(JARVIS_DIR(), 'giden');

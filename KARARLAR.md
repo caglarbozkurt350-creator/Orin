@@ -13,6 +13,7 @@ Son güncelleme: 2026-11-27 · Sürüm 0.9.11
   - Ana sekme yalnız: istenen iş için **en kısa öneri** + gerekli **sorular**. Bağlam en küçük tutulur.
   - Her iş ayrı bir **alt sekmede** (yeni oturum, kendi dalı/worktree'si) yapılır.
   - Raporlar ayrı bir **"Orvane · Raporlar"** alt sekmesinde toplanır; ana sekmeye yalnız tek satırlık sonuç gelir.
+  - Ana sekme alt sekmeleri **denetler**. İşi biten alt sekme, raporu Raporlar sekmesine alınıp dalı birleştikten sonra **sıkıştırılır veya silinir** (kullanıcının kalıcı izni, 2026-11-27). Rapor alınmadan silinmez; Raporlar sekmesi silinmez.
 - **Kararlar dosyası:** Bu dosya (`KARARLAR.md`). Yeni karar → buraya eklenir.
 - **Dal adları:** `ozellik/…`, `duzeltme/…`, `surum/x.y.z`, `claude/…`; birleştirme `main`'e PR ile.
 - **Sürüm notu:** Her sürümde `surum-notlari/<sürüm>.md`; kısa, Türkçe, "Masaüstü / Telefon" başlıkları, telefonda değişiklik yoksa "Değişiklik yok".

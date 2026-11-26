@@ -1,6 +1,6 @@
 // Ailem kategorileri (0.9.4): kutucuğa dokununca altta o kategorinin gerçek içeriği açılır.
 // • Bütçe: bu ayın kişisel gelir/gideri, kategoriler, son işlemler · Gelir / gider ekle (finans_kayit)
-// • Sağlık: bugünkü ilaçlar (ilac_al) ve sabah açlık şekeri (seker)
+// • Sağlık: bugünkü ilaçlar (ilac_al), sabah açlık şekeri (seker), spor (spor: adım, yürüyüş dk, başka aktivite)
 // • Menü & Market: haftalık menü (menu_yaz {k, v}) · market listesi (market_ekle / market_tik / market_temizle)
 // • Satın Alma: öneriler ve karar (oneri_ekle / oneri_karar)
 // • Ev İşleri: yapılacaklar (ev_ekle / ev_tik / ev_temizle)
@@ -11,7 +11,7 @@ import { Pressable, Text, TextInput, View } from 'react-native';
 import { EtkinlikFormu } from '@/bilesen/AileOrtak';
 import { AltPencere, Bos, FinansFormu } from '@/bilesen/formlar';
 import { Dugme, Hap, Ikon, KartK, s } from '@/bilesen/ortak';
-import { bugunIlac, IlacSatiri, SekerSatiri } from '@/bilesen/Saglik';
+import { bugunIlac, IlacSatiri, SekerSatiri, SporKarti } from '@/bilesen/Saglik';
 import { useBugun } from '@/lib/bugun';
 import type { Etkinlik, Kisi, Oneri, Ozet } from '@/lib/depo';
 import { olayEkle, uid } from '@/lib/depo';
@@ -103,6 +103,7 @@ function Saglik({ o }: { o: Ozet }) {
       <Text style={s.sub}>Bugünkü ilaçlar · içtiğinde düğmeyi aç</Text>
       {L.length ? L.map((i, n) => <IlacSatiri key={i.id} o={o} i={i} no={n + 1} />) : <Bos yazi={(o.aile?.ilac || []).length ? 'Bugün için ilaç yok.' : 'İlaç planı boş. Bana Özel › Sağlık’tan ilaç ekleyebilirsin.'} ikon="ilac" />}
       {!es && <SekerSatiri o={o} />}
+      {!es && <SporKarti key={'sp' + o.ts} o={o} />}
       <Dugme yazi="İlaç planını düzenle" ikon="ilac" tur="ikinci" onPress={() => sekmeGit(3)} />
     </>
   );

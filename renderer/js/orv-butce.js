@@ -136,7 +136,7 @@ GG.pano=function(v){var a=OA.st(),B=a.bak||{},ab=B.aile,bu=v.ay==GG.buAy(),hedef
  // 3-5) gelir, gider, hedef
  var fg=GG.fark(v.gl,v.og),fd=GG.fark(v.gd,v.od,true),hO=hedef?Math.min(1,v.gd/hedef):0;
  var k3='<span class="gg-yu" style="background:#16a34a" aria-hidden="true">↓</span><div class="gg-et">Bu ay gelir</div><div class="gg-orta">'+GG.say(v.gl,'tl',.35)+' ₺</div><span class="gg-fk" style="color:'+fg.renk+'">'+fg.yazi+' geçen aya göre</span>';
- // 0.9.12: gelir üst sınırı = önceki ayın bordrosu Net Ödenen + SGK ödeneği (BKR, orv-butce-kural.js)
+ // 0.9.13: gelir üst sınırı = önceki ayın bordrosu Net Ödenen + SGK ödeneği (BKR, orv-butce-kural.js)
  var sn=typeof BKR!='undefined'&&BKR.sinir?BKR.sinir(v.ay):null;
  if(sn)k3+='<span class="gg-sn'+(v.gl>sn.sinir+0.005?' asim':'')+'" data-sinir="'+sn.sinir+'">'+(v.gl>sn.sinir+0.005?'▲ Bordro sınırını '+tl(v.gl-sn.sinir)+' ₺ aşıyor':'Sınır '+tl(sn.sinir)+' ₺')+' · Net Ödenen'+(sn.sgk?' + SGK ödeneği':'')+'</span>';
  var k4='<span class="gg-yu" style="background:var(--acc)" aria-hidden="true">↑</span><div class="gg-et">Bu ay gider</div><div class="gg-orta">'+GG.say(v.gd,'tl',.4)+' ₺</div><span class="gg-fk" style="color:'+fd.renk+'">'+fd.yazi+' geçen aya göre</span>';

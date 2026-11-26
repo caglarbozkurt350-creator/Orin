@@ -1,5 +1,5 @@
 // ========================================================================
-// Orvane 0.9.12 · Ailem › Altın Hesabım. Tasarım 0.8.0 dili ve Aylık Bütçe sayfasının kart/tablo sınıfları (orv-butce.css: gg-*).
+// Orvane 0.9.13 · Ailem › Altın Hesabım. Tasarım 0.8.0 dili ve Aylık Bütçe sayfasının kart/tablo sınıfları (orv-butce.css: gg-*).
 // Veri: S.orvA.altin = {kalem:[{id,tur,miktar,alis,tarih,not,ts}], fiyat:{t:{tur:{satis,alis,deg,kaynak}},kaynak,tarih,ts}} (durum.json).
 //  • miktar: gram türlerinde gram (3 basamağa kadar), adetli türlerde tam sayı adet. alis: toplam alış tutarı (TL, isteğe bağlı).
 //  • Birim fiyat = satış fiyatı (Anasayfa'daki gram altın kartı gibi); "bozdurursan" değeri alış fiyatıyla ayrıca gösterilir.

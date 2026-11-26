@@ -161,5 +161,5 @@
 .gg-sessiz *,.gg-sessiz{animation:none!important}
 @media (prefers-reduced-motion:reduce){.gg *,.gg{animation:none!important;transition:none!important}.gg-k:hover{transform:none}}
 @media (max-width:760px){.gg-sek{order:3}.gg-g2b{grid-template-columns:1fr}}
-/* 0.9.12: gelir kartında Bordro sınırı (Net Ödenen + SGK ödeneği) */
+/* 0.9.13: gelir kartında Bordro sınırı (Net Ödenen + SGK ödeneği) */
 .gg-sn{display:block;margin-top:4px;font-size:11px;font-weight:600;color:var(--yazi3)}.gg-sn.asim{color:#ff9a85}

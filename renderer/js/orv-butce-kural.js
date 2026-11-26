@@ -1,5 +1,5 @@
 // ========================================================================
-// Orvane 0.9.12 · Aile Bütçesi kural katmanı (orv-butce.js'ten sonra yüklenir).
+// Orvane 0.9.13 · Aile Bütçesi kural katmanı (orv-butce.js'ten sonra yüklenir).
 // Var olan işlevler sarmalanır; hiçbir eski özellik silinmez. Kurallar KARARLAR.md › 6:
 //  • Aylık gelir ≤ Net Ödenen + SGK Rapor Ödeneği (maaş ertesi ayın 5'inde yatar: A ayının sınırı A−1 bordrosundan).
 //    Elle girilen gelir (Aylık Bütçe, Gelir/gider ekle) sınırı aşıyorsa kaydedilmez. Bakiye bildiriminin "Kayıt dışı gelir"i

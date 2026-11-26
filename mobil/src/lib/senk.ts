@@ -4,7 +4,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import Storage from 'expo-sqlite/kv-store';
 import { AppState, Platform } from 'react-native';
-import { bugunAnahtari, bugunIsareti } from '@/lib/bugun';
+import { bugunAnahtari, bugunIsareti, sekerSiniri, yerelSeker } from '@/lib/bugun';
 import { durum, guncelle, Ozet } from '@/lib/depo';
 
 // Masaüstüyle aynı Supabase projesi. Ayarlar ekranından değiştirilebilir.
@@ -92,7 +92,7 @@ export async function esitle(): Promise<void> {
     guncelle((d) => {
       const yer = new Map(d.olaylar.map((o) => [o.id, o]));
       (ol || []).forEach((r: any) => { if (!yer.has(r.id)) yer.set(r.id, { id: r.id, tur: r.tur, veri: r.veri, ts: Date.parse(r.ts), sira: r.sira, gitti: true }); });
-      const k = bugunAnahtari(), olaylar = [...yer.values()].filter((o) => !o.gitti || !o.sira || o.sira > bas || bugunIsareti(o, k)); // bugünkü ilaç işaretleri 00:00'a kadar kalır (ekip.ts gorunum)
+      const k = bugunAnahtari(), sk = sekerSiniri(), olaylar = [...yer.values()].filter((o) => !o.gitti || !o.sira || o.sira > bas || bugunIsareti(o, k) || yerelSeker(o, sk)); // bugünkü ilaç işaretleri 00:00'a kadar kalır (ekip.ts gorunum)
       return { ...d, ozet: ozet || d.ozet, olaylar, senk: { son: Date.now(), calisiyor: false } };
     });
   } catch (e) {
@@ -105,9 +105,19 @@ async function esitleEs(c: SupabaseClient, sahip: string) {
   guncelle((d) => ({ ...d, olaylar: d.olaylar.filter((o) => o.gitti || ES_TUR.includes(o.tur)) }));
   const gid = durum().olaylar.filter((o) => !o.gitti);
   if (gid.length) {
-    const { data, error } = await c.from('orvane_aile_olay').upsert(gid.map((o) => ({ id: o.id, sahip, tur: o.tur, veri: o.veri, ts: new Date(o.ts).toISOString() })), { onConflict: 'id' }).select('id,sira');
+    // orvane_aile_olay'da eşin yalnız INSERT izni var (UPDATE politikası yok). Düz upsert, daha önce gitmiş bir olay yeniden
+    // gönderilince (yanıt gelmeden uygulama kapandı, "gitti" diske yazılamadı) ON CONFLICT DO UPDATE yoluna girip RLS'e takılıyor,
+    // bütün parti reddediliyordu: o andan sonra eklenen randevu ve etkinlikler hiç gitmiyor, masaüstüne ve Çağlar'a ulaşmıyordu.
+    // ignoreDuplicates → ON CONFLICT DO NOTHING (yalnız INSERT izni ister); zaten sunucuda olanların sırası ayrıca okunur.
+    const { data, error } = await c.from('orvane_aile_olay').upsert(gid.map((o) => ({ id: o.id, sahip, tur: o.tur, veri: o.veri, ts: new Date(o.ts).toISOString() })), { onConflict: 'id', ignoreDuplicates: true }).select('id,sira');
     if (error) throw error;
     const m = new Map((data || []).map((r: any) => [r.id, r.sira]));
+    const eksik = gid.filter((o) => !m.has(o.id)).map((o) => o.id);
+    if (eksik.length) {
+      const { data: var0, error: e9 } = await c.from('orvane_aile_olay').select('id,sira').in('id', eksik);
+      if (e9) throw e9;
+      (var0 || []).forEach((r: any) => m.set(r.id, r.sira));
+    }
     guncelle((d) => ({ ...d, olaylar: d.olaylar.map((o) => (m.has(o.id) ? { ...o, gitti: true, sira: m.get(o.id) } : o)) }));
   }
   const { data: zt, error: e0 } = await c.from('orvane_aile').select('ts').eq('sahip', sahip).maybeSingle(); if (e0) throw e0;
@@ -122,7 +132,7 @@ async function esitleEs(c: SupabaseClient, sahip: string) {
   guncelle((d) => {
     const yer = new Map(d.olaylar.map((o) => [o.id, o]));
     (ol || []).forEach((r: any) => { if (!yer.has(r.id)) yer.set(r.id, { id: r.id, tur: r.tur, veri: r.veri, ts: Date.parse(r.ts), sira: r.sira, gitti: true }); });
-    const k = bugunAnahtari(), olaylar = [...yer.values()].filter((o) => !o.gitti || !o.sira || o.sira > bas || bugunIsareti(o, k)); // bugünkü ilaç işaretleri 00:00'a kadar kalır (ekip.ts gorunum)
+    const k = bugunAnahtari(), sk = sekerSiniri(), olaylar = [...yer.values()].filter((o) => !o.gitti || !o.sira || o.sira > bas || bugunIsareti(o, k) || yerelSeker(o, sk)); // bugünkü ilaç işaretleri 00:00'a kadar kalır (ekip.ts gorunum)
     return { ...d, ozet: ozet || d.ozet, olaylar, senk: { son: Date.now(), calisiyor: false } };
   });
 }

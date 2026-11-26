@@ -1,4 +1,4 @@
-// Bana Özel (0.9.0): Sağlık özeti (şeker 7 gün, ilaç uyumu), İLAÇLARIM (ekle/düzelt/sil, stok uyarısı, aylık PDF),
+// Bana Özel (0.9.0): Sağlık özeti (şeker 7 gün, ilaç uyumu), AÇLIK ŞEKERİ grafiği (14/30/60 gün, hedef bandı), İLAÇLARIM (ekle/düzelt/sil, stok uyarısı, aylık PDF),
 // Hobi: takip edilen oyunlar ve YENİ ÇIKACAK OYUNLAR (Steam; takip et → kalan gün, zil → çıkış günü hatırlatması).
 // İlaç olayları: ilac_kaydet / ilac_sil (masaüstü orv-telefon.js). Oyun takibi yalnız bu telefonda (lib/dis).
 import { Image } from 'expo-image';
@@ -9,6 +9,7 @@ import { AltPencere, Bos } from '@/bilesen/formlar';
 import { Bolumler, Dugme, Hap, Ikon, KartK, SayfaBasligi, s } from '@/bilesen/ortak';
 import { PdfDugme } from '@/bilesen/Pdf';
 import { alindiMi, IlacSatiri, SEKER_RENK, SekerSatiri } from '@/bilesen/Saglik';
+import { SekerGrafik } from '@/bilesen/SekerGrafik';
 import { Ilac, olayEkle, Ozet, uid } from '@/lib/depo';
 import { kalanGun, oyunYenile, takipDegis, useDis, useDisYenile, zilDegis } from '@/lib/dis';
 import { useBugun } from '@/lib/bugun';
@@ -115,6 +116,8 @@ export function BanaOzel() {
   const rol = useRol(), ben = benKimim(rol), es = rol === 'es', tum = o.aile?.ilac || [], bugun = useBugun(); // bugun: 00:00'da ekran yeni güne geçer
   const ilac = tum.filter((i) => (i.kim || 'cagla') === ben), diger = tum.filter((i) => (i.kim || 'cagla') !== ben), digerAd = es ? AD.cagla : AD.kubra;
   const so = saglikOzet(o, ilac);
+  const sekerSay = Object.keys(o.aile?.seker || {}).length, sekerSon = Object.keys(o.aile?.seker || {}).sort().pop();
+  const sekerOzet = sekerSay ? sekerSay + ' ölçüm · son ' + o.aile!.seker[sekerSon!] + ' mg/dL' : 'ölçüm yok';
   const azalan = ilac.map((i) => ({ i, k: kalanStok(i) })).filter((x) => x.k != null && x.k <= 7);
   const takipL = Object.entries(takip).map(([id, t]) => ({ id, ...t, kg: kalanGun(t.ts) })).sort((a, b) => (a.kg ?? 9999) - (b.kg ?? 9999));
   // 0.9.9: Ben sekmesinde yalnız kendi veriler; Eşim sekmesinde eşin verileri gösterge olarak.
@@ -156,6 +159,8 @@ export function BanaOzel() {
         {!es && <SekerSatiri key={'sk' + o.ts} o={o} />}
       </KartK>
 
+      {!es && <KartK ad="sekerGrafik" baslik="AÇLIK ŞEKERİ" ozet={sekerOzet}><SekerGrafik o={o} /></KartK>}
+
       {!es && <KartK ad="hobi" baslik="TAKİP ETTİĞİM OYUNLAR" ozet={takipL.length + ' oyun'}>
         {takipL.length ? takipL.map((t) => (
           <View key={t.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 44, paddingHorizontal: 12, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.05)' }}>
@@ -176,6 +181,7 @@ export function BanaOzel() {
 
       {sekme === 'esim' && (es ? <>
         <View style={{ flexDirection: 'row' }}>{sekerKutu(AD.cagla + ' · şeker · 7 gün')}</View>
+        <KartK ad="sekerGrafik" baslik={AD.cagla.toLocaleUpperCase('tr') + ' · AÇLIK ŞEKERİ'} ozet={sekerOzet}><SekerGrafik o={o} /></KartK>
         <Text style={[s.sub, { fontSize: 11.5 }]}>Yalnız görüntülenir; şekeri {AD.cagla} kendi telefonundan yazar.</Text>
       </> : <KartK ad="digerIlac" baslik={digerAd.toLocaleUpperCase('tr') + ' · İLAÇLAR'} ozet={diger.length + ' ilaç · ' + diger.filter((i) => alindiMi(o, i, bugun)).length + ' bugün alındı'}>
         {diger.slice().sort((a, b) => a.saat.localeCompare(b.saat)).map((i) => { const ok = alindiMi(o, i, bugun); return (

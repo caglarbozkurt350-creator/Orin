@@ -166,8 +166,9 @@ export function Kart({ c }: { c: Calisan }) {
 
 // ---------- Açılır-kapanır kart (başlığa dokununca küçülür; kapalıyken başlıkta kısa özet) ----------
 const KAPALI: Record<string, boolean> = {}; // tema değişince ekran yeniden kurulsa da açık/kapalı durumu korunur
-export function KartK({ ad, baslik, ozet, acikOzet, children, sag, duz }: { ad: string; baslik: string; ozet?: string; acikOzet?: string; children: ReactNode; sag?: ReactNode; duz?: boolean }) {
-  const [kap, setKap] = useState(!!KAPALI[ad]);
+/** kapali: ilk açılışta daraltılmış başlar (kullanıcı açarsa uygulama açık kaldıkça öyle kalır) */
+export function KartK({ ad, baslik, ozet, acikOzet, children, sag, duz, kapali }: { ad: string; baslik: string; ozet?: string; acikOzet?: string; children: ReactNode; sag?: ReactNode; duz?: boolean; kapali?: boolean }) {
+  const [kap, setKap] = useState(KAPALI[ad] ?? !!kapali);
   const degis = () => { LayoutAnimation.configureNext(LayoutAnimation.create(260, 'easeInEaseOut', 'opacity')); KAPALI[ad] = !kap; setKap(!kap); };
   return (
     <View style={duz ? undefined : s.cam}>

@@ -17,6 +17,9 @@ const INCELEME_ARAC = 'Read,Glob,Grep,Bash', INCELEME_IZIN = ['Read', 'Glob', 'G
 // (--permission-mode acceptEdits), gerçek veri ve kişisel dosya yasak (koru), git'te yalnız okuma; commit'i Orvane kendisi yapar, push/merge/yayın yok.
 const GELISTIR_ARAC = 'Read,Glob,Grep,Edit,Write,Bash', GELISTIR_IZIN = ['Read', 'Glob', 'Grep', 'Bash(npx electron . --smoke)', 'Bash(git status:*)', 'Bash(git diff:*)', 'Bash(git log:*)'];
 const GELISTIR_YASAK = ['Bash(git push:*)', 'Bash(git merge:*)', 'Bash(git checkout:*)', 'Bash(git reset:*)', 'Bash(git commit:*)', 'Bash(git branch:*)', 'Bash(git worktree:*)', 'Bash(npm publish:*)', 'Bash(npx eas-cli:*)', 'Bash(eas:*)', 'Bash(gh:*)', 'Bash(curl:*)', 'WebFetch', 'WebSearch'];
+// Tasarım kipi (0.9.11, geliştirme fikirleri + Claude Design): kendi çalışma klasöründe yazar, Orvane kaynağını yalnız OKUR (--add-dir),
+// tasarımı Artifact aracıyla Claude Design tuvaline yayınlar. Kaynakta düzenleme, Bash, git ve web araması yok.
+const TASARIM_ARAC = 'Read,Glob,Grep,Write,Edit,Artifact', TASARIM_IZIN = ['Read', 'Glob', 'Grep', 'Artifact'];
 function kuralYolu(p) { const s = String(p || '').replace(/\\/g, '/').replace(/^([A-Za-z]):/, (m, d) => '/' + d.toLowerCase()); return '/' + s.replace(/^\/+/, ''); } // C:\a\b → //c/a/b
 function koruKurallari(koru) { const r = []; (koru || []).filter(Boolean).forEach(p => { const k = kuralYolu(p), dosya = /\.\w+$/.test(p); ['Read', 'Edit', 'Write'].forEach(t => r.push(t + '(/' + k + (dosya ? '' : '/**') + ')')); }); return r; }
 function kaynakAday() { const c = cfg(); return [c.kaynak, DOCS && path.join(DOCS, 'Cloude Dosyaları', 'is-raporu')].filter(Boolean); }
@@ -57,6 +60,10 @@ const ENV_TUT = /^(SystemRoot|SystemDrive|windir|PATH|PATHEXT|USERPROFILE|HOMEDR
 function temizEnv() { const o = {}; for (const k of Object.keys(process.env)) if (ENV_TUT.test(k)) o[k] = process.env[k]; return o; }
 function argsOf(o, sistemDosyasi) {
   const c = cfg();
+  if (o.mod === 'tasarim') { const k = o.kaynak ? '/' + kuralYolu(o.kaynak) + '/**' : null;
+    return ['-p', '--output-format', 'json', '--model', MODELLER.includes(o.model) ? o.model : c.model, '--max-turns', String(Math.max(1, Math.min(80, Number(o.maxTur) || 60))),
+      '--strict-mcp-config', '--disable-slash-commands', '--setting-sources', '', '--no-session-persistence', '--permission-mode', 'acceptEdits', '--tools', TASARIM_ARAC,
+      ...(o.kaynak ? ['--add-dir', o.kaynak] : []), '--allowedTools', ...TASARIM_IZIN, '--disallowedTools', 'Bash', 'WebFetch', 'WebSearch', ...(k ? ['Edit(' + k + ')', 'Write(' + k + ')'] : []), ...koruKurallari(o.koru), '--append-system-prompt-file', sistemDosyasi]; }
   if (o.mod === 'gelistir') return ['-p', '--output-format', 'json', '--model', MODELLER.includes(o.model) ? o.model : c.model, '--max-turns', String(Math.max(1, Math.min(60, Number(o.maxTur) || 40))),
     '--strict-mcp-config', '--disable-slash-commands', '--setting-sources', '', '--no-session-persistence', '--permission-mode', 'acceptEdits', '--tools', GELISTIR_ARAC,
     '--allowedTools', ...GELISTIR_IZIN, '--disallowedTools', ...GELISTIR_YASAK, ...koruKurallari(o.koru), '--append-system-prompt-file', sistemDosyasi];
@@ -84,7 +91,7 @@ function calistir(o) {
   if (!o.test && toplanti && (c.toplanti || 0) >= (c.gunlukToplanti || 300)) return Promise.reject(Object.assign(new Error('Bugünkü toplantı cevabı sınırı doldu (' + (c.gunlukToplanti || 300) + ')'), { kod: 'gunluk' }));
   if (!o.test && sohbet && !toplanti && (c.sohbet || 0) >= c.gunlukSohbet) return Promise.reject(Object.assign(new Error('Bugünkü abonelik sohbet sınırı doldu (' + c.gunlukSohbet + ')'), { kod: 'gunluk' }));
   const kim = String(o.kim || 'genel').replace(/[^\w-]/g, '');
-  const inc = o.mod === 'inceleme', kay = inc ? kaynak() : null, gel = o.mod === 'gelistir' || o.mod === 'jarvis'; // jarvis (0.7.15): Jarvis klasöründe, yalnız okuma
+  const inc = o.mod === 'inceleme', kay = inc ? kaynak() : null, gel = o.mod === 'gelistir' || o.mod === 'jarvis' || o.mod === 'tasarim'; // jarvis (0.7.15): Jarvis klasöründe, yalnız okuma
   if (inc && !kay) return Promise.reject(new Error('Orvane kaynak klasörü bulunamadı (Ayarlar › Yapay zekâ › Claude aboneliği › Kaynak klasörü)'));
   if (gel && !(o.cwd && fs.existsSync(o.cwd))) return Promise.reject(new Error('Geliştirme çalışma klasörü yok'));
   // 0.7.20 (Ada): sayaç iş BAŞLARKEN ayrılır (aynı anda başlayan işler günlük sınırı aşamaz); iş başarısız olursa geri verilir
@@ -162,14 +169,14 @@ async function test() {
   kaydet(); return status();
 }
 // Arka plan işleri (0.7.17): Orvane'nin başlattığı her Claude Code işi kaydedilir (çalışan, tür, süre, token, sonuç); Çalışanlarım › Arka plan işleri
-const ISLER = [], ISTUR = { sohbet: 'Sohbet cevabı', toplanti: 'Toplantı cevabı', inceleme: 'Program incelemesi', gelistir: 'İş emri (geliştirme)', jarvis: 'Jarvis sohbeti' };
+const ISLER = [], ISTUR = { sohbet: 'Sohbet cevabı', toplanti: 'Toplantı cevabı', inceleme: 'Program incelemesi', gelistir: 'İş emri (geliştirme)', tasarim: 'Geliştirme fikirleri ve tasarım', jarvis: 'Jarvis sohbeti' };
 let ISYUK = false;
 function islerDosya() { return path.join(DIR, 'arkaplan.json'); }
 function islerYukle() { if (ISYUK || !DIR) return; ISYUK = true; try { JSON.parse(fs.readFileSync(islerDosya(), 'utf8')).forEach(x => { if (x.durum === 'calisiyor') { x.durum = 'hata'; x.hata = 'Orvane kapanınca yarıda kaldı'; } ISLER.push(x); }); } catch (e) {} }
 function islerKaydet() { try { const f = islerDosya(), t = f + '.tmp'; fs.writeFileSync(t, JSON.stringify(ISLER.slice(-60))); fs.renameSync(t, f); } catch (e) {} }
 function calistirIzle(o) {
   o = o || {}; islerYukle();
-  const tur = o.mod === 'inceleme' || o.mod === 'gelistir' || o.mod === 'jarvis' ? o.mod : o.tur === 'sohbet' || o.tur === 'toplanti' ? o.tur : 'gorev';
+  const tur = o.mod === 'inceleme' || o.mod === 'gelistir' || o.mod === 'jarvis' || o.mod === 'tasarim' ? o.mod : o.tur === 'sohbet' || o.tur === 'toplanti' ? o.tur : 'gorev';
   const j = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), kim: String(o.kim || 'genel'), tur, etiket: String(o.etiket || ISTUR[tur] || String(o.istem || '').split(/\r?\n/).find(x => x.trim()) || 'Görev').slice(0, 90), model: o.model || cfg().model, basla: Date.now(), durum: 'calisiyor' };
   if (!o.test) { ISLER.push(j); if (ISLER.length > 60) ISLER.splice(0, ISLER.length - 60); }
   const bitir = (r, e) => { j.bitis = Date.now(); j.sureMs = j.bitis - j.basla; if (r) { j.durum = 'bitti'; j.token = r.token || 0; j.adim = r.tur || 0; if (r.model) j.model = r.model; } else { j.durum = 'hata'; j.hata = String(e && e.message || e).slice(0, 200); } if (!o.test) islerKaydet(); };

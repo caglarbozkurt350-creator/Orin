@@ -56,6 +56,7 @@ contextBridge.exposeInMainWorld('api', {
     durum: () => ipcRenderer.invoke('isemri:durum'),
     gelistir: o => ipcRenderer.invoke('isemri:gelistir', o)
   },
+  fikirTasarim: { baslat: o => ipcRenderer.invoke('fikirTasarim:baslat', o), hazirla: o => ipcRenderer.invoke('fikirTasarim:hazirla', o), durum: () => ipcRenderer.invoke('fikirTasarim:durum'), kopyala: ad => ipcRenderer.invoke('fikirTasarim:kopyala', ad) },
   toplanti: { kaydet: o => ipcRenderer.invoke('toplanti:kaydet', o) },
   piyasa: { tcmb: zorla => ipcRenderer.invoke('piyasa:tcmb', zorla), gecmis: () => ipcRenderer.invoke('piyasa:gecmis') },
   gizli: { klasorler: () => ipcRenderer.invoke('gizli:klasorler') },

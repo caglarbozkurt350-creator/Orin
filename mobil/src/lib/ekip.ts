@@ -21,6 +21,15 @@ const BEC0: Record<string, [string, number, string][]> = {
 const DESC0: Record<string, string> = { orin: 'şirketi yönetir, görevleri dağıtır, gelişimleri onaylar', orla: 'ekibi koordine eder, işleri sıraya koyar', nika: 'çalışan kartlarını hazırlar, beceri ve hafızaları geliştirir', echo: 'iş günü kayıtlarını toplar ve raporlar', otto: 'gelir-gider kaydını tutar, yaklaşan ödemeleri hatırlatır' };
 
 const bosAy = (ay: string): ButceAy => ({ ay, gelir: 0, gider: 0, kat: {}, hg: [0, 0, 0, 0, 0], hc: [0, 0, 0, 0, 0] });
+export const SPOR_TUR: Record<string, string> = { kosu: 'Koşu', bisiklet: 'Bisiklet', fitness: 'Fitness', yuzme: 'Yüzme', yoga: 'Yoga', diger: 'Diğer' };
+/** Masaüstündeki OT9.spor ile aynı kurallar */
+function sporUygula(o: Ozet, v: any) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(v.k || '') || (v.kim !== 'cagla' && v.kim !== 'kubra')) return;
+  const a = (o.aile = o.aile || bosAile()), sp = (a.spor = { ...(a.spor || {}) }), s = (x: any, m: number) => Math.max(0, Math.min(m, Math.round(+x) || 0));
+  const y: any = { adim: s(v.adim, 100000), dk: s(v.dk, 600), tur: SPOR_TUR[v.tur] ? v.tur : '', tdk: s(v.tdk, 600) };
+  if (!y.tur) y.tdk = 0; if (/^\d{2}:\d{2}$/.test(v.s || '')) y.s = v.s;
+  const k = v.k + '|' + v.kim; if (!y.adim && !y.dk && !y.tdk) delete sp[k]; else sp[k] = y;
+}
 export function bosAile(): Aile { return { fin: { bu: bosAy(''), once: bosAy(''), islem: [] }, ilac: [], al: {}, seker: {}, tcmb: null }; }
 export function bosOzet(): Ozet {
   return { v: 1, ts: 0, olaySira: 0, ekip: { m: {}, gorev: [], gel: [], sohbet: {} }, gun: {}, proj: [], ayar: { w1: 525, w2: 435 } };
@@ -75,8 +84,10 @@ export function uygula(o: Ozet, e: Olay) {
       const k = gunAnahtari(d), g = o.gun[k];
       if (g?.D && (!v.t || g.D === v.t || (v.t === 'rapor13' && g.D === 'rapor4'))) { const y = { ...g }; delete y.D; o.gun[k] = y; }
     }
-  } else if (/^(etkinlik|etkinlik_sil|ozel_gun|ozel_gun_sil|es_harcama|es_gelir|finans_kayit)$/.test(e.tur)) {
+  } else if (/^(etkinlik|etkinlik_sil|ozel_gun|ozel_gun_sil|es_harcama|es_gelir|finans_kayit|cep_iste|es_cep_iste)$/.test(e.tur)) {
     aileUygula(o, e);
+  } else if (e.tur === 'spor') {
+    sporUygula(o, v);
   } else if (/^(menu_yaz|market_ekle|market_tik|market_temizle|oneri_ekle|oneri_karar|ev_ekle|ev_tik|ev_temizle)$/.test(e.tur)) {
     katUygula(o, e);
   } else if (/^es_ilac_(al|kaydet|sil)$/.test(e.tur) || e.tur === 'ilac_al' || e.tur === 'ilac_kaydet' || e.tur === 'ilac_sil' || e.tur === 'seker') {
@@ -129,7 +140,11 @@ function aileUygula(o: Ozet, e: Olay) {
     const m = O.ozel.find((x) => x.id === v.id); if (m && es && m.kim !== 'kubra') return;
     const y = { ad: v.ad, tarih: v.tarih, tur: v.tur || 'diger', kisi: v.kisi === 'cagla' || v.kisi === 'kubra' ? v.kisi : undefined }; if (m) Object.assign(m, y); else O.ozel.push({ id: v.id, kim, ...y });
   } else if (e.tur === 'ozel_gun_sil') O.ozel = O.ozel.filter((x) => x.id !== v.id || (es && x.kim !== 'kubra'));
-  else {
+  else if (e.tur === 'cep_iste' || e.tur === 'es_cep_iste') {
+    // 0.9.11: cep harçlığı iste → yalnız isteyenin cebi artar; Aile Bütçesi ve gelir değişmez
+    const t = Math.round((+String(v.tutar).replace(',', '.') || 0) * 100) / 100, c = O.cep[e.tur === 'cep_iste' ? 'c' : 'e']; if (!(t > 0) || !c) return;
+    c.har = (c.har || 0) + t; if (c.kal != null) { c.kal += t; c.gunluk = O.cep.kalanGun ? Math.max(0, Math.round(c.kal / O.cep.kalanGun)) : c.gunluk; } else c.kal = t;
+  } else {
     // Harcama / gelir: es_harcama {tutar, ad, kasa cep|ortak, kat} · es_gelir · finans_kayit {tur, kim, tutar, kalem, tarih, hk?}
     if (e.tur === 'finans_kayit' && v.kim === 'sirket') return;
     const gelir = e.tur === 'es_gelir' || (e.tur === 'finans_kayit' && v.tur === 'gelir'), tutar = Math.round((+String(v.tutar).replace(',', '.') || 0) * 100) / 100; if (!(tutar > 0)) return;

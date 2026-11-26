@@ -26,7 +26,11 @@ export type Aile = {
   ortak?: Ortak;
   /** 0.9.4 Ailem kategorileri (masaüstü S.orvA): menü "gün-ogle|aksam" (gün 0 = Pazartesi), market listesi, satın alma önerileri, ev işleri */
   menu?: Record<string, string>; market?: MarketMadde[]; oneri?: Oneri[]; ev?: EvIsi[];
+  /** 0.9.4 spor: "YYYY-MM-DD|cagla|kubra" → günlük kayıt */
+  spor?: Record<string, Spor>;
 };
+/** Günlük spor: adım, yürüyüş dk, başka aktivite (tur: kosu|bisiklet|fitness|yuzme|yoga|diger) ve dakikası, yazıldığı saat */
+export type Spor = { adim: number; dk: number; tur: string; tdk: number; s?: string };
 export type MarketMadde = { id: string; ad: string; al: boolean };
 export type Oneri = { id: string; ad: string; fiyat: string; alt: string; otto: string; karar: 'bekliyor' | 'onay' | 'ertele' | 'red'; ts: number };
 export type EvIsi = { id: string; ad: string; kim: string; bitti: boolean };
@@ -42,7 +46,7 @@ export type Ortak = {
   trend: [string, number, number][];
   kasa: { ortak: number; c: number; e: number };
   kat: Record<string, number>;
-  cep: { c?: CepDurum; e?: CepDurum; kalanGun?: number; bek?: number };
+  cep: { c?: CepDurum; e?: CepDurum; kalanGun?: number; bek?: number; /** 0.9.11 bakiye: cep harçlığı tutar olarak; yuzde: kalanın yüzdesi */ mod?: 'bakiye' | 'yuzde' };
   hareket: [string, 0 | 1, string, string, number, 'o' | 'c' | 'e', Kisi][];
   odeme: { ad: string; tutar: number; tarih: string }[];
   takvim: Etkinlik[]; ozel: OzelGun[]; izin: Record<string, string>;

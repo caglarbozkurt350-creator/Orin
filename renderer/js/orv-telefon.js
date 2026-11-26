@@ -2,7 +2,7 @@
 // Orvane 0.9.0 · Telefonun yeni 5 sekmeli arayüzü için eşitleme eki.
 // Telefona giden özete `aile` bloğu eklenir: bu ay ve geçen ayın kişisel bütçesi (S.finans, Şirket hariç),
 // ilaç planı ve alındı işaretleri (S.orvA.ilac / ilacAl), sabah açlık şekeri (S.orvA.seker), TCMB kuru.
-// Telefondan gelen yeni olaylar: kayit_duzelt, kayit_sil, izin_sil, ilac_al, ilac_kaydet, ilac_sil, seker {k, v, s} (s: yazıldığı saat → S.orvA.sekerSaat).
+// Telefondan gelen yeni olaylar: kayit_duzelt, kayit_sil, izin_sil, ilac_al, ilac_kaydet, ilac_sil, seker {k, v, s} (s: yazıldığı saat → S.orvA.sekerSaat), spor {k, kim, adim, dk, tur, tdk, s} (→ S.orvA.spor).
 // 0.9.4: Ailem kategorileri telefonda da çalışır: özete menu {"gün-ogle|aksam": yemek}, market [{id,ad,al}],
 // oneri [{id,ad,fiyat,alt,otto,karar,ts}], ev [{id,ad,kim,bitti}] eklenir. Yeni olaylar: menu_yaz {k, v}, market_ekle {id, ad},
 // market_tik {id, al}, market_temizle, oneri_ekle {id, ad, fiyat, alt}, oneri_karar {id, karar}, ev_ekle {id, ad, kim}, ev_tik {id, bitti}, ev_temizle.
@@ -16,7 +16,8 @@ OT9.butceAy=function(ay){var f=typeof fnS=='function'?fnS():{kayit:[]},r={ay:ay,
  f.kayit.forEach(function(k){if(k.kim=='sirket'||String(k.tarih||'').slice(0,7)!=ay)return;var t=+k.tutar||0,w=Math.min(4,Math.floor(((+String(k.tarih).slice(8,10)||1)-1)/7));
   if(k.tur=='gelir'){r.gelir+=t;r.hg[w]+=t;if(k.kd||k.kalem=='Kayıt dışı gelir')r.kdg+=t}else{if(k.kd||k.kalem=='Kayıt dışı harcama')r.kd+=t;r.gider+=t;r.hc[w]+=t;r.kat[k.kalem||'Diğer']=(r.kat[k.kalem||'Diğer']||0)+t}});
  r.kd=Math.round(r.kd*100)/100;r.kdg=Math.round(r.kdg*100)/100;return r};
-OT9.aile=function(){var a=OA.st(),f=typeof fnS=='function'?fnS():{kayit:[],piyasa:{}},bu=OT9.ay(0),once=OT9.ay(1),sin=OT9.pad(new Date(Date.now()-62*864e5)),al={},sk={},ss={};
+OT9.aile=function(){var a=OA.st(),f=typeof fnS=='function'?fnS():{kayit:[],piyasa:{}},bu=OT9.ay(0),once=OT9.ay(1),sin=OT9.pad(new Date(Date.now()-62*864e5)),al={},sk={},ss={},sp={};
+ Object.keys(a.spor||{}).forEach(function(k){if(k.slice(0,10)>=sin)sp[k]=a.spor[k]});
  Object.keys(a.ilacAl||{}).forEach(function(k){if(k.slice(0,10)>=sin)al[k]=1});
  Object.keys(a.seker||{}).forEach(function(k){if(k>=sin){sk[k]=a.seker[k];if(a.sekerSaat&&a.sekerSaat[k])ss[k]=a.sekerSaat[k]}});
  var islem=f.kayit.filter(function(k){var y=String(k.tarih||'').slice(0,7);return k.kim!='sirket'&&(y==bu||y==once)}).sort(function(x,y){return x.tarih<y.tarih?1:x.tarih>y.tarih?-1:(y.ts||0)-(x.ts||0)}).slice(0,60)
@@ -24,7 +25,7 @@ OT9.aile=function(){var a=OA.st(),f=typeof fnS=='function'?fnS():{kayit:[],piyas
  var p=f.piyasa&&f.piyasa.tcmb;
  return{fin:{bu:OT9.butceAy(bu),once:OT9.butceAy(once),islem:islem},
   ilac:(a.ilac||[]).map(function(i){return{id:i.id,ad:i.ad,miktar:i.miktar||'',saat:i.saat||'',tekrar:i.tekrar||'gun',actok:i.actok||'',not:i.not||'',stok:i.stok==null?null:+i.stok,stokTs:i.stokTs||0,eklendi:i.eklendi||0,kim:i.kim||'cagla'}}),
-  al:al,seker:sk,sekerSaat:ss,
+  al:al,seker:sk,sekerSaat:ss,spor:sp,
   menu:Object.assign({},a.menu||{}),
   market:(a.market||[]).slice(0,80).map(function(m){return{id:m.id,ad:m.ad,al:!!m.al}}),
   oneri:(a.oneri||[]).slice(-30).map(function(o){return{id:o.id,ad:o.ad,fiyat:o.fiyat||'',alt:o.alt||'',otto:o.otto||'',karar:o.karar||'bekliyor',ts:o.ts||0}}),
@@ -51,8 +52,15 @@ var _ot9Bu=bulutUygula;bulutUygula=function(e){var v=e.veri||{},a=OA.st();
   var m=a.ilac.filter(function(z){return z.id==v.id})[0];if(m)Object.assign(m,o);else{o.id=v.id;o.eklendi=e.ts||Date.now();a.ilac.push(o)}OA.kaydet();return}
  if(e.tur=='ilac_sil'){a.ilac=a.ilac.filter(function(z){return z.id!=v.id});OA.kaydet();return}
  if(e.tur=='seker'){if(!/^\d{4}-\d{2}-\d{2}$/.test(v.k||''))return;a.seker=a.seker||{};a.sekerSaat=a.sekerSaat||{};var sv=Math.round(+v.v);if(sv>=20&&sv<=600){a.seker[v.k]=sv;if(/^\d{2}:\d{2}$/.test(v.s||''))a.sekerSaat[v.k]=v.s}else{delete a.seker[v.k];delete a.sekerSaat[v.k]}OA.kaydet();return}
+ if(e.tur=='spor'){OT9.spor(v,a);return}
  if(OT9.aileOlay(e,v,a))return;
  return _ot9Bu(e)};
+// Spor (0.9.4): günlük adım, yürüyüş dk, başka aktivite (tur + tdk). Anahtar "YYYY-MM-DD|cagla|kubra"; hepsi 0 ise kayıt silinir.
+OT9.SPOR={kosu:1,bisiklet:1,fitness:1,yuzme:1,yoga:1,diger:1};
+OT9.spor=function(v,a){if(!/^\d{4}-\d{2}-\d{2}$/.test(v.k||'')||(v.kim!='cagla'&&v.kim!='kubra'))return;a.spor=a.spor||{};
+ var s=function(x,m){x=Math.round(+x)||0;return Math.max(0,Math.min(m,x))},o={adim:s(v.adim,100000),dk:s(v.dk,600),tur:OT9.SPOR[v.tur]?v.tur:'',tdk:s(v.tdk,600)},key=v.k+'|'+v.kim;
+ if(!o.tur)o.tdk=0;if(/^\d{2}:\d{2}$/.test(v.s||''))o.s=v.s;
+ if(!o.adim&&!o.dk&&!o.tdk)delete a.spor[key];else a.spor[key]=o;OA.kaydet()};
 // Ailem kategorileri (menü, market, satın alma, ev işleri): telefondan gelen olaylar. Masaüstündeki OA.menuKaydet / marketEkle / oneriKarar / evTik ile aynı kurallar.
 OT9.KARAR={bekliyor:1,onay:1,ertele:1,red:1};
 OT9.aileOlay=function(e,v,a){var t=e.tur,bul=function(L){return L.filter(function(x){return x.id==v.id})[0]},ok=function(){OA.kaydet();return true};

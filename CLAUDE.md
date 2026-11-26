@@ -1,5 +1,10 @@
 # Orvane
 
-- Oturum başında `KARARLAR.md` dosyasını oku; alınan kararlara uy. Yeni karar alınınca oraya ekle.
 - Kullanıcıyla Türkçe konuş.
-- Çalışma düzeni (KARARLAR.md › 1): Ana sekme yalnız kısa öneri ve soru; işler alt sekmelerde, raporlar "Orvane · Raporlar" sekmesinde.
+- Çalışma düzeni: Ana sekme yalnız kısa öneri ve soru; işler alt sekmelerde, raporlar "Orvane · Raporlar" sekmesinde (`kararlar/calisma-duzeni.md`).
+
+## Kararları okuma kuralı
+
+- Alt sekme yalnız işiyle ilgili `kararlar/*.md` dosyalarını okur (dizin: `KARARLAR.md`'nin altındaki liste).
+- `KARARLAR.md` yalnız büyük güncellemelerde okunur: yeni sürüm hattı, mimari değişiklik, birden çok konuya dokunan iş.
+- Yeni karar ilgili konu dosyasına eklenir. Büyük bir kuralsa `KARARLAR.md`'deki genel kurallara da eklenir.

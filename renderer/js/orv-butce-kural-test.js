@@ -1,4 +1,4 @@
-// Orvane 0.9.13 · Aile Bütçesi kural testleri (yalnız `electron . --smoke`). Uydurma tutarlar, kişisel veri yok; durum sonunda geri alınır.
+// Orvane 0.9.12 · Aile Bütçesi kural testleri (yalnız `electron . --smoke`). Uydurma tutarlar, kişisel veri yok; durum sonunda geri alınır.
 // Kapsam: gelir ≤ Net Ödenen + SGK, bakiye bildirimi, kasaya işleme (ekle/düzelt/sil), telefon ve eşten çift sayım, bordro maaşı,
 // kayıt dışı satırı, geçmiş ay net 0, içe aktarma, kuruş yuvarlaması, eksi bakiye, Anasayfa/cep/Otto özetleri, salt okunur denetim.
 window.__butceKuralTest=function(){var R=[];

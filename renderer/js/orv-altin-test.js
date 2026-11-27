@@ -1,4 +1,4 @@
-// Orvane 0.9.13 · Ailem › Altın Hesabım smoke testleri. Uydurma fiyat ve miktarlar; ağ yok; durum sonunda geri alınır.
+// Orvane 0.9.12 · Ailem › Altın Hesabım smoke testleri. Uydurma fiyat ve miktarlar; ağ yok; durum sonunda geri alınır.
 window.__altinTest=function(){var R=[];
  function t(n,c,m){try{var ok=typeof c=='function'?c():c;R.push({n:'Altın Hesabım: '+n,ok:!!ok,m:ok?'':String(typeof m=='function'?m():m||'beklenmeyen sonuç')})}catch(e){R.push({n:'Altın Hesabım: '+n,ok:false,m:e.message})}}
  var y={a:S.orvA?JSON.stringify(S.orvA):null,fn:S.finans?JSON.stringify(S.finans):null,ui:JSON.stringify(AH.ui),ag:AH._ag},toast0=window.toast,tl=[];

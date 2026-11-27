@@ -572,14 +572,14 @@ ipcMain.handle('piyasa:gecmis', wrap(async () => { const f = path.join(DATA(), '
 async function altinAl() { const r = await fetch('https://finans.truncgil.com/v4/today.json', { cache: 'no-store', signal: AbortSignal.timeout(8000) }); if (!r.ok) throw new Error('Truncgil ' + r.status);
   const j = await r.json(), g = j && j.GRA, sat = g && +g.Selling; if (!(sat > 100 && sat < 100000)) throw new Error('Gram altın okunamadı');
   return { gram: Math.round(sat * 100) / 100, alis: +g.Buying || null, kaynak: 'Truncgil', tarih: String(j.Update_Date || '') }; }
-// 0.9.13: Altın Hesabım · tür başına TL fiyat (Truncgil v4, ücretsiz, anahtarsız). Yalnız altın satırları ham olarak döner; ayrıştırma renderer'da (orv-altin.js AH.fiyatOku). 15 dk önbellek.
+// 0.9.12: Altın Hesabım · tür başına TL fiyat (Truncgil v4, ücretsiz, anahtarsız). Yalnız altın satırları ham olarak döner; ayrıştırma renderer'da (orv-altin.js AH.fiyatOku). 15 dk önbellek.
 ipcMain.handle('piyasa:altin', wrap(async zorla => { const f = path.join(DATA(), 'altin-fiyat.json'), o = readJSON(f, null);
   if (!zorla && o && o.alindi && Date.now() - o.alindi < 15 * 60e3) return o; if (SMOKE) throw new Error('Testte ağ yok');
   try { const r = await fetch('https://finans.truncgil.com/v4/today.json', { cache: 'no-store', signal: AbortSignal.timeout(8000) }); if (!r.ok) throw new Error('Truncgil ' + r.status);
     const j = await r.json(), ham = {}; Object.keys(j || {}).forEach(k => { const v = j[k]; if (v && typeof v == 'object' && (v.Type == 'Gold' || /ALTIN|GRA|HAS|YIA/.test(k))) ham[k] = { Buying: +v.Buying || 0, Selling: +v.Selling || 0, Change: +v.Change || 0 }; });
     if (!ham.GRA) throw new Error('Altın fiyatı okunamadı'); const v = { ham, kaynak: 'Truncgil', tarih: String(j.Update_Date || ''), alindi: Date.now() }; writeJSON(f, v); return v;
   } catch (e) { if (o && o.ham) return Object.assign({}, o, { eski: true, hata: e.message }); throw e; } }));
-// 0.9.13: Altın Hesabım · alım gücü karşılaştırması. Anahtarsız, ücretsiz kaynaklar:
+// 0.9.12: Altın Hesabım · alım gücü karşılaştırması. Anahtarsız, ücretsiz kaynaklar:
 //  • TÜFE: TÜİK genel endeksi, BIS veri servisi üzerinden (WS_LONG_CPI, M.TR.628; aylık, 24 saat önbellek). EVDS anahtar ister, OECD ~1 yıl geriden gelir.
 //  • Kur: ECB referans kurları (Frankfurter) — işlem tarihindeki ve bugünkü USD/TRY, EUR/TRY. Geçmiş tarihli kur kalıcı önbellekte.
 // Bir kaynak alınamazsa o kısım boş döner ve hata yazılır; uydurma değer yok.

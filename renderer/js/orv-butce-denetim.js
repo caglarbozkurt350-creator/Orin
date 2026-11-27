@@ -1,5 +1,5 @@
 // ========================================================================
-// Orvane 0.9.13 · Aile Bütçesi kural denetimi (SALT OKUNUR). Hiçbir değeri değiştirmez; yalnız bulguları listeler.
+// Orvane 0.9.12 · Aile Bütçesi kural denetimi (SALT OKUNUR). Hiçbir değeri değiştirmez; yalnız bulguları listeler.
 // Hem uygulamada (Aylık Bütçe › Dashboard uyarısı, smoke testleri) hem de Node ile durum.json kopyası üzerinde çalışır.
 // Girdi: st = durum.json'daki S nesnesi ({finans:{kayit}, orvA:{bak}, bordro:{aylar}}), bugunAy = 'YYYY-AA'.
 // Kurallar (KARARLAR.md › 6):
@@ -32,7 +32,7 @@ BKD.ayToplam=function(st,ay){var g=0,c=0;BKD.kisisel(st).forEach(function(k){if(
 // Bir kaydın bakiyeye etkisi zaten işlenmiş mi (orv-sayfa-a3.js OA.kayitKasa ile aynı mantık)
 BKD.kasa=function(st,r){var B=(st&&st.orvA&&st.orvA.bak)||{},c=st&&st.orvA&&st.orvA.cep||{};if(!r||r.kim=='sirket'||r.bakDus||r.bakEk)return null;
  if(r.hk=='c')return 'cagla';if(r.hk=='e')return c.e===0&&B.aile?'aile':'kubra';return B.aile?'aile':'cagla'};
-// 0.9.13 kuralı: içe aktarılan banka kayıtları ve geçmiş ay kayıtları bakiye bildiriminde sayılmaz (orv-butce-kural.js OA.kayitKasa)
+// 0.9.12 kuralı: içe aktarılan banka kayıtları ve geçmiş ay kayıtları bakiye bildiriminde sayılmaz (orv-butce-kural.js OA.kayitKasa)
 BKD.sayilmaz=function(r,bugunAy){return r.kaynak=='banka'||(!!bugunAy&&ayK(r.tarih)<bugunAy)};
 BKD.ozet=function(k){return{id:k.id,tarih:k.tarih,tur:k.tur,kalem:k.kalem,tutar:r2(k.tutar),kaynak:k.kaynak||'',not:String(k.not||'').slice(0,80)}};
 
@@ -59,7 +59,7 @@ BKD.denetle=function(st,bugunAy){var B=[],K=BKD.kisisel(st),aylar={},bak=(st&&st
  // Sonraki bakiye bildiriminde hesaba katılacak (işlenmemiş) kayıtlar
  var bek={},eski={};K.forEach(function(r){var k=BKD.kasa(st,r);if(!k||!bak[k])return;var bas=bak[k].bts||bak[k].ts||0;if((+r.ts||0)<=bas)return;if(BKD.sayilmaz(r,bugunAy))(eski[k]=eski[k]||[]).push(r);else (bek[k]=bek[k]||[]).push(r)});
  Object.keys(eski).forEach(function(k){var L=eski[k],net=r2(L.reduce(function(n,r){return n+(r.tur=='gelir'?1:-1)*(+r.tutar||0)},0));
-  B.push({kod:'bekleyen-eski',mesaj:L.length+' içe aktarılmış / geçmiş ay kaydı '+k+' bakiyesinden sonra eklenmiş. 0.9.11 bunları sonraki bildirimde beklenen bakiyeye '+net+' ₺ olarak katardı; 0.9.13 saymaz.',tutar:net,kayitlar:L.map(BKD.ozet)})});
+  B.push({kod:'bekleyen-eski',mesaj:L.length+' içe aktarılmış / geçmiş ay kaydı '+k+' bakiyesinden sonra eklenmiş. 0.9.11 bunları sonraki bildirimde beklenen bakiyeye '+net+' ₺ olarak katardı; 0.9.12 saymaz.',tutar:net,kayitlar:L.map(BKD.ozet)})});
  Object.keys(bek).forEach(function(k){var L=bek[k],net=r2(L.reduce(function(n,r){return n+(r.tur=='gelir'?1:-1)*(+r.tutar||0)},0));
   B.push({kod:'bekleyen',mesaj:L.length+' kayıt '+k+' bakiyesine işlenmemiş; sonraki bildirimde beklenen bakiyeye '+net+' ₺ eklenecek'+(L.some(function(r){return r.kaynak=='banka'})?' (içe aktarılan banka kayıtları da var: bunlar zaten bakiyenin içinde olmalı)':'')+'.',tutar:net,kayitlar:L.map(BKD.ozet)})});
  // Aile Bütçesi = iki cep + kalan; kalan eksiye düşmemeli

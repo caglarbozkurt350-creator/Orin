@@ -10,11 +10,11 @@
 - **Kayıt dışı gelir olamaz (kullanıcı kararı, 2026-11-27):** Gelir bellidir. Bildirilen bakiye beklenenden fazlaysa hesap hatası vardır (çift ya da fazla yazılmış gider, yanlış tutar, girilmemiş gelir). Bildirim kaydedilmez, bakiye değişmez; pencere nedeni yazar. Kayıt dışı harcama olabilir. Eski kayıt dışı gelir kayıtlarını denetim "kural dışı" diye listeler.
 - **Sınır dışı gelirler (2026-11-27):** Maaş avansı ve BES çıkışı gelirdir ama Bordro sınırına sayılmaz (avans sonraki bordrodan düşülür, BES birikimdir). Kalem adı "Maaş avansı" ya da "BES…" olmalı.
 - **Ay devri (2026-11-27):** Kasım 2026 ve sonrası: ayın kalanı (gelir − gider) sonraki aylara birikerek devreder; bu aylar net 0'a eşitlenmez, geçmişe girilen kayıt kasaya işlenir. Ekim 2026 ve öncesi banka dökümüyle net 0 kalır. Aile Bütçesi üst sınırı = devreden (artıysa) + bu ayın geliri. Dashboard gelir kartı devredeni gösterir.
-- **Gelir üst sınırı (2026-11-27 · 0.9.13):** Bir ayın geliri Bordrodaki Net Ödenen'i geçemez; tek istisna SGK Rapor Ödeneği (sınır = Net Ödenen + SGK ödeneği). Maaş ertesi ayın 5'inde yatar; A ayının sınırı A−1 bordrosundan gelir, maaş kaydı da o tarihe yazılır. Sınırı aşan elle girilen gelir kaydedilmez. Bordrosu olmayan ayda sınır yok.
-- **Bakiye bildir (0.9.13):** Bildirilen tutar gelire eklenmez; yalnız beklenenden düşükse fark kayıt dışı harcama olarak yazılır.
-- **Kasaya işleme (0.9.13):** Her yeni kişisel kayıt (Aylık Bütçe, "+ Gelir / + Gider", Kübra harcaması, ödenen beklenen ödeme, Çağlar'ın telefonu) girildiği anda kasasına ve Aile Bütçesine işlenir; silinince geri alınır. Kübra harcaması gider kaydı olur. İçe aktarılan banka kayıtları ve geçmiş ay kayıtları bakiye bildiriminde sayılmaz.
-- **Geçmiş aylar (0.9.13):** Devir öncesi (Ekim 2026 ve önce), net 0 olan kapanmış aya kayıt eklenir/düzeltilir/silinirse bakiye değişmez; ayın kayıt dışı harcaması farkı karşılar.
-- **Denetim (0.9.13):** Bütçe denetimi salt okunurdur; kurala aykırı kayıtları listeler, veriyi kendiliğinden düzeltmez. Veriyi düzeltmek kullanıcının kararıdır.
+- **Gelir üst sınırı (2026-11-27 · 0.9.12):** Bir ayın geliri Bordrodaki Net Ödenen'i geçemez; tek istisna SGK Rapor Ödeneği (sınır = Net Ödenen + SGK ödeneği). Maaş ertesi ayın 5'inde yatar; A ayının sınırı A−1 bordrosundan gelir, maaş kaydı da o tarihe yazılır. Sınırı aşan elle girilen gelir kaydedilmez. Bordrosu olmayan ayda sınır yok.
+- **Bakiye bildir (0.9.12):** Bildirilen tutar gelire eklenmez; yalnız beklenenden düşükse fark kayıt dışı harcama olarak yazılır.
+- **Kasaya işleme (0.9.12):** Her yeni kişisel kayıt (Aylık Bütçe, "+ Gelir / + Gider", Kübra harcaması, ödenen beklenen ödeme, Çağlar'ın telefonu) girildiği anda kasasına ve Aile Bütçesine işlenir; silinince geri alınır. Kübra harcaması gider kaydı olur. İçe aktarılan banka kayıtları ve geçmiş ay kayıtları bakiye bildiriminde sayılmaz.
+- **Geçmiş aylar (0.9.12):** Devir öncesi (Ekim 2026 ve önce), net 0 olan kapanmış aya kayıt eklenir/düzeltilir/silinirse bakiye değişmez; ayın kayıt dışı harcaması farkı karşılar.
+- **Denetim (0.9.12):** Bütçe denetimi salt okunurdur; kurala aykırı kayıtları listeler, veriyi kendiliğinden düzeltmez. Veriyi düzeltmek kullanıcının kararıdır.
 
 ## Banka dökümü içe aktarma
 
@@ -26,7 +26,7 @@
 
 ## Altın Hesabım
 
-- Ailem altında ayrı sekme (0.9.13). Gram türleri gramla, adetli altınlar adetle girilir; her kaydın düzenlenebilir **İşlem tarihi** (alış tarihi) var, ileri tarih kabul edilmez. Birim fiyat satış fiyatı; bozdurma değeri ayrıca. Fiyat Truncgil; Otto'nun günlük verisi Kapalıçarşı kaynaklıysa gram ve çeyrek ondan. Veri `durum.json`'da (`S.orvA.altin`); Aile Bütçesine işlenmez, telefona gitmez.
+- Ailem altında ayrı sekme (0.9.12). Gram türleri gramla, adetli altınlar adetle girilir; her kaydın düzenlenebilir **İşlem tarihi** (alış tarihi) var, ileri tarih kabul edilmez. Birim fiyat satış fiyatı; bozdurma değeri ayrıca. Fiyat Truncgil; Otto'nun günlük verisi Kapalıçarşı kaynaklıysa gram ve çeyrek ondan. Veri `durum.json`'da (`S.orvA.altin`); Aile Bütçesine işlenmez, telefona gitmez.
 - **Alım gücü karşılaştırması (2026-11-27):** İşlem tarihi ve alış tutarı olan her kayıt için, işlem tarihinden bugüne:
   - **Nominal getiri:** bugünkü değer ÷ alış − 1.
   - **Reel getiri (TÜFE):** (bugünkü değer ÷ alış) ÷ (TÜFE son ay ÷ TÜFE işlem ayı) − 1. Kaynak: TÜİK TÜFE endeksi, BIS veri servisi üzerinden (ücretsiz, anahtarsız, güncel). Son yayımlanan ay içinde bulunulan aydan 2 aydan fazla gerideyse reel getiri gösterilmez.

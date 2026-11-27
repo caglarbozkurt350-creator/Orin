@@ -1,4 +1,4 @@
-/* Orvane 0.9.13 · Ailem › Altın Hesabım (renderer/js/orv-altin.js). Kart, tablo ve düğmeler orv-butce.css'teki gg-* sınıflarından gelir;
+/* Orvane 0.9.12 · Ailem › Altın Hesabım (renderer/js/orv-altin.js). Kart, tablo ve düğmeler orv-butce.css'teki gg-* sınıflarından gelir;
    burada yalnız altına özgü birkaç ayrıntı var. Renkler tema değişkenlerinden (--yazi*, --cam*); altın tonu sabit. */
 .ah-lg{background:linear-gradient(160deg,#fff1b8,#e0a32e)!important;color:#3a2804!important;font-size:12px!important}
 .ah-kyn{max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

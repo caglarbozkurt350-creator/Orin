@@ -89,10 +89,10 @@ BR.yukle=function(o){if(!o||!Array.isArray(o.aylar))throw new Error('Bordro dosy
 // Otomatik yalnız bu ay ve geçen ayın bordrosu için (eski ayların toplu içe aktarılması bakiyeyi şişirmesin); eski aylar düğmeyle eklenir.
 // Net sonradan düzeltilirse gelir kaydı ve bakiye farkı kadar güncellenir. Bağlantı m.butce = {t, id, ts}.
 BR.otoAy=function(ay){var d=new Date(),b=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');d.setDate(1);d.setMonth(d.getMonth()-1);var g=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');return ay==b||ay==g};
-// 0.9.13: maaş ertesi ayın 5'inde yatar; gelir kaydı o tarihe yazılır (Aylık Bütçe'de doğru ayın geliri; Bordro sınırı denetimi buna göre)
+// 0.9.12: maaş ertesi ayın 5'inde yatar; gelir kaydı o tarihe yazılır (Aylık Bütçe'de doğru ayın geliri; Bordro sınırı denetimi buna göre)
 BR.odemeTarih=function(ay){var p=String(ay).split('-'),y=+p[0],a=+p[1]+1;if(a>12){a=1;y++}return y+'-'+String(a).padStart(2,'0')+'-05'};
 BR.butceEkle=function(m,zorla){if(!m||!m.v||typeof fnS!='function')return false;var net=Math.round((+m.v.net||0)*100)/100,a=OA.st(),hk=m.butce?(m.butce.k||'cagla'):(a.bak&&a.bak.aile?'aile':'cagla'),bk=a.bak&&a.bak[hk],id='br'+m.ay,k0=fnS().kayit.filter(function(x){return x.id==id})[0];
- // 0.9.13: ay silinip yeniden açıldıysa / içe aktarıldıysa maaş kaydı durur: yeniden bağlanır, ikinci kez eklenmez (yalnız fark işlenir)
+ // 0.9.12: ay silinip yeniden açıldıysa / içe aktarıldıysa maaş kaydı durur: yeniden bağlanır, ikinci kez eklenmez (yalnız fark işlenir)
  if(!m.butce&&k0){var kas=OA.KASA_AD&&OA.KASA_AD[k0.bakEk]?k0.bakEk:null;m.butce={t:+k0.tutar||0,id:id,ts:Date.now(),bak:kas?1:0,k:kas||hk};hk=m.butce.k;bk=a.bak&&a.bak[hk];if(Math.abs(net-m.butce.t)<0.01)return true}
  if(m.butce){var fark=Math.round((net-m.butce.t)*100)/100;if(!fark||!(net>0))return false;var r=fnS().kayit.filter(function(x){return x.id==m.butce.id})[0];if(r)r.tutar=net/* 0.9.12: ts değişmez; değişseydi bakiyeye işlenmemiş maaş sonraki bildirimde tümüyle yeniden sayılırdı */
   if(bk&&m.butce.bak){bk.t=Math.round((bk.t+fark)*100)/100;bk.ts=Date.now()}m.butce.t=net;m.butce.ts=Date.now();return true}

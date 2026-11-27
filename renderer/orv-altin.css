@@ -25,3 +25,4 @@
 .gg-orta.ah-kar{font-size:34px;letter-spacing:-.02em}
 .ah-kr{background:linear-gradient(160deg,#fff1b8,var(--ah-t,#e0a32e))!important}
 .ah-dn{padding:2px 4px}
+.ah .gg-ts,.fe .gg-ts{position:relative} /* gizli tablo başlığı (position:absolute) kaydırma kutusunun dışına taşmasın: 1024 px yatay taşma */

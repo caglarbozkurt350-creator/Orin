@@ -14,3 +14,15 @@
 .ah-uy{margin:6px 0 10px;padding:8px 12px;border-radius:10px;background:rgba(255,190,90,.12);border:1px solid rgba(255,190,90,.35);font-size:12.5px;color:var(--yazi2)}
 .ah-ag .ah-top td{border-top:1px solid var(--cizgi,rgba(255,255,255,.12))}
 .ah-kyn2{line-height:1.5}
+/* 0.9.13 · Tasarım (Claude Design "Orvane · FuzulEv ve Altın Hesabım" › Altin): altın tonlu toplam değer kartı, dağılım çubuğu, geniş kâr rakamı */
+.ah-ust{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr);gap:14px}
+@media (max-width:1100px){.ah-ust{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}}
+.gg-k.ah-hero{background:linear-gradient(160deg,rgba(58,44,16,.75),rgba(29,29,32,.9));border-color:rgba(253,230,138,.22)}
+.gg-k.ah-hero:hover{border-color:rgba(253,230,138,.36)}
+.ah-hero .gg-et,.ah-hero .gg-alt{color:#d8c9a0}.ah-hero .gg-buyuk span{font-size:48px}
+.ah-dag{display:flex;height:10px;border-radius:5px;overflow:hidden;gap:2px;margin-top:4px}.ah-dag span{min-width:4px}
+.ah-dl{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:#d8c9a0}.ah-dl span{display:flex;align-items:center;gap:6px}.ah-dl i{width:8px;height:8px;border-radius:4px}.ah-dl b{color:var(--yazi);font-weight:700}
+.gg-orta.ah-kar{font-size:34px;letter-spacing:-.02em}
+.ah-kr{background:linear-gradient(160deg,#fff1b8,var(--ah-t,#e0a32e))!important}
+.ah-dn{padding:2px 4px}
+.ah .gg-ts,.fe .gg-ts{position:relative} /* gizli tablo başlığı (position:absolute) kaydırma kutusunun dışına taşmasın: 1024 px yatay taşma */

@@ -15,6 +15,7 @@
 - **Kasaya işleme (0.9.12):** Her yeni kişisel kayıt (Aylık Bütçe, "+ Gelir / + Gider", Kübra harcaması, ödenen beklenen ödeme, Çağlar'ın telefonu) girildiği anda kasasına ve Aile Bütçesine işlenir; silinince geri alınır. Kübra harcaması gider kaydı olur. İçe aktarılan banka kayıtları ve geçmiş ay kayıtları bakiye bildiriminde sayılmaz.
 - **Geçmiş aylar (0.9.12):** Devir öncesi (Ekim 2026 ve önce), net 0 olan kapanmış aya kayıt eklenir/düzeltilir/silinirse bakiye değişmez; ayın kayıt dışı harcaması farkı karşılar.
 - **Denetim (0.9.12):** Bütçe denetimi salt okunurdur; kurala aykırı kayıtları listeler, veriyi kendiliğinden düzeltmez. Veriyi düzeltmek kullanıcının kararıdır.
+- FuzulEv sekmesi var (Ailem altında; ayrıntılar aşağıda).
 
 ## Banka dökümü içe aktarma
 
@@ -34,3 +35,14 @@
   - **Asgari ücret cinsinden:** alış ÷ o günkü net asgari ücret → bugünkü değer ÷ bugünkü net asgari ücret. Kaynak: Resmi Gazete/ÇSGB net tutarları, kod içinde sabit tablo (2023 Temmuz'dan beri doğrulanmış yıllar). Yeni yıl tutarı açıklanınca tabloya eklenir.
   - Seçilmeyenler: TCMB EVDS (API anahtarı ister), OECD (TÜFE ~1 yıl geride), İTO/ENAG (resmî değil, ücretsiz API yok).
   - **Veri yoksa ya da çekilemiyorsa** değer üretilmez; hücrede "veri yok" ve nedeni, kartta uyarı yazılır. Önbellek: TÜFE 24 saat, güncel kur 6 saat, geçmiş kur kalıcı (`alim-gucu.json`).
+
+## FuzulEv (0.9.13)
+
+- Ailem › FuzulEv: birikim/finansman sözleşmesi ve taksitleri `durum.json`'da (`S.orvA.fuzulev`) tutulur; telefona gönderilmez (şimdilik).
+- Bilinmeyen taksit tutarı uydurulmaz: boş kalır, "Tutar girilmedi" gösterilir; kullanıcı düzenler.
+- "Ödendi" işaretlenirken istenirse Aile Bütçesine "FuzulEv taksiti" gideri yazılır (kasa: Aile Bütçesi ya da Çağlar cep) ve hemen kasaya işlenir.
+- Çift sayma yok: kayıt kimliği taksite bağlı (`fe` + taksit id); bankadan içe aktarılmış aynı ödeme (aynı tutar, ±7 gün, "fuzul" geçen) varsa yeni gider yazılmaz, ona bağlanır.
+- Ay devri öncesi (Ekim 2026 ve önce) kapanmış aya ait ödemede bütçeye yazma varsayılan kapalı; yazılırsa bakiye değişmez, ayın kayıt dışı harcaması dengeler. Kasım 2026 ve sonrası açık aylar: varsayılan açık, kasaya işlenir.
+- "Geri al" yalnız FuzulEv'in yazdığı gideri ve bakiye etkisini geri alır; banka kaydı kalır. Taksit silinince bütçedeki gider kalır.
+- Teslimata kalan = teslimat taksitine kadar (o dahil) ödenmemiş taksit sayısı ve teslimat vadesine kalan gün.
+- Gerçek sözleşme bilgileri koda/testlere girmez; İçe Aktar JSON'undaki "fuzulev" anahtarıyla ya da sayfadan elle girilir.

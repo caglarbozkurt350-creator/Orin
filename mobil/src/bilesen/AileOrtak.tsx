@@ -217,7 +217,7 @@ export function OrtakBolum() {
   const [pen, setPen] = useState<null | { t: 'para'; gelir?: boolean } | { t: 'cep' } | { t: 'etk'; e?: Etkinlik; randevu?: boolean } | { t: 'ozel'; g?: OzelGun }>(null), [n, setN] = useState(0);
   const ac = (p: NonNullable<typeof pen>) => { setPen(p); setN((x) => x + 1); };
   const tr = O.trend[O.trend.length - 1] || ['', o.aile?.fin.bu.gelir || 0, o.aile?.fin.bu.gider || 0], once = O.trend[O.trend.length - 2];
-  // 0.9.17: "Kalan" = Aile Bütçesi güncel bakiyesi (masaüstüyle aynı). Önceden bu ayın gelir − gideriydi; devreden ve bildirilen bakiye eksik kalıyordu.
+  // 0.9.16: "Kalan" = Aile Bütçesi güncel bakiyesi (masaüstüyle aynı). Önceden bu ayın gelir − gideriydi; devreden ve bildirilen bakiye eksik kalıyordu.
   const kalan = O.aile ? O.aile.t : tr[1] - tr[2], kat = Object.entries(O.kat).sort((a, b) => b[1] - a[1]), kmax = kat.length ? kat[0][1] : 1;
   // Yaklaşanlar: bütün gelecek etkinlik ve randevular (önceden 30 günden ilerisi özette sayılıyor ama listede görünmüyordu)
   // + 30 gün içindeki izin ve özel günler

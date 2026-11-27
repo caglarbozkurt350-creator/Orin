@@ -154,7 +154,7 @@ function aileUygula(o: Ozet, e: Olay) {
     O.hareket.unshift([tarih, gelir ? 1 : 0, kat, e.tur === 'finans_kayit' ? v.not || '' : v.ad || '', tutar, kasa, kim]);
     const ay = new Date(); if (tarih.slice(0, 7) !== ay.getFullYear() + '-' + String(ay.getMonth() + 1).padStart(2, '0')) return;
     const tr = O.trend[O.trend.length - 1]; if (tr) tr[gelir ? 1 : 2] += tutar;
-    // 0.9.17: masaüstü yeni kaydı hemen kasaya işler (cep harcaması da Aile Bütçesinden düşer); eşitlemeye kadar telefonda da öyle görünsün
+    // 0.9.16: masaüstü yeni kaydı hemen kasaya işler (cep harcaması da Aile Bütçesinden düşer); eşitlemeye kadar telefonda da öyle görünsün
     if (O.aile) O.aile.t = Math.round((O.aile.t + (gelir ? tutar : -tutar)) * 100) / 100;
     if (gelir) { a.fin.bu.gelir += tutar; return; }
     a.fin.bu.gider += tutar; a.fin.bu.kat[kat] = (a.fin.bu.kat[kat] || 0) + tutar;

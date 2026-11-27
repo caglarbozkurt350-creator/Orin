@@ -32,7 +32,7 @@ OAI.ortak=function(){var a=OAI.st(),F=OA.fin(),f=F.f,bugun=OT9.pad(new Date()),a
   .map(function(k){return[k.tarih,k.tur=='gelir'?1:0,OAI.metin(k.kalem||'Diğer',30),OAI.metin(k.not,40),+k.tutar||0,k.hk=='c'?'c':k.hk=='e'?'e':'o',/^es-/.test(k.kaynak||'')?'kubra':'cagla']});
  var izin={},d=new Date();d.setDate(d.getDate()-30);for(var i=0;i<150;i++){var gk=key(d);if(D[gk])izin[gk]=D[gk];d.setDate(d.getDate()+1)}
  var bas=OT9.pad(new Date(Date.now()-30*864e5));
- // 0.9.17: Aile Bütçesi güncel bakiyesi (masaüstü "Aile Bütçesi · güncel bakiye" ile aynı değer). Telefon "Kalan"ı bundan gösterir;
+ // 0.9.16: Aile Bütçesi güncel bakiyesi (masaüstü "Aile Bütçesi · güncel bakiye" ile aynı değer). Telefon "Kalan"ı bundan gösterir;
  // önceden yalnız bu ayın gelir − gideri gidiyordu, devreden / bildirilen bakiye telefonda yoktu.
  var ab=null;try{var B=(OA.st().bak||{}).aile;if(B&&isFinite(+B.t))ab={t:Math.round((+B.t)*100)/100,ts:+B.ts||0}}catch(e){}
  return{ad:OAI.AD,trend:trend,kasa:kasa,kat:kat,cep:cp,hareket:hareket,aile:ab,

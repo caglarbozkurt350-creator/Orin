@@ -158,7 +158,7 @@ function ButceKart({ o }: { o: Ozet }) {
       <Bos yazi={o.ts ? 'Bu ay gelir ya da gider kaydı yok. Masaüstünde Ailem › Finans’a girilen kayıtlar burada görünür.' : 'Masaüstü Orvane ile eşitlenince bütçe burada görünür.'} ikon="grafik" />
     </KartK>
   );
-  // 0.9.17: "Kalan" = Aile Bütçesi güncel bakiyesi (masaüstüyle aynı); masaüstü göndermediyse bu ayın gelir − gideri
+  // 0.9.16: "Kalan" = Aile Bütçesi güncel bakiyesi (masaüstüyle aynı); masaüstü göndermediyse bu ayın gelir − gideri
   const ab = o.aile?.ortak?.aile, kalan = ab ? ab.t : bu.gelir - bu.gider, ay = AY[new Date().getMonth()], onAd = AY[(new Date().getMonth() + 11) % 12];
   const kat = Object.entries(bu.kat).filter((x) => x[1] > 0).sort((a, b) => b[1] - a[1]), kmax = kat.length ? kat[0][1] : 1;
   // Uyarı: geçen aya göre en çok artan kategori (sınır yok; kıyas geçen ay)

@@ -1,4 +1,4 @@
-// Anasayfa (0.9.0): İş günü göstergesi (hafta günü · ayın haftası · ay dakikası: ayın bütün iş günleri, izin düşülür, gün gün dilimli), bu ay gelir–gider (kalan bakiye çizgisi /
+// Anasayfa (0.9.0): İş günü göstergesi (hafta günü · ayın haftası · ay dakikası: ayın bütün iş günleri, izin düşülür, gün gün dilimli; 0.9.16: Bu hafta gün gün, Ayın haftası hafta hafta dilimli), bu ay gelir–gider (kalan bakiye çizgisi /
 // kategoriler, geçen aya göre uyarı), günlük ilaç takibi, sabah açlık şekeri ve şeker grafiği.
 // Bugünkü görevler kartı kaldırıldı (görevler Ekip › Görevler'de).
 // Kaynak: masaüstü özeti (o.gun, o.aile) + telefondaki bekleyen olaylar.
@@ -22,29 +22,6 @@ import { AY, ayaGore, ayin, ayinHaftalari, GK, gunAnahtari, gunEkle, haftaBasi, 
 const Tumu = ({ git, yazi = 'Tümü' }: { git: () => void; yazi?: string }) => (
   <Pressable onPress={git} accessibilityRole="button" hitSlop={4} style={{ height: 32, paddingHorizontal: 12, borderRadius: 16, backgroundColor: saydam(R.ana, 0.16), justifyContent: 'center' }}><Text style={{ color: R.ana2, fontSize: 12, fontWeight: '600' }}>{yazi}</Text></Pressable>
 );
-
-/** Küçük ilerleme halkası */
-function Halka({ oran, renk, boy = 58 }: { oran: number; renk: string; boy?: number }) {
-  const r = boy / 2 - 5, C = 2 * Math.PI * r;
-  return (
-    <Svg width={boy} height={boy} style={{ transform: [{ rotate: '-90deg' }] }}>
-      <Circle cx={boy / 2} cy={boy / 2} r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={6} />
-      {oran > 0 && <Circle cx={boy / 2} cy={boy / 2} r={r} fill="none" stroke={renk} strokeWidth={6} strokeLinecap="round" strokeDasharray={`${Math.max(0.01, Math.min(1, oran)) * C} ${C}`} />}
-    </Svg>
-  );
-}
-function Olcu({ ust, deger, alt, oran, renk }: { ust: string; deger: string; alt: string; oran: number; renk: string }) {
-  return (
-    <View style={{ flex: 1, alignItems: 'center', gap: 6 }} accessible accessibilityLabel={ust + ' ' + deger + ' ' + alt}>
-      <View style={{ width: 58, height: 58 }}>
-        <Halka oran={oran} renk={renk} />
-        <View style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: R.yazi, fontSize: 14, fontWeight: '700' }}>{deger}</Text></View>
-      </View>
-      <Text style={{ color: R.yazi, fontSize: 12.5, fontWeight: '600', textAlign: 'center' }}>{ust}</Text>
-      <Text style={[s.sub, { fontSize: 11, textAlign: 'center' }]}>{alt}</Text>
-    </View>
-  );
-}
 
 type AyDilim = { oran: number; gecti: boolean; bugun: boolean };
 const EKSIK = '#f59e0b';
@@ -70,20 +47,30 @@ function DilimHalka({ dilim, renk, boy = 58 }: { dilim: AyDilim[]; renk: string;
   );
 }
 
-function AyOlcu({ g }: { g: ReturnType<typeof isGunuOlcu> }) {
-  const yuzde = g.toplam ? Math.round((g.girilen / g.toplam) * 100) : 0, bin = (n: number) => n.toLocaleString('tr-TR');
+/** Dilimli halka + başlık: Bu hafta (dilim = iş günü), Ayın haftası (dilim = hafta), Bu ay (dilim = iş günü). Renk ve lejant ortak. */
+function DilimOlcu({ ust, deger, alt, dilim, etiket, eksikDk = 0 }: { ust: string; deger: string; alt: string; dilim: AyDilim[]; etiket: string; eksikDk?: number }) {
   return (
-    <View style={{ flex: 1, alignItems: 'center', gap: 6 }} accessible
-      accessibilityLabel={'Bu ay yüzde ' + yuzde + ', ' + g.girilen + ' / ' + g.toplam + ' dakika' + (g.eksikDk ? ', ' + g.eksikDk + ' dakika eksik' : '') + (g.izin ? ', ' + g.izin + ' izin günü düşüldü' : '')}>
+    <View style={{ flex: 1, alignItems: 'center', gap: 6 }} accessible accessibilityLabel={etiket}>
       <View style={{ width: 58, height: 58 }}>
-        <DilimHalka dilim={g.dilim} renk={R.yesil} />
-        <View style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: R.yazi, fontSize: 14, fontWeight: '700' }}>{g.toplam ? '%' + yuzde : '—'}</Text></View>
+        <DilimHalka dilim={dilim} renk={R.yesil} />
+        <View style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: R.yazi, fontSize: 14, fontWeight: '700' }}>{deger}</Text></View>
       </View>
-      <Text style={{ color: R.yazi, fontSize: 12.5, fontWeight: '600', textAlign: 'center' }}>Bu ay</Text>
-      <Text style={[s.sub, { fontSize: 11, textAlign: 'center' }]}>{bin(g.girilen)} / {bin(g.toplam)} dk</Text>
-      {g.eksikDk > 0 && <Text style={{ color: EKSIK, fontSize: 11, fontWeight: '600', textAlign: 'center', marginTop: -4 }}>{bin(g.eksikDk)} dk eksik</Text>}
+      <Text style={{ color: R.yazi, fontSize: 12.5, fontWeight: '600', textAlign: 'center' }}>{ust}</Text>
+      <Text style={[s.sub, { fontSize: 11, textAlign: 'center' }]}>{alt}</Text>
+      {eksikDk > 0 && <Text style={{ color: EKSIK, fontSize: 11, fontWeight: '600', textAlign: 'center', marginTop: -4 }}>{bin(eksikDk)} dk eksik</Text>}
     </View>
   );
+}
+const bin = (n: number) => n.toLocaleString('tr-TR');
+const dkYazi = (girilen: number, toplam: number, eksikDk: number) => girilen + ' / ' + toplam + ' dakika' + (eksikDk ? ', ' + eksikDk + ' dakika eksik' : '');
+
+/** Bir günün iş süresi (dk) ve girilen dk. İzin günü null. Süre masaüstü özetinden (L + fazla mesai); özetin kapsamadığı
+ *  günler için hafta içi / Cuma ayarı; hafta sonu ve resmî tatil 0. */
+function gunSure(o: Ozet, t0: Date): { h: number; T: number } | null {
+  const g = o.gun[gunAnahtari(t0)], w1 = o.ayar?.w1 || 525, w2 = o.ayar?.w2 || 435;
+  if (g?.D) return null;
+  const h = g ? (g.L ? g.L + (g.OT || 0) : 0) : t0.getDay() % 6 === 0 ? 0 : t0.getDay() === 5 ? w2 : w1;
+  return { h, T: g?.T || 0 };
 }
 
 function isGunuOlcu(o: Ozet) {
@@ -95,21 +82,37 @@ function isGunuOlcu(o: Ozet) {
   const hl = ayinHaftalari(b), hi = Math.max(1, hl.findIndex((h) => h.getTime() === hb.getTime()) + 1);
   // 3) Ay: ayın bütün iş günlerinin süresi (izin günleri düşülür) ve girilen dk. Gün süresi masaüstü özetinden (L + fazla mesai);
   //    özetin kapsamadığı ileri günler için hafta içi / Cuma ayarı. Her iş günü halkada bir dilim.
-  const w1 = o.ayar?.w1 || 525, w2 = o.ayar?.w2 || 435, son = new Date(b.getFullYear(), b.getMonth() + 1, 0).getDate(), bugun = b.getDate();
+  const son = new Date(b.getFullYear(), b.getMonth() + 1, 0).getDate(), bugun = b.getDate(), bugun0 = new Date(b.getFullYear(), b.getMonth(), bugun);
   let girilen = 0, toplam = 0, eksik = 0, eksikDk = 0, izin = 0;
   const dilim: AyDilim[] = [];
   for (let d = 1; d <= son; d++) {
-    const t0 = new Date(b.getFullYear(), b.getMonth(), d), k = gunAnahtari(t0), g = o.gun[k];
-    if (g?.D) { if (t0.getDay() % 6 !== 0) izin++; continue; }
-    const h = g ? (g.L ? g.L + (g.OT || 0) : 0) : t0.getDay() % 6 === 0 ? 0 : t0.getDay() === 5 ? w2 : w1;
+    const t0 = new Date(b.getFullYear(), b.getMonth(), d), x = gunSure(o, t0);
+    if (!x) { if (t0.getDay() % 6 !== 0) izin++; continue; }
+    const { h, T } = x;
     if (!h) continue; // hafta sonu / resmî tatil
-    const T = g?.T || 0;
     toplam += h; girilen += Math.min(T, h);
     if (o.ts && d < bugun && T < h) { eksik++; eksikDk += h - T; }
     dilim.push({ oran: Math.min(1, T / h), gecti: !!o.ts && d < bugun, bugun: d === bugun });
   }
+  // 4) Bu hafta: Pzt–Cum, her iş günü bir dilim (izin ve tatil günleri dilim değil). Ay sınırını aşan günler de sayılır.
+  const hafta: AyDilim[] = [];
+  let hGir = 0, hTop = 0, hEksikDk = 0;
+  [0, 1, 2, 3, 4].forEach((i) => {
+    const t0 = gunEkle(hb, i), x = gunSure(o, t0);
+    if (!x || !x.h) return;
+    const gecti = !!o.ts && t0 < bugun0;
+    hTop += x.h; hGir += Math.min(x.T, x.h); if (gecti && x.T < x.h) hEksikDk += x.h - x.T;
+    hafta.push({ oran: Math.min(1, x.T / x.h), gecti, bugun: t0.getTime() === bugun0.getTime() });
+  });
+  // 5) Ayın haftaları: her hafta bir dilim; doluluk = o haftanın bu aya düşen iş günlerinde girilen / toplam dk.
+  //    Bitmiş haftada eksik kalan kısım turuncu, bu hafta beyaz çerçeveli. İş günü olmayan hafta (hepsi izin/tatil) dolu sayılır.
+  const haftalar: AyDilim[] = hl.map((h0) => {
+    let gr = 0, tp = 0;
+    [0, 1, 2, 3, 4].forEach((i) => { const t0 = gunEkle(h0, i); if (t0.getMonth() !== b.getMonth()) return; const x = gunSure(o, t0); if (x && x.h) { tp += x.h; gr += Math.min(x.T, x.h); } });
+    return { oran: tp ? gr / tp : 1, gecti: !!o.ts && gunEkle(h0, 4) < bugun0, bugun: h0.getTime() === hb.getTime() };
+  });
   const bg = o.gun[bk];
-  return { dolu, isg: isg || 5, hi, hn: hl.length, girilen, toplam, eksik, eksikDk, izin, dilim, bg };
+  return { dolu, isg: isg || 5, hi, hn: hl.length, girilen, toplam, eksik, eksikDk, izin, dilim, hafta, hGir, hTop, hEksikDk, haftalar, bg };
 }
 
 /** Para yazısı: eksi değerde gerçek eksi işareti (−), tutar ayraçlı */
@@ -242,9 +245,12 @@ export function Anasayfa() {
 
       {!es && <KartK ad="isgunu" baslik="İŞ GÜNÜ" ozet={g.dolu + '/' + g.isg + ' gün · ' + g.hi + '/' + g.hn + '. hafta'} sag={<Tumu git={() => sekmeGit(2)} yazi="Kayıt gir" />}>
         <View style={{ flexDirection: 'row', gap: 4 }}>
-          <Olcu ust="Bu hafta" deger={g.dolu + '/' + g.isg} alt="dolu iş günü" oran={g.dolu / g.isg} renk={R.yesil} />
-          <Olcu ust="Ayın haftası" deger={g.hi + '/' + g.hn} alt={AY[new Date().getMonth()]} oran={g.hi / g.hn} renk={R.ana2} />
-          <AyOlcu g={g} />
+          <DilimOlcu ust="Bu hafta" deger={g.dolu + '/' + g.isg} alt="dolu iş günü" dilim={g.hafta}
+            etiket={'Bu hafta ' + g.dolu + ' / ' + g.isg + ' dolu iş günü, ' + dkYazi(g.hGir, g.hTop, g.hEksikDk)} />
+          <DilimOlcu ust="Ayın haftası" deger={g.hi + '/' + g.hn} alt={AY[new Date().getMonth()]} dilim={g.haftalar}
+            etiket={ayin(AY[new Date().getMonth()]) + ' ' + g.hn + ' haftasının ' + g.hi + '. haftası, ' + g.haftalar.filter((x) => x.oran >= 1).length + ' hafta dolu'} />
+          <DilimOlcu ust="Bu ay" deger={g.toplam ? '%' + (Math.round((g.girilen / g.toplam) * 100)) : '—'} alt={bin(g.girilen) + ' / ' + bin(g.toplam) + ' dk'} dilim={g.dilim} eksikDk={g.eksikDk}
+            etiket={'Bu ay yüzde ' + (g.toplam ? Math.round((g.girilen / g.toplam) * 100) : 0) + ', ' + dkYazi(g.girilen, g.toplam, g.eksikDk) + (g.izin ? ', ' + g.izin + ' izin günü düşüldü' : '')} />
         </View>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 12 }}>
           {[[R.yesil, 'Girilen'], [EKSIK, 'Eksik (geçen günler)'], ['rgba(255,255,255,0.18)', 'Kalan']].map(([c, y]) => (

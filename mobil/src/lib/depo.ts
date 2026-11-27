@@ -32,14 +32,18 @@ export type Aile = {
   altin?: Altin; fuzulev?: FuzulEv;
 };
 /** Altın kaydı: miktar gram (gr) ya da adet; alis toplam alış tutarı (yoksa null); deger/kar/gunluk fiyat yoksa null */
-export type AltinKalem = { id: string; tur: string; ad: string; birim: 'gr' | 'adet'; miktar: number; tarih: string; alis: number | null; not: string; deger: number | null; kar: number | null; gunluk: number | null };
+export type AltinKalem = { id: string; tur: string; ad: string; birim: 'gr' | 'adet'; miktar: number; tarih: string; alis: number | null; not: string; deger: number | null; kar: number | null; gunluk: number | null;
+  /** 0.9.15: toplam ağırlık (gram), gramStd 1 = gram girilmemiş, türün standart ağırlığıyla; ayar (24/22/18/14); has altın karşılığı (gram) */
+  gram?: number | null; gramStd?: 0 | 1; ayar?: number | null; has?: number | null };
 /** Alım gücü satırı (işlem tarihinden bugüne). Değer yoksa ...Neden alanı nedeni söyler */
 export type AltinAgSatir = { id: string; nominal: number; enf?: number; reel?: number; tufeNeden?: string; usd?: number; eur?: number; kurNeden?: string; asAlis?: number; asBugun?: number; asNeden?: string };
 export type Altin = {
   /** t: tür → [satış, alış, günlük %, Kapalıçarşı ? 1 : 0] */
   fiyat: { t: Record<string, [number, number, number, 0 | 1]>; kaynak: string; tarih: string; eski: 0 | 1 } | null;
   kalem: AltinKalem[];
-  top: { deger: number; bozdur: number; alis: number; karDeger: number; kar: number | null; karP: number | null; gunluk: number; gunlukP: number; gram: number; adet: number; eksik: number };
+  top: { deger: number; bozdur: number; alis: number; karDeger: number; kar: number | null; karP: number | null; gunluk: number; gunlukP: number; gram: number; adet: number; eksik: number;
+    /** 0.9.15: tüm kayıtların toplam gramı, has altın karşılığı, standart ağırlıkla sayılan kayıt sayısı */
+    gramTop?: number; has?: number; gramStd?: number };
   ag: { guncel: 0 | 1; tufeSon: string; kurTarih: string; uyari: string; satir: AltinAgSatir[]; top: { n: number; alis: number; deger: number; nominal: number | null; reel: number | null; usd: number | null; eur: number | null } } | null;
 };
 export type FeTaksitKisa = { no: number; tur: string; vade: string; tutar: number | null; kalan: number | null; gun: number };

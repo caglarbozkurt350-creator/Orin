@@ -102,7 +102,7 @@ BKK.doldur=function(o,eski){var y={};Object.keys(eski).forEach(function(k){if(es
 if(typeof GG!='undefined'&&GG.guncelle){var _gg=GG.guncelle;GG.guncelle=function(id,o){var r=GG.bul(id);if(!r)return _gg(id,o);
  return _gg(id,BKK.doldur(o,{tur:r.tur,tutar:String(r.tutar),kalem:r.kalem,tarih:r.tarih,not:r.not,kisi:r.kisi,kasa:GG.kasa(r)}))}}
 if(typeof AH!='undefined'&&AH.guncelle){var _ag=AH.guncelle;AH.guncelle=function(id,o){var k=AH.st().kalem.filter(function(x){return x.id==id})[0];if(!k)return _ag(id,o);
- return _ag(id,BKK.doldur(o,{tur:k.tur,miktar:k.miktar,alis:k.alis,tarih:k.tarih,not:k.not}))}}
+ return _ag(id,BKK.doldur(o,{tur:k.tur,miktar:k.miktar,alis:k.alis,tarih:k.tarih,not:k.not,gram:k.gram,ayar:k.ayar}))}}
 if(typeof FE!='undefined'&&FE.guncelle){var _fg=FE.guncelle;FE.guncelle=function(id,o){var t=FE.bul(id);if(!t)return _fg(id,o);
  return _fg(id,BKK.doldur(o,{no:t.no,tur:t.tur,vade:t.vade,tutar:t.tutar,odendi:t.odendi,odenen:t.odenen,odemeTarih:t.odemeTarih}))}}
 // Sözleşme: dosyada / pencerede gelmeyen alan silinmez (eskiden FE.SOZ'daki her eksik alan silinirdi)

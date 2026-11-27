@@ -29,6 +29,7 @@
 ## Altın Hesabım
 
 - Ailem altında ayrı sekme (0.9.12). Gram türleri gramla, adetli altınlar adetle girilir; her kaydın düzenlenebilir **İşlem tarihi** (alış tarihi) var, ileri tarih kabul edilmez. Birim fiyat satış fiyatı; bozdurma değeri ayrıca. Fiyat Truncgil; Otto'nun günlük verisi Kapalıçarşı kaynaklıysa gram ve çeyrek ondan. Veri `durum.json`'da (`S.orvA.altin`); Aile Bütçesine işlenmez. Telefona salt okunur özet gider, yalnız Çağlar'ın telefonuna (0.9.14).
+- **Gram ve ayar (0.9.15):** Adetli üründe isteğe bağlı `gram` = adet başı ağırlık × adet; form standart ağırlıkla ön dolu (çeyrek 1,75 · yarım 3,5 · tam 7 · Cumhuriyet/Ata/Reşat 7,216 · Gremse 17,54 · ikibuçuk 18,04 · beşli 36,08 gr; sikkeler 22 ayar). Gramı olmayan eski kayıt standart ağırlıkla "≈" gösterilir, veriye yazılmaz; standarda eşit girilen gram da yazılmaz. Bilezik ve Takı: gram + `ayar` (24/22/18/14), değer o ayarın gram fiyatıyla, işçilik girmez. Has karşılığı = gram × milyem (24: 0,995 · 22: 0,916 · 18: 0,750 · 14: 0,585). Kart ve listede toplam gram ve has karşılığı; telefona da gider.
 - **Alım gücü karşılaştırması (2026-11-27):** İşlem tarihi ve alış tutarı olan her kayıt için, işlem tarihinden bugüne:
   - **Nominal getiri:** bugünkü değer ÷ alış − 1.
   - **Reel getiri (TÜFE):** (bugünkü değer ÷ alış) ÷ (TÜFE son ay ÷ TÜFE işlem ayı) − 1. Kaynak: TÜİK TÜFE endeksi, BIS veri servisi üzerinden (ücretsiz, anahtarsız, güncel). Son yayımlanan ay içinde bulunulan aydan 2 aydan fazla gerideyse reel getiri gösterilmez.

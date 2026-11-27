@@ -33,10 +33,12 @@ BKR.ayNet=function(ay,haric){return r2(GG.kayitlar().filter(function(k){return a
 BKR.kapali=function(ay,haric){return /^\d{4}-\d{2}$/.test(ay||'')&&ay<GG.buAy()&&ay<BKD.DEVIR&&GG.kayitlar().some(function(k){return ayK(k.tarih)==ay&&k.id!=haric})&&Math.abs(BKR.ayNet(ay,haric))<0.01};
 // dNet: ayın (gelir − gider) değişimi. Kayıt dışı harcama dNet kadar artar/azalır; karşılanamayan kısım döner (0 = net 0 korundu).
 BKR.dengele=function(ay,dNet){dNet=r2(dNet);if(!dNet)return 0;var L=GG.kayitlar().filter(function(k){return ayK(k.tarih)==ay&&GG.kd(k)}).sort(function(x,y){return (+y.tutar||0)-(+x.tutar||0)});
- if(dNet>0){if(L.length){L[0].tutar=r2((+L[0].tutar||0)+dNet);return 0}
+ // 0.9.13: program kaydı değişince eski tutar kayıtta kalır (k.eski: [{t, ts}]; kullanıcı kuralı: girilen veri kaybolmaz)
+ var iz=function(k){k.eski=(Array.isArray(k.eski)?k.eski:[]).concat([{t:r2(k.tutar),ts:Date.now()}]).slice(-20)};
+ if(dNet>0){if(L.length){iz(L[0]);L[0].tutar=r2((+L[0].tutar||0)+dNet);return 0}
   var son=ay+'-'+String(new Date(+ay.slice(0,4),+ay.slice(5,7),0).getDate()).padStart(2,'0'),k=fnKaydet({tur:'gider',kim:'cagla',tutar:String(dNet),kalem:GG.KD,tarih:son,not:'Geçmiş ay net 0 dengesi',kaynak:'bakiye'});
   if(k){k.kd='aile';k.bakEk='gecmis';return 0}return dNet}
- var kal=-dNet;L.forEach(function(k){if(kal<=0)return;var t=+k.tutar||0,d=Math.min(t,kal);kal=r2(kal-d);if(r2(t-d)<0.01)fnS().kayit=fnS().kayit.filter(function(x){return x.id!=k.id});else k.tutar=r2(t-d)});
+ var kal=-dNet;L.forEach(function(k){if(kal<=0)return;var t=+k.tutar||0,d=Math.min(t,kal);kal=r2(kal-d);if(r2(t-d)<0.01)fnS().kayit=fnS().kayit.filter(function(x){return x.id!=k.id});else{iz(k);k.tutar=r2(t-d)}});
  return kal>0?-kal:0};
 
 // ---------- 3) Yeni kaydı kasasına işleme ----------

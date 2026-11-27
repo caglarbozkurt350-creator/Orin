@@ -40,8 +40,10 @@ window.__orvAsync=function(){var R=[];function t(n,ok,m){R.push({n:n,ok:!!ok,m:o
   S.orvAuto=false;ORV.panelAc(null);ORV.navEnter();ORV.navLeave();return w(1250)}).then(function(){
   t('Panel: Otomatik daralt kapalıysa açık kalır, içerik yana kayar',nv.classList.contains('open')&&document.documentElement.classList.contains('orv-acik-sabit')&&getComputedStyle(pn).getPropertyValue('--orv-ml').trim()=='312px'&&getComputedStyle(nv).width=='300px',nv.className+' '+document.documentElement.className+' '+getComputedStyle(pn).marginLeft);
   S.orvAuto=true;ORV.mod('dock');
+  // Ortamdan bağımsız: GitHub makinesi "hareketi azalt" bildirebilir; bu test hareketin AÇIK olduğu durumu ölçer (matchMedia taklit edilir)
+  var mm0=window.matchMedia;window.matchMedia=function(q){return {matches:false,media:q,addListener:function(){},removeListener:function(){},addEventListener:function(){},removeEventListener:function(){}}};
   var c=0;gecis(function(){c++},{mod:'akiskan',zorla:true});var once=c;
-  return w(150).then(function(){var mid=pn.classList.contains('orv-out')&&c==0;return w(450).then(function(){t('Geçiş: Akışkan önce çıkış (orv-out), ~0,35 sn sonra içerik değişir, sınıflar temizlenir',once==0&&mid&&c==1&&!pn.classList.contains('orv-out'))})})}).then(function(){
+  return w(150).then(function(){var mid=pn.classList.contains('orv-out')&&c==0;return w(450).then(function(){window.matchMedia=mm0;t('Geçiş: Akışkan önce çıkış (orv-out), ~0,35 sn sonra içerik değişir, sınıflar temizlenir',once==0&&mid&&c==1&&!pn.classList.contains('orv-out'))})})}).then(function(){
   var ok=true;['kaydir','yakinlas','sol'].forEach(function(m){ORV.gecisSet(m);ok=ok&&ORV.gecisAl()==m});ORV.gecisSet('akiskan');t('Geçiş: modlar saklanır/okunur',ok&&ORV.gecisAl()=='akiskan');
   return Promise.all([document.fonts.load('600 14px Inter'),document.fonts.load('700 40px "Space Grotesk"'),document.fonts.load('500 14px Inter','ğşİı')])}).then(function(){
   t('Yazı tipleri: Inter ve Space Grotesk yerel dosyadan yüklendi (çevrimdışı)',function(){var F=Array.from(document.fonts).map(function(f){return f.family.replace(/"/g,'')+':'+f.status});var ok=F.some(function(x){return x=='Space Grotesk:loaded'})&&F.some(function(x){return x=='Inter:loaded'});if(!ok)throw new Error(F.join(','));return true});

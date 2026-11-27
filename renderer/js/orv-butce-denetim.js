@@ -14,7 +14,7 @@ var r2=function(n){return Math.round((+n||0)*100)/100};
 var ayK=function(t){return String(t||'').slice(0,7)};
 BKD.ayKay=function(ay,d){var x=new Date(+ay.slice(0,4),+ay.slice(5,7)-1+d,1);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')};
 BKD.KASA={aile:1,cagla:1,kubra:1};
-BKD.maas=function(k){return k&&k.tur=='gelir'&&(/^br\d{4}-\d{2}$/.test(k.id||'')||/^Maaş/i.test(k.kalem||''))};
+BKD.maas=function(k){return k&&k.tur=='gelir'&&(/^br\d{4}-\d{2}$/.test(k.id||'')||(/^Maaş/i.test(k.kalem||'')&&!/^Maaş avansı/i.test(k.kalem||'')))};
 BKD.sgk=function(k){return k&&k.tur=='gelir'&&/SGK/i.test((k.kalem||'')+' '+(k.not||''))};
 // Kullanıcı kararı (2026-11-27): Maaş avansı ve BES çıkışı gelirdir ama Bordro sınırının dışındadır (avans sonraki bordrodan düşülür; BES birikimdir).
 BKD.sinirDisi=function(k){return k&&k.tur=='gelir'&&/^(Maaş avansı|BES)/i.test(k.kalem||'')};

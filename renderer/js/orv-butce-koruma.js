@@ -39,14 +39,16 @@ if(typeof GG!='undefined'&&GG.silKayit){var _gs=GG.silKayit;GG.silKayit=function
 // ---------- 2) Telefondan gelen gelir de Bordro sınırına uyar ----------
 // Döner: null (uygun) | sınır yazısı (kaydedilmez)
 BKK.telefonGelir=function(tarih,tutar,kalem){if(typeof BKR=='undefined'||!BKR.gelirOk||!(tutar>0))return null;var ay=/^\d{4}-\d{2}-\d{2}$/.test(tarih||'')?ayK(tarih):ayK(bugun()),c=BKR.gelirOk(ay,tutar,null,kalem);return c.ok?null:BKR.asimYazi(c)};
-BKK.telefonRed=function(id,kim,tutar,yazi){var ilk=!BKK.izVar('sr'+id);BKK.izEkle('sr'+id);if(ilk){BKK.not('sr'+id,kim+' telefonundan gelen gelir kaydedilmedi',yazi,tutar);try{toast(kim+' telefonundan gelen '+tl(tutar)+' ₺ gelir kaydedilmedi: Bordro sınırı')}catch(e){}}kaydet()};
+// Kullanıcı girişi kaybolmaz: sınırı aşan telefon geliri bütçeye yazılmaz ama olduğu gibi saklanır (S.orvA.gelirRed); kural düzelirse elle eklenebilir
+BKK.gelirRed=function(){var a=OA.st();if(!Array.isArray(a.gelirRed))a.gelirRed=[];return a.gelirRed};
+BKK.telefonRed=function(id,kim,tutar,yazi,veri){var ilk=!BKK.izVar('sr'+id);BKK.izEkle('sr'+id);if(ilk){var L=BKK.gelirRed();if(!L.some(function(x){return x.id==id})){L.push({id:String(id),kim:kim,tutar:tutar,veri:veri?JSON.parse(JSON.stringify(veri)):null,neden:yazi,ts:Date.now()});if(L.length>200)L.splice(0,L.length-200)}BKK.not('sr'+id,kim+' telefonundan gelen gelir kaydedilmedi',yazi,tutar);try{toast(kim+' telefonundan gelen '+tl(tutar)+' ₺ gelir kaydedilmedi: Bordro sınırı')}catch(e){}}kaydet()};
 if(typeof bulutUygula=='function'){var _bu=bulutUygula;bulutUygula=function(e){var v=e&&e.veri||{};
  if(e&&e.tur=='finans_kayit'&&v.tur=='gelir'&&v.kim!='sirket'&&!(typeof GG!='undefined'&&GG.bul(e.id))){
-  if(BKK.silindi(e.id)||BKK.izVar('sr'+e.id))return;var t=tutarOku(v.tutar),y=BKK.telefonGelir(v.tarih,t,v.kalem);if(y){BKK.telefonRed(e.id,'Çağlar’ın',t,y);return}}
+  if(BKK.silindi(e.id)||BKK.izVar('sr'+e.id))return;var t=tutarOku(v.tutar),y=BKK.telefonGelir(v.tarih,t,v.kalem);if(y){BKK.telefonRed(e.id,'Çağlar’ın',t,y,v);return}}
  return _bu(e)}}
 if(typeof OAI!='undefined'&&OAI.uygula){var _ou=OAI.uygula;OAI.uygula=function(e,kim){var v=e&&e.veri||{};
  if(e&&e.tur=='es_gelir'&&!(typeof GG!='undefined'&&GG.bul('fn'+e.id))){if(BKK.silindi('fn'+e.id)||BKK.izVar('sr'+e.id))return false;
-  var t=OAI.tutar(v.tutar),y=BKK.telefonGelir(OAI.tarihOk&&OAI.tarihOk(v.tarih)?v.tarih:'',t,v.kat);if(y){BKK.telefonRed(e.id,'Eşinin',t,y);return false}}
+  var t=OAI.tutar(v.tutar),y=BKK.telefonGelir(OAI.tarihOk&&OAI.tarihOk(v.tarih)?v.tarih:'',t,v.kat);if(y){BKK.telefonRed(e.id,'Eşinin',t,y,v);return false}}
  return _ou.apply(this,arguments)}}
 
 // ---------- 3) Aylık tablo "Elle düzeltme" ----------
@@ -94,4 +96,18 @@ if(OA.iceUygula){var _iu=OA.iceUygula;OA.iceUygula=function(o){var s=BKK.iceSuz(
  s.red.forEach(function(x){var m=OA.KASA_AD[x.k]+' bakiyesi içe aktarılmadı: dosyada '+tl(x.t)+' ₺, beklenen '+tl(x.bek)+' ₺. Gelir eklenmeden bakiye artamaz.';BKK.not(null,m,'İçe Aktar',x.t);try{toast(m)}catch(e){}});
  if(s.cift){try{toast(s.cift+' maaş kaydı içe aktarılmadı: o ayın maaşı zaten kayıtlı')}catch(e){}}
  if(s.red.length||s.cift)OA.kaydet();return n};OA.iceUygula.__fe=true}
+// ---------- 7) Düzenlerken girilen veri kaybolmaz (kullanıcı kuralı 2026-11-27) ----------
+// Düzenleme işlevine gelmeyen (undefined) alan var olan değeriyle korunur; boş bırakılan ('') alan bilerek silinmiş sayılır.
+BKK.doldur=function(o,eski){var y={};Object.keys(eski).forEach(function(k){if(eski[k]!==undefined)y[k]=eski[k]});Object.keys(o||{}).forEach(function(k){if(o[k]!==undefined)y[k]=o[k]});return y};
+if(typeof GG!='undefined'&&GG.guncelle){var _gg=GG.guncelle;GG.guncelle=function(id,o){var r=GG.bul(id);if(!r)return _gg(id,o);
+ return _gg(id,BKK.doldur(o,{tur:r.tur,tutar:String(r.tutar),kalem:r.kalem,tarih:r.tarih,not:r.not,kisi:r.kisi,kasa:GG.kasa(r)}))}}
+if(typeof AH!='undefined'&&AH.guncelle){var _ag=AH.guncelle;AH.guncelle=function(id,o){var k=AH.st().kalem.filter(function(x){return x.id==id})[0];if(!k)return _ag(id,o);
+ return _ag(id,BKK.doldur(o,{tur:k.tur,miktar:k.miktar,alis:k.alis,tarih:k.tarih,not:k.not}))}}
+if(typeof FE!='undefined'&&FE.guncelle){var _fg=FE.guncelle;FE.guncelle=function(id,o){var t=FE.bul(id);if(!t)return _fg(id,o);
+ return _fg(id,BKK.doldur(o,{no:t.no,tur:t.tur,vade:t.vade,tutar:t.tutar,odendi:t.odendi,odenen:t.odenen,odemeTarih:t.odemeTarih}))}}
+// Sözleşme: dosyada / pencerede gelmeyen alan silinmez (eskiden FE.SOZ'daki her eksik alan silinirdi)
+if(typeof FE!='undefined'&&FE.sozKaydet){var _fs=FE.sozKaydet;FE.sozKaydet=function(o){var s=FE.st().soz||{},y={};(FE.SOZ||[]).forEach(function(d){var k=d[0];y[k]=o&&o[k]!==undefined?o[k]:s[k]});return _fs(y)}}
+// Bakiye bildirimi: bakiye nesnesindeki diğer alanlar korunur
+if(OA.bakBildir){var _bb2=OA.bakBildir;OA.bakBildir=function(k){var b0=OA.st().bak&&OA.st().bak[k],ek=b0?JSON.parse(JSON.stringify(b0)):null,r=_bb2.apply(this,arguments),b1=OA.st().bak&&OA.st().bak[k];
+ if(ek&&b1&&b1!==b0)Object.keys(ek).forEach(function(x){if(b1[x]===undefined)b1[x]=ek[x]});return r}}
 })();

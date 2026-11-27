@@ -107,6 +107,27 @@ window.__butceKorumaTest=function(){var R=[];
    var now=Date.now();fnS().kayit.push({id:'kor-eski-1',tur:'gider',kim:'cagla',tutar:4000,kalem:'Market',tarih:GG.ayKay(ay,-2)+'-10',ts:now,kaynak:'banka'});
    var g0=OA.ayToplam(ay).gelir,s=OA.bakBildir('aile',bak('aile'),'test');var ok=!(s&&s.kayit&&s.kayit.tur=='gelir')&&OA.ayToplam(ay).gelir==g0&&!GG.kayitlar().some(function(k){return k.tur=='gelir'&&k.kalem=='Kayıt dışı gelir'});
    fnS().kayit=fnS().kayit.filter(function(x){return x.id!='kor-eski-1'});return ok});
+
+  // ---------- 10) Düzenlerken girilen veri kaybolmaz ----------
+  t('Reddedilen telefon geliri kaybolmaz: bütçeye yazılmaz ama olduğu gibi saklanır (gelirRed)',function(){var L=OA.st().gelirRed||[],x=L.filter(function(r){return r.id=='kor-tel-g1'})[0],z=L.filter(function(r){return r.id=='kor-es-g1'})[0];
+   return x&&x.tutar==2500&&x.veri&&x.veri.kalem=='Ek gelir'&&x.veri.tarih==bugun&&/Bordro sınırını/.test(x.neden)&&z&&z.tutar==900},function(){return JSON.stringify(OA.st().gelirRed)});
+  t('Bütçe kaydı: yalnız tutar verilerek düzenlenince açıklama, kalem, kişi, kasa ve tarih korunur',function(){var r=GG.ekle({tur:'gider',kalem:'Market',tarih:bugun,not:'Önemli not',kisi:'kubra',kasa:'kubra',tutar:'30'});
+   var y2=GG.guncelle(r.id,{tutar:'35'}),k=kay(r.id),ok=!!y2&&k.tutar==35&&k.not=='Önemli not'&&k.kalem=='Market'&&k.kisi=='kubra'&&k.hk=='e'&&k.tarih==bugun;GG.silKayit(r.id);return ok&&ayni(durum(ay),d0)},function(){return JSON.stringify(durum(ay))});
+  t('Bütçe formu: sınır yüzünden reddedilen kayıtta yazılan değerler formda kalır; düzenlemede değiştirilmeyen alanlar korunur',function(){GG.ui.sek='detay';GG.ui.ay=null;ORV.git0('aylikbutce');GG.yeniKayit('gelir');
+   var s=function(id,v){var e=document.getElementById(id);if(e)e.value=v;return !!e};s('ggETu','gelir');s('ggETt','99999');s('ggEKa','Ek gelir');s('ggENo','Formda kalmalı');GG.kaydet();
+   var ok=document.getElementById('ggETt').value=='99999'&&document.getElementById('ggENo').value=='Formda kalmalı'&&BKR.gelir(ay)==35000;
+   var r=GG.ekle({tur:'gider',kalem:'Fatura',tarih:bugun,not:'Elektrik · kasım',kisi:'ortak',kasa:'aile',tutar:'80'});GG.ui.yeni=false;GG.duzenle(r.id);s('ggETt','85');GG.kaydet();var k=kay(r.id);
+   ok=ok&&k.tutar==85&&k.not=='Elektrik · kasım'&&k.kalem=='Fatura'&&k.kisi=='ortak';GG.silKayit(r.id);GG.ui.yeni=false;GG.ui.edit=null;return ok&&ayni(durum(ay),d0)},function(){return JSON.stringify(durum(ay))});
+  t('Altın: yalnız miktar verilerek düzenlenince tür, alış, işlem tarihi ve not korunur',function(){if(typeof AH=='undefined')return true;var x0=OA.st().altin?JSON.stringify(OA.st().altin):null;
+   var k=AH.ekle({tur:'gram',miktar:'2',alis:'5000',tarih:GG.ayKay(ay,-1)+'-03',not:'Örnek not'});var y2=k&&AH.guncelle(k.id,{miktar:'3'});var z=k&&AH.st().kalem.filter(function(q){return q.id==k.id})[0];
+   var ok=!!y2&&z.miktar==3&&z.tur=='gram'&&z.alis==5000&&z.tarih==GG.ayKay(ay,-1)+'-03'&&z.not=='Örnek not';if(x0)OA.st().altin=JSON.parse(x0);else delete OA.st().altin;return ok},function(){return 'altın: '+JSON.stringify(OA.st().altin)});
+  t('FuzulEv: taksit yalnız tutarla düzenlenince tür, vade, ödendi korunur; sözleşmede gelmeyen alan silinmez',function(){OA.st().fuzulev={};FE.iceUygula({soz:{plan:'Örnek',sozNo:'000-T',bedel:1000,taksitSay:2},taksit:[{no:1,tur:'Tasarruf',vade:bugun,tutar:500,odendi:true,odenen:500,odemeTarih:bugun}]});
+   var tk=FE.st().taksit[0],y2=FE.guncelle(tk.id,{tutar:'600'}),t2=FE.bul(tk.id);FE.sozKaydet({plan:'Yeni ad'});var s2=FE.st().soz;
+   var ok=!!y2&&t2.tutar==600&&t2.tur=='Tasarruf'&&t2.vade==bugun&&t2.odendi&&t2.no==1&&s2.plan=='Yeni ad'&&s2.sozNo=='000-T'&&s2.bedel==1000&&s2.taksitSay==2;delete OA.st().fuzulev;return ok&&ayni(durum(ay),d0)},function(){return JSON.stringify(FE.st())});
+  t('Bakiye bildir: bakiyedeki diğer bilgiler korunur',function(){var b=OA.st().bak.kubra;b.not='örnek';var t0=b.t;OA.bakBildir('kubra',t0,'test');var ok=OA.st().bak.kubra.not=='örnek'&&OA.st().bak.kubra.t==t0;delete OA.st().bak.kubra.not;return ok});
+  t('Geçmiş ay dengesi: program kaydı (Kayıt dışı harcama) değişince eski tutar kayıtta kalır',function(){var a2=GG.ayKay(ay,-5),x=fnKaydet({tur:'gider',kim:'cagla',tutar:'1000',kalem:GG.KD,tarih:a2+'-28',kaynak:'bakiye'},'kor-kd');x.kd='aile';x.bakEk='gecmis';
+   BKR.dengele(a2,-300);var k=kay('kor-kd'),ok=k&&k.tutar==700&&Array.isArray(k.eski)&&k.eski[0].t==1000;BKR.dengele(a2,100);ok=ok&&k.tutar==800&&k.eski.length==2&&k.eski[1].t==700;
+   fnS().kayit=fnS().kayit.filter(function(q){return q.id!='kor-kd'});return ok});
  }catch(e){R.push({n:'Gelir koruması: test çöktü',ok:false,m:e.stack||e.message})}
  finally{window.toast=toast0;OA.bugunKey=y.bk;BKD.DEVIR=y.dv;if(y.fn)S.finans=JSON.parse(y.fn);else delete S.finans;if(y.a)S.orvA=JSON.parse(y.a);else delete S.orvA;if(y.br)S.bordro=JSON.parse(y.br);else delete S.bordro;GG.ui=JSON.parse(y.ui);BR.ui=JSON.parse(y.bui);try{if(typeof save=='function')save()}catch(e){}}
  return R};

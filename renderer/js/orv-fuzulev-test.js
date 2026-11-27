@@ -70,6 +70,12 @@ window.__fuzulevTest=function(){var R=[];
    var a0=bak('aile'),s=FE.odendi(t3.id,{tutar:'1.000',odemeTarih:ay+'-20',butce:true,kasa:'aile'}),r=kay('fe'+t3.id);var ok=s.butce.durum=='yazildi'&&r&&r.bakEk=='gecmis'&&!r.bakDus&&bak('aile')==a0&&Math.abs(BKR.ayNet(ay))<0.01;
    FE.odenmedi(t3.id);var ok2=!kay('fe'+t3.id)&&bak('aile')==a0&&Math.abs(BKR.ayNet(ay))<0.01;fnS().kayit=fnS().kayit.filter(function(x){return !/^tsG/.test(x.id)});if(!(ok&&ok2))throw new Error(JSON.stringify({ok:ok,ok2:ok2,a:bak('aile'),a0:a0,n:BKR.ayNet(ay)}));return true});
   t3.odenen=null;t3.tutar=11000;
+  // İçe Aktar: "butce":true ile ödenmiş taksit bütçeye yazılır; ikinci içe aktarmada tekrar yazılmaz
+  t('İçe Aktar "butce": ödenmiş taksit Aile Bütçesine bir kez yazılır, ödenmemişe dokunmaz',function(){var a0=bak('aile'),t2=FE.st().taksit.filter(function(q){return q.no==2})[0];
+   var m=FE.iceUygula({taksit:[{no:2,tur:'Tasarruf',vade:t2.vade,tutar:'3.500',odendi:true,odenen:'3.500',odemeTarih:bugun,butce:true},{no:6,tur:'Finansman',vade:gunEk(bugun,87),tutar:'7.000',butce:true}]});
+   var r=kay('fe'+t2.id),m2=FE.iceUygula({taksit:[{no:2,tur:'Tasarruf',odendi:true,odenen:3500,odemeTarih:bugun,butce:true}]}),t6=FE.st().taksit.filter(function(q){return q.no==6})[0];
+   var ok=m.butce==1&&r&&r.tutar==3500&&r.kalem=='FuzulEv taksiti'&&t2.tutar==3500&&t2.odenen==3500&&bak('aile')==a0-3500&&m2.butce==0&&fnS().kayit.filter(function(x){return x.id=='fe'+t2.id}).length==1&&!t6.butceId;
+   FE.odenmedi(t2.id);t2.tutar=null;t2.odendi=true;if(!ok)throw new Error(JSON.stringify({m:m,m2:m2,r:r,a:bak('aile'),a0:a0}));return bak('aile')==a0});
   // Bütçesiz ödeme ve Çağlar cep kasası
   var t4=FE.st().taksit.filter(function(q){return q.no==4})[0];FE.odendi(t4.id,{odemeTarih:bugun,butce:false});
   t('Bütçeye yazmadan ödendi: kayıt yok, bakiye aynı',t4.odendi&&!t4.butceId&&!kay('fe'+t4.id)&&bak('aile')==50000);

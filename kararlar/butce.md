@@ -8,6 +8,7 @@
 - Aylık gelir ≤ Net Ödenen + SGK ödeneği.
 - Bakiye bildirimi gelire eklenmez; fark kayıt dışı harcama olarak yazılır.
 - Altın Hesabım sekmesi var (altın hesabı ayrı sekmede izlenir).
+- FuzulEv sekmesi var (Ailem altında; ayrıntılar aşağıda).
 
 ## Banka dökümü içe aktarma
 
@@ -16,3 +17,14 @@
 - Geçmiş aylar net 0: ayın "Kayıt dışı harcama" = gelir − bilinen gider.
 - İçinde bulunulan aya istenmedikçe ekleme yapılmaz.
 - İçe Aktar klasörü: `Belgeler\Orin\İçe Aktar` → açılışta bir kez işlenir, `İşlendi`'ye taşınır.
+
+## FuzulEv (0.9.13)
+
+- Ailem › FuzulEv: birikim/finansman sözleşmesi ve taksitleri `durum.json`'da (`S.orvA.fuzulev`) tutulur; telefona gönderilmez (şimdilik).
+- Bilinmeyen taksit tutarı uydurulmaz: boş kalır, "Tutar girilmedi" gösterilir; kullanıcı düzenler.
+- "Ödendi" işaretlenirken istenirse Aile Bütçesine "FuzulEv taksiti" gideri yazılır (kasa: Aile Bütçesi ya da Çağlar cep) ve hemen kasaya işlenir.
+- Çift sayma yok: kayıt kimliği taksite bağlı (`fe` + taksit id); bankadan içe aktarılmış aynı ödeme (aynı tutar, ±7 gün, "fuzul" geçen) varsa yeni gider yazılmaz, ona bağlanır.
+- Geçmiş aya ait ödemede bütçeye yazma varsayılan kapalı (kapanmış ay net 0 kuralı).
+- "Geri al" yalnız FuzulEv'in yazdığı gideri ve bakiye etkisini geri alır; banka kaydı kalır. Taksit silinince bütçedeki gider kalır.
+- Teslimata kalan = teslimat taksitine kadar (o dahil) ödenmemiş taksit sayısı ve teslimat vadesine kalan gün.
+- Gerçek sözleşme bilgileri koda/testlere girmez; İçe Aktar JSON'undaki "fuzulev" anahtarıyla ya da sayfadan elle girilir.

@@ -1,0 +1,39 @@
+/* Orvane 0.9.13 · Ailem › FuzulEv (renderer/js/orv-fuzulev.js). Kart, tablo, düğmeler orv-butce.css (gg-*); burada yalnız FuzulEv'e özgü ayrıntılar.
+   Tasarım: Claude Design "Orvane · FuzulEv ve Altın Hesabım". Renkler tema değişkenlerinden; tür renkleri sabit (Tasarruf camgöbeği, Tahsisat altın, Finansman lavanta). */
+.fe-lg{font-size:12px!important}
+.fe .soluk{color:var(--yazi3)}
+.fe-kd{font-size:30px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}.fe-kd i{font-style:normal;font-size:16px;color:var(--yazi2);font-weight:600}
+.fe-uy{color:#ffcf8a}
+.gg-k.fe-kp{padding:14px 16px;gap:6px;border-radius:20px}
+.fe-tab th:nth-child(7),.fe-tab td:nth-child(7){padding-left:22px}
+/* Gecikme uyarısı */
+.fe-gec{display:flex;flex-wrap:wrap;align-items:center;gap:14px;padding:14px 18px;border-radius:20px;background:rgba(255,120,95,.12);border:1px solid rgba(255,138,107,.35);animation:ggGir .6s cubic-bezier(.33,1,.68,1) backwards}
+.fe-gm{flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:2px}.fe-gm b{font-size:14px;color:#ffd0c4}.fe-gm span{font-size:13px;color:#d9b3aa}
+.gg-btn.fe-gb{background:#ff8a6b;color:#2a0f08;box-shadow:none}
+/* Sözleşme + yol */
+.fe-iki{display:flex;flex-wrap:wrap;gap:14px}.fe-iki>.fe-soz{flex:1 1 340px}.fe-iki>.fe-yolk{flex:2 1 560px}
+.fe-pl{font-size:14px;font-weight:700}
+.fe-sg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 16px;font-size:13px}.fe-sg span{display:block;color:var(--yazi3);font-size:12px}.fe-sg b{font-variant-numeric:tabular-nums}
+.fe-lj{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--yazi2)}.fe-lj span{display:flex;align-items:center;gap:6px}.fe-lj i{width:8px;height:8px;border-radius:4px}
+.fe-yol{display:grid;gap:6px;align-items:end;min-height:84px}
+.fe-yi{display:flex;flex-direction:column;align-items:center;gap:6px}.fe-yi i{display:block;width:100%;border-radius:8px;opacity:.38;transition:opacity .3s}.fe-yi span{font-size:11px;font-weight:600;color:var(--yazi3)}
+.fe-yi.on i{opacity:1}.fe-yi.on span{color:var(--yazi)}.fe-yi.tes i{outline:2px solid #fde68a;outline-offset:2px}.fe-yi.tes span{color:#fde68a}.fe-yi.gec i{outline:2px solid #ff9a85;outline-offset:2px}
+.fe-yl{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;font-size:12px;color:var(--yazi2)}.fe-ty{color:#fde68a;font-weight:700}
+.fe-bar{height:8px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}.fe-bar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--acc2),var(--acc));transition:width .6s var(--ease-ana,ease)}
+/* Tablo */
+.fe-szg{display:flex;background:var(--cam);border:1px solid var(--cam-kenar);border-radius:999px;padding:3px;gap:2px}
+.fe-sz{height:32px;border-radius:999px;border:0;padding:0 14px;font-size:13px!important;font-weight:700!important;background:transparent;color:var(--yazi2)}.fe-sz.on{background:#f2f2f3;color:#141416}
+.fe-tab td,.fe-tab th{font-variant-numeric:tabular-nums}
+.fe-trg{background:rgba(255,120,95,.06)}
+.fe-tur{display:inline-flex;align-items:center;gap:6px;font-weight:600}.fe-tur i{width:8px;height:8px;border-radius:4px}
+.fe-d{font-size:12px;font-weight:700;border-radius:999px;padding:3px 9px;white-space:nowrap;color:#c9c9ce;background:rgba(255,255,255,.06)}
+.fe-d.ok{color:#7ee2a0;background:rgba(126,226,160,.12)}.fe-d.uy{color:#ffcf8a;background:rgba(255,207,138,.12)}.fe-d.gec{color:#ff9a85;background:rgba(255,154,133,.14)}.fe-d.tes{color:#fde68a;background:rgba(253,230,138,.12)}
+.fe-bt{display:inline-flex;width:16px;height:16px;border-radius:8px;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#141416;background:#7ee2a0;vertical-align:1px}
+.gg-btn.fe-ob{height:32px;border-radius:16px;padding:0 12px;font-size:12px!important}
+.fe-chk{display:inline-flex;align-items:center;gap:6px;font-size:13px;white-space:nowrap}.fe-chk input{width:18px;height:18px;accent-color:var(--acc)}
+/* Pencereler */
+.fe-bk{display:flex;align-items:flex-start;gap:12px;padding:14px;border-radius:18px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);cursor:pointer;margin:6px 0}
+.fe-bk input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--acc);flex:none}.fe-bk span{display:flex;flex-direction:column;gap:4px}.fe-bk b{font-size:14px}.fe-bk small{font-size:12px;color:var(--yazi2);line-height:1.5}
+.fe-sd{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px;max-height:60vh;overflow:auto}
+@media (max-width:720px){.fe-sg,.fe-sd{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.fe-gec{animation:none!important}.fe-yi i,.fe-bar i{transition:none!important}}

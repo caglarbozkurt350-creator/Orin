@@ -1,6 +1,6 @@
 # Orvane · Alınan Kararlar (dizin)
 
-Genel kurallar burada; ayrıntı `kararlar/` altında konu başına. Alt sekmeler yalnız işiyle ilgili konu dosyasını okur.
+Genel kurallar burada; ayrıntı `kararlar/` altında konu başına. Bu dosyalar kayıttır; alt sekmeler okumaz (en önemli kurallar `CLAUDE.md`'de, işe özel olanlar brief'te).
 Son güncelleme: 2026-11-27 · Sürüm 0.9.11
 
 ## Genel kurallar

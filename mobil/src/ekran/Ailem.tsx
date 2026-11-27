@@ -17,6 +17,7 @@ import type { Ozet } from '@/lib/depo';
 import { aciklama, useGorunum } from '@/lib/ekip';
 import { useEkip } from '@/lib/kullan';
 import { useRol } from '@/lib/rol';
+import { useYeni } from '@/lib/yeni';
 import { R, saydam } from '@/lib/tema';
 
 const KAT: [string, string, string, string, string][] = [
@@ -32,6 +33,13 @@ const KAT: [string, string, string, string, string][] = [
 ];
 /** Çalışanı olmayan kategoriler: kutucuğun alt satırı özet, seçili çalışan kartı yok */
 const VARLIK: Record<string, (o: Ozet) => [string, string]> = { altin: (o) => altinOzet(o.aile?.altin), fuzulev: (o) => fuzulevOzet(o.aile?.fuzulev) };
+/** Varlık kutucuğu tam sayfa açar (geri ok / Android geri → Ailem); diğerleri altta paneli açar */
+const katAc = (id: string, digeri: () => void) => (VARLIK[id] ? router.push(('/' + id) as any) : digeri());
+/** "Yeni" etiketi: sayfa bir kez açılınca ya da ilk görüldükten 14 gün sonra kaybolur (lib/yeni.ts) */
+function YeniEtiket({ id }: { id: string }) {
+  if (!useYeni(id)) return null;
+  return <View style={{ position: 'absolute', top: 12, right: 12, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 999, backgroundColor: saydam(R.ana, 0.18), borderWidth: 1, borderColor: saydam(R.ana, 0.5) }}><Text style={{ color: R.yazi, fontSize: 10.5, fontWeight: '700' }}>Yeni</Text></View>;
+}
 const ISLER: Record<string, string> = {
   mia: 'Aile işlerinde muhatap; Çağlar ve Kübra’ya yanıt verir. Otto, Iris, Marco ve Nerya ona bağlı.',
   otto: 'Gelir-gider kaydı; Çağlar ve Kübra bakiyelerini ayrı tutar, aradaki transferi gelir/gider saymaz.',
@@ -68,9 +76,10 @@ export function Ailem() {
         {KAT.map(([id, ad, alt, harf, renk]) => {
           const k = bul(id), on = famId === id, vz = VARLIK[id] ? VARLIK[id](o) : null, gec = id === 'fuzulev' && fuzulevGecikti(o.aile?.fuzulev);
           return (
-            <Pressable key={id} onPress={() => aileSec(on && fam ? null : id)} accessibilityRole="button" accessibilityState={{ selected: on }} accessibilityLabel={ad + ', ' + alt}
+            <Pressable key={id} onPress={() => katAc(id, () => aileSec(on && fam ? null : id))} accessibilityRole="button" accessibilityState={{ selected: on }} accessibilityLabel={ad + ', ' + alt}
               style={({ pressed }) => ({ width: '48%', flexGrow: 1, minHeight: 132, borderRadius: 20, padding: 14, gap: 8, borderWidth: 1, borderColor: on ? saydam(R.ana, 0.7) : gec ? 'rgba(255,107,90,0.55)' : 'rgba(255,255,255,0.10)', backgroundColor: on ? saydam(R.ana, 0.1) : 'rgba(255,255,255,0.05)', opacity: fam && !on ? 0.45 : 1, transform: [{ translateY: on ? -2 : 0 }, { scale: pressed ? 0.95 : 1 }] })}>
               <View style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: renk, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#1c1c1e', fontWeight: '700', fontSize: 15 }}>{harf}</Text></View>
+              {!!VARLIK[id] && <YeniEtiket id={id} />}
               <Text style={{ color: R.yazi, fontSize: 14, lineHeight: 18, fontWeight: '600' }}>{ad}</Text>
               <Text style={s.sub}>{alt}</Text>
               {vz ? <Text numberOfLines={1} style={{ marginTop: 'auto', color: vz[1], fontSize: 11.5, fontWeight: '600' }}>{vz[0]}</Text>
@@ -112,9 +121,10 @@ function AilemPasif() {
         {KAT.map(([id, ad, , , renk]) => {
           const on = sec[0] === id;
           return (
-            <Pressable key={id} onPress={() => aileSec(id)} accessibilityRole="button" accessibilityState={{ selected: on }} accessibilityLabel={ad}
+            <Pressable key={id} onPress={() => katAc(id, () => aileSec(id))} accessibilityRole="button" accessibilityState={{ selected: on }} accessibilityLabel={ad}
               style={({ pressed }) => ({ width: '48%', flexGrow: 1, minHeight: 112, borderRadius: 20, padding: 14, gap: 8, borderWidth: 1, borderColor: on ? saydam(R.ana, 0.7) : 'rgba(255,255,255,0.10)', backgroundColor: on ? saydam(R.ana, 0.1) : 'rgba(255,255,255,0.05)', transform: [{ translateY: on ? -2 : 0 }, { scale: pressed ? 0.95 : 1 }] })}>
               <View style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: renk, alignItems: 'center', justifyContent: 'center' }}><Ikon ad={SIMGE[id]} boy={19} renk="#1c1c1e" kalin={2.2} /></View>
+              {!!VARLIK[id] && <YeniEtiket id={id} />}
               <Text style={{ color: R.yazi, fontSize: 14, lineHeight: 18, fontWeight: '600' }}>{ad}</Text>
               <Text numberOfLines={2} style={s.sub}>{PASIF_IS[id]}</Text>
               {VARLIK[id] && (() => { const v = VARLIK[id](g); return <Text numberOfLines={1} style={{ color: v[1], fontSize: 11.5, fontWeight: '600' }}>{v[0]}</Text>; })()}

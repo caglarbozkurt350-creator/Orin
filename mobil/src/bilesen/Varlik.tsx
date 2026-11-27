@@ -2,19 +2,29 @@
 // yalnız Çağlar'ın telefonuna gelir, eşin özetinde yoktur. Telefon değiştirmez; kayıt ekleme/düzeltme masaüstündedir.
 // Tasarım: masaüstündeki Claude Design "Orvane · FuzulEv ve Altın Hesabım" dili (altın tonları, taksit türü renkleri, ▲ / ▼).
 // FuzulEv gecikmesi telefonda bugünün tarihine göre yeniden hesaplanır (masaüstü kapalıyken de uyarı güncel kalır).
-import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Redirect } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { Bos } from '@/bilesen/formlar';
-import { Bolumler, Hap, Ikon, s } from '@/bilesen/ortak';
+import { Bolumler, Ekran, Hap, Ikon, s } from '@/bilesen/ortak';
 import type { Altin, FeDurum, FuzulEv, Ozet } from '@/lib/depo';
+import { useGorunum } from '@/lib/ekip';
+import { useRol } from '@/lib/rol';
+import { yeniGoruldu } from '@/lib/yeni';
 import { R, saydam } from '@/lib/tema';
-import { AY, tamAnahtar, tarihOf, tl } from '@/lib/zaman';
+import { AY, tamAnahtar, tarihOf } from '@/lib/zaman';
 
 const YESIL = '#7ee2a0', KIRMIZI = '#ff9a85', ALTIN = '#e0a32e';
 const ok = (d: number | null | undefined) => (d == null || d === 0 ? '' : d > 0 ? '▲ ' : '▼ ');
 const renk = (d: number | null | undefined) => (d == null || d === 0 ? R.yazi2 : d > 0 ? YESIL : KIRMIZI);
-const yuzde = (p: number, k = 1) => '%' + Math.abs(p).toLocaleString('tr-TR', { maximumFractionDigits: k });
-const miktar = (n: number, b: 'gr' | 'adet') => n.toLocaleString('tr-TR', { maximumFractionDigits: b === 'gr' ? 3 : 0 }) + ' ' + b;
+// Türkçe sayı biçimi elle (cihazın Intl verisine bağlı kalmasın): binlik nokta, ondalık virgül. k: en çok ondalık, sondaki sıfırlar atılır.
+export function sayiTr(n: number, k = 0) {
+  const neg = n < 0, [t, o = ''] = Math.abs(n).toFixed(k).split('.'), ond = o.replace(/0+$/, '');
+  return (neg ? '−' : '') + t.replace(/\B(?=(\d{3})+(?!\d))/g, '.') + (ond ? ',' + ond : '');
+}
+export const tl = (n: number) => sayiTr(Math.round(n)) + ' ₺';
+const yuzde = (p: number, k = 1) => '%' + sayiTr(Math.abs(p), k);
+const miktar = (n: number, b: 'gr' | 'adet') => sayiTr(n, b === 'gr' ? 3 : 0) + ' ' + b;
 const tarihY = (t: string) => { if (!/^\d{4}-\d{2}-\d{2}$/.test(t)) return '—'; const d = tarihOf(t); return d.getDate() + ' ' + AY[d.getMonth()].slice(0, 3) + ' ' + d.getFullYear(); };
 const ayY = (a: string) => (/^\d{4}-\d{2}/.test(a) ? AY[+a.slice(5, 7) - 1].slice(0, 3) + ' ' + a.slice(0, 4) : '—');
 const gunFark = (a: string, b: string) => Math.round((tarihOf(b).getTime() - tarihOf(a).getTime()) / 864e5);
@@ -32,6 +42,8 @@ function Gosterge({ et, deger, birim, alt, altRenk, vurgu }: { et: string; deger
     </View>
   );
 }
+/** Veri yoksa değer üretilmez: "veri yok" ve nedeni (masaüstü kuralı) */
+const VeriYok = ({ neden }: { neden: string }) => <View style={{ gap: 2 }}><Text style={{ color: R.soluk, fontSize: 15, fontWeight: '700' }}>veri yok</Text><Text style={[s.sub, { color: '#f7bd55' }]}>{neden}</Text></View>;
 const SaltOkunur = ({ yazi }: { yazi: string }) => <Text style={[s.sub, { fontSize: 11, color: R.soluk }]}>{yazi}</Text>;
 
 // ======================= Altın Hesabım =======================
@@ -142,16 +154,19 @@ export function AltinPanel({ o }: { o: Ozet }) {
       {/* Alım gücü */}
       <View style={{ padding: 14, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.05)', gap: 8 }}>
         <Text style={[s.sub, { color: R.yazi, fontWeight: '600', fontSize: 13 }]}>Alım gücü · işlem tarihinden bugüne</Text>
-        {!a.ag ? <Text style={s.soluk}>TÜFE ve kur verisi masaüstünde alınınca burada görünür.</Text>
+        {!a.ag ? <VeriYok neden="TÜFE ve kur verisi masaüstünde henüz alınmadı (bilgisayarda Orvane açılınca ya da Altın Hesabım açılınca alınır)." />
           : !a.ag.satir.length ? <Text style={s.soluk}>Masaüstünde satırlara işlem tarihi ve alış tutarı girilince her kaydın getirisi burada görünür.</Text>
-          : (
+          : (() => { const ag = a.ag, ilk = (alan: 'tufeNeden' | 'kurNeden') => ag.satir.map((x) => x[alan]).find(Boolean) || ''; return (
             <>
-              {!!a.ag.uyari && <Text style={[s.sub, { color: '#f7bd55' }]}>{a.ag.uyari}</Text>}
+              {!!ag.uyari && <Text style={[s.sub, { color: '#f7bd55' }]}>{ag.uyari}</Text>}
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                <Gosterge et="Nominal getiri" deger={a.ag.top.nominal != null ? ok(a.ag.top.nominal) + yuzde(a.ag.top.nominal) : '—'} vurgu={renk(a.ag.top.nominal)} alt={tl(a.ag.top.alis) + ' → ' + tl(a.ag.top.deger)} />
-                <Gosterge et="Reel getiri (TÜFE)" deger={a.ag.top.reel != null ? ok(a.ag.top.reel) + yuzde(a.ag.top.reel) : 'veri yok'} vurgu={a.ag.top.reel != null ? renk(a.ag.top.reel) : R.soluk} alt={a.ag.tufeSon ? 'TÜFE son ay: ' + ayY(a.ag.tufeSon) : 'TÜFE alınamadı'} />
-                <Gosterge et="Dolar alınsaydı" deger={a.ag.top.usd != null ? tl(a.ag.top.usd) : 'veri yok'} vurgu={a.ag.top.usd != null ? renk(a.ag.top.deger - a.ag.top.usd) : R.soluk} alt={a.ag.top.usd != null ? (a.ag.top.deger >= a.ag.top.usd ? '▲ altın önde' : '▼ dolar önde') : undefined} altRenk={a.ag.top.usd != null ? renk(a.ag.top.deger - a.ag.top.usd) : undefined} />
-                <Gosterge et="Euro alınsaydı" deger={a.ag.top.eur != null ? tl(a.ag.top.eur) : 'veri yok'} vurgu={a.ag.top.eur != null ? renk(a.ag.top.deger - a.ag.top.eur) : R.soluk} alt={a.ag.top.eur != null ? (a.ag.top.deger >= a.ag.top.eur ? '▲ altın önde' : '▼ euro önde') : undefined} altRenk={a.ag.top.eur != null ? renk(a.ag.top.deger - a.ag.top.eur) : undefined} />
+                <Gosterge et="Nominal getiri" deger={ag.top.nominal != null ? ok(ag.top.nominal) + yuzde(ag.top.nominal) : 'veri yok'} vurgu={ag.top.nominal != null ? renk(ag.top.nominal) : R.soluk} alt={tl(ag.top.alis) + ' → ' + tl(ag.top.deger)} />
+                <Gosterge et="Reel getiri (TÜFE)" deger={ag.top.reel != null ? ok(ag.top.reel) + yuzde(ag.top.reel) : 'veri yok'} vurgu={ag.top.reel != null ? renk(ag.top.reel) : R.soluk}
+                  alt={ag.top.reel != null ? 'TÜFE son ay: ' + ayY(ag.tufeSon) : ilk('tufeNeden') || (ag.guncel ? 'Bazı satırların TÜFE’si yok' : 'TÜFE güncel değil')} altRenk={ag.top.reel != null ? undefined : '#f7bd55'} />
+                <Gosterge et="Dolar alınsaydı" deger={ag.top.usd != null ? tl(ag.top.usd) : 'veri yok'} vurgu={ag.top.usd != null ? renk(ag.top.deger - ag.top.usd) : R.soluk}
+                  alt={ag.top.usd != null ? (ag.top.deger >= ag.top.usd ? '▲ altın önde' : '▼ dolar önde') : ilk('kurNeden') || 'Bazı satırların kuru yok'} altRenk={ag.top.usd != null ? renk(ag.top.deger - ag.top.usd) : '#f7bd55'} />
+                <Gosterge et="Euro alınsaydı" deger={ag.top.eur != null ? tl(ag.top.eur) : 'veri yok'} vurgu={ag.top.eur != null ? renk(ag.top.deger - ag.top.eur) : R.soluk}
+                  alt={ag.top.eur != null ? (ag.top.deger >= ag.top.eur ? '▲ altın önde' : '▼ euro önde') : ilk('kurNeden') || 'Bazı satırların kuru yok'} altRenk={ag.top.eur != null ? renk(ag.top.deger - ag.top.eur) : '#f7bd55'} />
               </View>
               {a.kalem.filter((k) => agMap[k.id]).map((k) => { const x = agMap[k.id]; return (
                 <View key={k.id} style={{ gap: 2, paddingTop: 6, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)' }}>
@@ -159,12 +174,13 @@ export function AltinPanel({ o }: { o: Ozet }) {
                   <Text style={[s.sub, { fontSize: 11.5 }]}>
                     Nominal <Text style={{ color: renk(x.nominal), fontWeight: '700' }}>{ok(x.nominal)}{yuzde(x.nominal)}</Text>
                     {'  ·  '}Reel {x.reel != null ? <Text style={{ color: renk(x.reel), fontWeight: '700' }}>{ok(x.reel)}{yuzde(x.reel)}</Text> : <Text style={{ color: R.soluk }}>veri yok</Text>}
-                    {x.enf != null ? '  ·  TÜFE %' + x.enf.toLocaleString('tr-TR', { maximumFractionDigits: 1 }) : ''}
-                    {x.asAlis != null ? '  ·  asgari ücret ' + x.asAlis.toLocaleString('tr-TR', { maximumFractionDigits: 2 }) + ' → ' + (x.asBugun || 0).toLocaleString('tr-TR', { maximumFractionDigits: 2 }) + ' ay' : ''}
+                    {x.enf != null ? '  ·  TÜFE ' + yuzde(x.enf) : ''}
+                    {x.usd != null ? '  ·  dolar ' + tl(x.usd) : ''}
                   </Text>
+                  <Text style={[s.sub, { fontSize: 11.5 }]}>Asgari ücret: {x.asAlis != null ? sayiTr(x.asAlis, 2) + ' → ' + sayiTr(x.asBugun || 0, 2) + ' ay' : 'veri yok'}</Text>
+                  {[x.reel == null && x.tufeNeden ? 'TÜFE: ' + x.tufeNeden : '', x.usd == null && x.kurNeden ? 'Kur: ' + x.kurNeden : '', x.asAlis == null && x.asNeden ? 'Asgari ücret: ' + x.asNeden : ''].filter(Boolean).map((n) => <Text key={n} style={[s.sub, { fontSize: 11, color: '#f7bd55' }]}>{n}</Text>)}
                 </View>); })}
-            </>
-          )}
+            </>); })()}
       </View>
       <SaltOkunur yazi={(f ? (f.eski ? 'Son bilinen fiyat · ' : '') + f.kaynak + (f.tarih ? ' · ' + f.tarih : '') + ' · ' : '') + 'Salt okunur · kayıtlar masaüstünde düzenlenir · ▲ / ▼ değişim'} />
     </>
@@ -312,5 +328,42 @@ export function FuzulEvPanel({ o }: { o: Ozet }) {
       )}
       <SaltOkunur yazi="Salt okunur · ödendi işareti ve düzenleme masaüstünde · gecikme bugüne göre hesaplanır" />
     </>
+  );
+}
+
+// ======================= Tam sayfa (0.9.14) =======================
+// Kutucuk → app/altin.tsx, app/fuzulev.tsx. Geri ok ve Android geri tuşu Ailem'e döner (Stack).
+// Eşin profilinde açılmaz: Ailem'e geri yönlendirilir (masaüstü de eşin özetine bu veriyi koymaz).
+const ESKI = 6 * 36e5;
+const saatY = (t: number) => { const d = new Date(t); return d.getDate() + ' ' + AY[d.getMonth()].slice(0, 3) + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+/** Masaüstü özeti yalnız değişince gönderilir; 6 saatten eskiyse küçük not (veri tasarrufu kuralı gereği zaman = son değişim) */
+export function EskiOzetNotu({ ts, simdi }: { ts?: number; simdi: number }) {
+  if (!ts || simdi - ts < ESKI) return null;
+  const sa = Math.floor((simdi - ts) / 36e5), sure = sa >= 48 ? Math.floor(sa / 24) + ' gün' : sa + ' saat';
+  return <Text style={[s.sub, { fontSize: 11, color: '#f7bd55' }]}>Masaüstü özeti {sure}tir güncellenmedi · son: {saatY(ts)}. Bilgisayar açılınca yenilenir.</Text>;
+}
+
+const SAYFA = {
+  altin: { ad: 'Altın Hesabım', harf: 'Au', renk: '#fde68a', Govde: AltinPanel },
+  fuzulev: { ad: 'FuzulEv', harf: 'FE', renk: '#fdba74', Govde: FuzulEvPanel },
+};
+export function VarlikSayfa({ id }: { id: 'altin' | 'fuzulev' }) {
+  const o = useGorunum(), rol = useRol(), p = SAYFA[id], [simdi] = useState(Date.now);
+  useEffect(() => { if (rol !== 'es') yeniGoruldu(id); }, [id, rol]);
+  if (rol === 'es') return <Redirect href="/" />;
+  const { Govde } = p;
+  return (
+    <Ekran geri baslik={
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <View style={{ width: 26, height: 26, borderRadius: 9, backgroundColor: p.renk, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#1c1c1e', fontWeight: '700', fontSize: 11 }}>{p.harf}</Text></View>
+        <Text style={{ color: R.soluk, fontSize: 13 }}>Ailem ›</Text>
+        <Text style={{ color: R.yazi, fontSize: 17, fontWeight: '600' }}>{p.ad}</Text>
+      </View>
+    }>
+      <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 36 }}>
+        <EskiOzetNotu ts={o.ts} simdi={simdi} />
+        <Govde o={o} />
+      </ScrollView>
+    </Ekran>
   );
 }

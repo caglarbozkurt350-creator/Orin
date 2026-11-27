@@ -28,6 +28,32 @@ export type Aile = {
   menu?: Record<string, string>; market?: MarketMadde[]; oneri?: Oneri[]; ev?: EvIsi[];
   /** 0.9.4 spor: "YYYY-MM-DD|cagla|kubra" → günlük kayıt */
   spor?: Record<string, Spor>;
+  /** 0.9.14 Altın Hesabım ve FuzulEv (masaüstü orv-varlik-tel.js; salt okunur, yalnız Çağlar'ın telefonuna gelir) */
+  altin?: Altin; fuzulev?: FuzulEv;
+};
+/** Altın kaydı: miktar gram (gr) ya da adet; alis toplam alış tutarı (yoksa null); deger/kar/gunluk fiyat yoksa null */
+export type AltinKalem = { id: string; tur: string; ad: string; birim: 'gr' | 'adet'; miktar: number; tarih: string; alis: number | null; not: string; deger: number | null; kar: number | null; gunluk: number | null };
+/** Alım gücü satırı (işlem tarihinden bugüne). Değer yoksa ...Neden alanı nedeni söyler */
+export type AltinAgSatir = { id: string; nominal: number; enf?: number; reel?: number; tufeNeden?: string; usd?: number; eur?: number; kurNeden?: string; asAlis?: number; asBugun?: number; asNeden?: string };
+export type Altin = {
+  /** t: tür → [satış, alış, günlük %, Kapalıçarşı ? 1 : 0] */
+  fiyat: { t: Record<string, [number, number, number, 0 | 1]>; kaynak: string; tarih: string; eski: 0 | 1 } | null;
+  kalem: AltinKalem[];
+  top: { deger: number; bozdur: number; alis: number; karDeger: number; kar: number | null; karP: number | null; gunluk: number; gunlukP: number; gram: number; adet: number; eksik: number };
+  ag: { guncel: 0 | 1; tufeSon: string; kurTarih: string; uyari: string; satir: AltinAgSatir[]; top: { n: number; alis: number; deger: number; nominal: number | null; reel: number | null; usd: number | null; eur: number | null } } | null;
+};
+export type FeTaksitKisa = { no: number; tur: string; vade: string; tutar: number | null; kalan: number | null; gun: number };
+export type FeDurum = 'odendi' | 'girilmedi' | 'gecikti' | 'bekliyor';
+export type FuzulEv = {
+  soz: { plan?: string; tarih?: string; kampanya?: string; finTur?: string; bedel?: number; orgUcret?: number; pesinat?: number; taksitSay?: number; teslimat?: number; durum?: string };
+  /** masaüstünün özeti hazırladığı gün (gecikme telefonda bugüne göre yeniden hesaplanır) */
+  bugun: string;
+  ozet: { say: number; odenenSay: number; odenen: number; odenenEksik: number; kalan: number; kalanEksik: number; kalanSay: number; toplam: number; toplamEksik: number; ilerleme: number };
+  sonraki: FeTaksitKisa | null; geciken: FeTaksitKisa[];
+  teslim: { no: number; vade: string; taksit: number; gun: number | null; tamam: 0 | 1 } | null;
+  son: { no: number; vade: string } | null;
+  /** [no, tür, vade, tutar, ödenen, kalan, durum, gecikme gün, ödeme tarihi] */
+  taksit: [number, string, string, number | null, number | null, number | null, FeDurum, number, string][];
 };
 /** Günlük spor: adım, yürüyüş dk, başka aktivite (tur: kosu|bisiklet|fitness|yuzme|yoga|diger) ve dakikası, yazıldığı saat */
 export type Spor = { adim: number; dk: number; tur: string; tdk: number; s?: string };

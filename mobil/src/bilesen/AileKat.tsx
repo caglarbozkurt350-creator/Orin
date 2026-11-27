@@ -5,6 +5,7 @@
 // • Satın Alma: öneriler ve karar (oneri_ekle / oneri_karar)
 // • Ev İşleri: yapılacaklar (ev_ekle / ev_tik / ev_temizle)
 // • Aile Takvimi: yaklaşan etkinlik ve randevular (etkinlik)
+// • 0.9.14 Altın Hesabım, FuzulEv: burada değil, tam sayfa açılır (app/altin.tsx, app/fuzulev.tsx → bilesen/Varlik.tsx)
 // Veri masaüstünden gelir (orv-telefon.js → OT9.aile); olayları masaüstü OT9.aileOlay uygular, telefonda lib/ekip.ts → katUygula.
 import { ReactElement, useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';

@@ -5,3 +5,4 @@
 - Herkes yalnız kendi eklediğini düzeltir/siler; eş Çağlar'ın kayıtlarını değiştiremez (bulut kuralı + masaüstü denetimi).
 - Bana Özel: "Ben" / "Eşim" sekmeleri.
 - Eş profilinde oyun kartları ve "Bu Hafta" yok, görevler yok, Ekip şeridi yok.
+- Altın Hesabım ve FuzulEv eşe gönderilmez; yalnız Çağlar'ın telefonunda, salt okunur (0.9.14).

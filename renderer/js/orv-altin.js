@@ -5,7 +5,7 @@
 //  • Birim fiyat = satış fiyatı (Anasayfa'daki gram altın kartı gibi); "bozdurursan" değeri alış fiyatıyla ayrıca gösterilir.
 //  • Fiyat: Truncgil v4 (ücretsiz; ana süreç 'piyasa:altin'). KARARLAR › 4: Kapalıçarşı tercih edilir → Otto'nun bugünkü piyasa verisi
 //    Kapalıçarşı kaynaklıysa gram ve çeyrek satış fiyatı ondan alınır. Günlük değişim Truncgil'in günlük % değişiminden (▲ / ▼).
-//  • Altın Aile Bütçesine işlenmez, telefona gönderilmez (şimdilik).
+//  • Altın Aile Bütçesine işlenmez. 0.9.14: salt okunur özet yalnız Çağlar'ın telefonuna gider (orv-varlik-tel.js), eşe gitmez.
 // ========================================================================
 var AH=window.AH||{};
 (function(){

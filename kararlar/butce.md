@@ -16,6 +16,7 @@
 - **Geçmiş aylar (0.9.12):** Devir öncesi (Ekim 2026 ve önce), net 0 olan kapanmış aya kayıt eklenir/düzeltilir/silinirse bakiye değişmez; ayın kayıt dışı harcaması farkı karşılar.
 - **Denetim (0.9.12):** Bütçe denetimi salt okunurdur; kurala aykırı kayıtları listeler, veriyi kendiliğinden düzeltmez. Veriyi düzeltmek kullanıcının kararıdır.
 - FuzulEv sekmesi var (Ailem altında; ayrıntılar aşağıda).
+- **Gelir eklemeden gelir artmaz (kullanıcı kararı, 2026-11-27 · 0.9.13):** Kullanıcı ya da eşi gelir eklemedikçe aylık gelir ve Aile Bütçesi bakiyesi artmaz. Telefon ve eş geliri de Bordro sınırına uyar (aşan kaydedilmez). Silinen banka/telefon/eş kaydı yeniden içe aktarma ya da eşitlemeyle geri gelmez (`S.finans.silinen`). İçe Aktar bakiyesi beklenenden (+ dosyadaki yeni gelirler) yüksekse uygulanmaz. Aynı ayda ikinci maaş yazılmaz. Cep harçlığı eklemek gelir değildir: cebi yüksek bildirmek reddedilir, fark "cep harçlığı" olarak eklenir (Aile Bütçesi ve gelir değişmez). Aylık tablodaki yuvarlanmış gelir kuruş farkı yazmaz. Kod: `orv-butce-koruma.js`.
 
 ## Banka dökümü içe aktarma
 

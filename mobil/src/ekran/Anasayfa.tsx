@@ -33,6 +33,7 @@ function DilimHalka({ dilim, renk, boy = 58 }: { dilim: AyDilim[]; renk: string;
   const yay = (a0: number, a1: number) => { const [x0, y0] = nokta(a0), [x1, y1] = nokta(a1); return `M${x0.toFixed(2)} ${y0.toFixed(2)} A${r} ${r} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`; };
   return (
     <Svg width={boy} height={boy}>
+      {!dilim.length && <Circle cx={c} cy={c} r={r} stroke="rgba(255,255,255,0.10)" strokeWidth={6} fill="none" />}
       {dilim.map((x, i) => {
         const a0 = i * pay + bosluk / 2, a1 = (i + 1) * pay - bosluk / 2, am = a0 + (a1 - a0) * x.oran;
         return (
@@ -48,15 +49,16 @@ function DilimHalka({ dilim, renk, boy = 58 }: { dilim: AyDilim[]; renk: string;
 }
 
 /** Dilimli halka + başlık: Bu hafta (dilim = iş günü), Ayın haftası (dilim = hafta), Bu ay (dilim = iş günü). Renk ve lejant ortak. */
-function DilimOlcu({ ust, deger, alt, dilim, etiket, eksikDk = 0 }: { ust: string; deger: string; alt: string; dilim: AyDilim[]; etiket: string; eksikDk?: number }) {
+function DilimOlcu({ ust, deger, alt, dilim, etiket, eksikDk = 0, bos = false }: { ust: string; deger: string; alt: string; dilim: AyDilim[]; etiket: string; eksikDk?: number; bos?: boolean }) {
   return (
-    <View style={{ flex: 1, alignItems: 'center', gap: 6 }} accessible accessibilityLabel={etiket}>
+    <View style={{ flex: 1, alignItems: 'center', gap: 6 }} accessible accessibilityLabel={etiket + (bos ? ', kayıt yok' : '')}>
       <View style={{ width: 58, height: 58 }}>
         <DilimHalka dilim={dilim} renk={R.yesil} />
         <View style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: R.yazi, fontSize: 14, fontWeight: '700' }}>{deger}</Text></View>
       </View>
       <Text style={{ color: R.yazi, fontSize: 12.5, fontWeight: '600', textAlign: 'center' }}>{ust}</Text>
       <Text style={[s.sub, { fontSize: 11, textAlign: 'center' }]}>{alt}</Text>
+      {bos && <Text style={[s.sub, { fontSize: 11, textAlign: 'center', marginTop: -4 }]}>kayıt yok</Text>}
       {eksikDk > 0 && <Text style={{ color: EKSIK, fontSize: 11, fontWeight: '600', textAlign: 'center', marginTop: -4 }}>{bin(eksikDk)} dk eksik</Text>}
     </View>
   );
@@ -246,11 +248,11 @@ export function Anasayfa() {
       {!es && <KartK ad="isgunu" baslik="İŞ GÜNÜ" ozet={g.dolu + '/' + g.isg + ' gün · ' + g.hi + '/' + g.hn + '. hafta'} sag={<Tumu git={() => sekmeGit(2)} yazi="Kayıt gir" />}>
         <View style={{ flexDirection: 'row', gap: 4 }}>
           <DilimOlcu ust="Bu hafta" deger={g.dolu + '/' + g.isg} alt="dolu iş günü" dilim={g.hafta}
-            etiket={'Bu hafta ' + g.dolu + ' / ' + g.isg + ' dolu iş günü, ' + dkYazi(g.hGir, g.hTop, g.hEksikDk)} />
+            etiket={'Bu hafta ' + g.dolu + ' / ' + g.isg + ' dolu iş günü, ' + dkYazi(g.hGir, g.hTop, g.hEksikDk)} bos={!g.hGir} />
           <DilimOlcu ust="Ayın haftası" deger={g.hi + '/' + g.hn} alt={AY[new Date().getMonth()]} dilim={g.haftalar}
-            etiket={ayin(AY[new Date().getMonth()]) + ' ' + g.hn + ' haftasının ' + g.hi + '. haftası, ' + g.haftalar.filter((x) => x.oran >= 1).length + ' hafta dolu'} />
+            etiket={ayin(AY[new Date().getMonth()]) + ' ' + g.hn + ' haftasının ' + g.hi + '. haftası, ' + g.haftalar.filter((x) => x.oran >= 1).length + ' hafta dolu'} bos={!g.girilen} />
           <DilimOlcu ust="Bu ay" deger={g.toplam ? '%' + (Math.round((g.girilen / g.toplam) * 100)) : '—'} alt={bin(g.girilen) + ' / ' + bin(g.toplam) + ' dk'} dilim={g.dilim} eksikDk={g.eksikDk}
-            etiket={'Bu ay yüzde ' + (g.toplam ? Math.round((g.girilen / g.toplam) * 100) : 0) + ', ' + dkYazi(g.girilen, g.toplam, g.eksikDk) + (g.izin ? ', ' + g.izin + ' izin günü düşüldü' : '')} />
+            etiket={'Bu ay yüzde ' + (g.toplam ? Math.round((g.girilen / g.toplam) * 100) : 0) + ', ' + dkYazi(g.girilen, g.toplam, g.eksikDk) + (g.izin ? ', ' + g.izin + ' izin günü düşüldü' : '')} bos={!g.girilen} />
         </View>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 12 }}>
           {[[R.yesil, 'Girilen'], [EKSIK, 'Eksik (geçen günler)'], ['rgba(255,255,255,0.18)', 'Kalan']].map(([c, y]) => (

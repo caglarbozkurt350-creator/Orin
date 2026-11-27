@@ -16,6 +16,8 @@ window.__aile091Test=function(){var R=[];
   t('Eş: aynı olay iki kez işlenmez',fnS().kayit.filter(function(x){return x.id=='fnt91h1'}).length==1);
   var or=OAI.ortak();
   t('Ortak blok: kasa dağılımı (ortak / eş cebi)',or.kasa.e>=250&&or.kasa.ortak>=900&&or.kat.Market>=900);
+  (function(){var st=OA.st(),eski=st.bak;st.bak=Object.assign({},eski||{},{aile:{t:12345,ts:5}});var o2=OAI.ortak(),tr=o2.trend[5];st.bak=eski;
+   t('Ortak blok: Aile Bütçesi güncel bakiyesi telefona gider (bu ayın gelir − giderinden bağımsız)',o2.aile&&o2.aile.t==12345&&o2.aile.ts==5&&tr[1]-tr[2]!=12345)})();
   t('Ortak blok: 6 aylık gelir-gider trendi',or.trend.length==6&&or.trend[5][0]==bugun.slice(0,7));
   t('Ortak blok: hareketlerde eşin kaydı işaretli',or.hareket.some(function(h){return h[6]=='kubra'&&h[5]=='e'}));
   // Eşin ilaçları

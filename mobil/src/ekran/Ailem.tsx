@@ -8,11 +8,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AltPencere, FinansFormu, GorevFormu } from '@/bilesen/formlar';
 import { OrtakBolum } from '@/bilesen/AileOrtak';
 import { KatPanel } from '@/bilesen/AileKat';
+import { altinOzet, fuzulevGecikti, fuzulevOzet } from '@/bilesen/Varlik';
 import { PdfDugme } from '@/bilesen/Pdf';
 import { Avatar, Dugme, Foto, Ikon, KartK, SayfaBasligi, s } from '@/bilesen/ortak';
-import { aciklama } from '@/lib/ekip';
 import { KISA } from '@/lib/ekipMeta';
 import { aileSec, rayDegis, useGezinti } from '@/lib/gezinti';
+import type { Ozet } from '@/lib/depo';
+import { aciklama, useGorunum } from '@/lib/ekip';
 import { useEkip } from '@/lib/kullan';
 import { useRol } from '@/lib/rol';
 import { R, saydam } from '@/lib/tema';
@@ -24,7 +26,12 @@ const KAT: [string, string, string, string, string][] = [
   ['nerya', 'Satın Alma', 'Araştırır, yalnızca öneri sunar', 'A', '#f9a8d4'],
   ['mia', 'Ev İşleri', 'Aile işlerinde tek muhatap', 'E', '#e9d5ff'],
   ['remy', 'Aile Takvimi', 'Bozkurt Ailesi takvimi', 'T', '#a7f3d0'],
+  // 0.9.14 · çalışanı olmayan, salt okunur kategoriler (masaüstü Ailem › Altın Hesabım / FuzulEv). Alt satırda canlı özet.
+  ['altin', 'Altın Hesabım', 'Altın birikimi ve güncel değer', 'Au', '#fde68a'],
+  ['fuzulev', 'FuzulEv', 'Birikim, taksitler ve teslimat', 'FE', '#fdba74'],
 ];
+/** Çalışanı olmayan kategoriler: kutucuğun alt satırı özet, seçili çalışan kartı yok */
+const VARLIK: Record<string, (o: Ozet) => [string, string]> = { altin: (o) => altinOzet(o.aile?.altin), fuzulev: (o) => fuzulevOzet(o.aile?.fuzulev) };
 const ISLER: Record<string, string> = {
   mia: 'Aile işlerinde muhatap; Çağlar ve Kübra’ya yanıt verir. Otto, Iris, Marco ve Nerya ona bağlı.',
   otto: 'Gelir-gider kaydı; Çağlar ve Kübra bakiyelerini ayrı tutar, aradaki transferi gelir/gider saymaz.',
@@ -35,7 +42,7 @@ const ISLER: Record<string, string> = {
 };
 const AILE = ['mia', 'otto', 'iris', 'marco', 'nerya'];
 // Pasif (manuel mod): isim/avatar yerine işlev simgesi ve işlev açıklaması
-const SIMGE: Record<string, string> = { otto: 'kart', iris: 'kalp', marco: 'not', nerya: 'ara', mia: 'ev', remy: 'izin' };
+const SIMGE: Record<string, string> = { otto: 'kart', iris: 'kalp', marco: 'not', nerya: 'ara', mia: 'ev', remy: 'izin', altin: 'altin', fuzulev: 'ev' };
 const PASIF_IS: Record<string, string> = {
   otto: 'Gelir-gider kaydı; iki kişinin bakiyesi ayrı tutulur, aradaki transfer gelir/gider sayılmaz.',
   iris: 'Sağlık takibi ve günlük ilaç planı.',
@@ -43,6 +50,8 @@ const PASIF_IS: Record<string, string> = {
   nerya: 'Alışveriş listesi ve karşılaştırma notları.',
   mia: 'Ev işleri ve aile yapılacakları.',
   remy: 'Aile takvimi ve hatırlatmalar.',
+  altin: 'Altın birikimi, güncel değer ve kâr/zarar.',
+  fuzulev: 'Birikim sözleşmesi, taksitler ve gecikme.',
 };
 
 export function Ailem() {
@@ -57,14 +66,15 @@ export function Ailem() {
       <OrtakBolum />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
         {KAT.map(([id, ad, alt, harf, renk]) => {
-          const k = bul(id), on = famId === id;
+          const k = bul(id), on = famId === id, vz = VARLIK[id] ? VARLIK[id](o) : null, gec = id === 'fuzulev' && fuzulevGecikti(o.aile?.fuzulev);
           return (
             <Pressable key={id} onPress={() => aileSec(on && fam ? null : id)} accessibilityRole="button" accessibilityState={{ selected: on }} accessibilityLabel={ad + ', ' + alt}
-              style={({ pressed }) => ({ width: '48%', flexGrow: 1, minHeight: 132, borderRadius: 20, padding: 14, gap: 8, borderWidth: 1, borderColor: on ? saydam(R.ana, 0.7) : 'rgba(255,255,255,0.10)', backgroundColor: on ? saydam(R.ana, 0.1) : 'rgba(255,255,255,0.05)', opacity: fam && !on ? 0.45 : 1, transform: [{ translateY: on ? -2 : 0 }, { scale: pressed ? 0.95 : 1 }] })}>
+              style={({ pressed }) => ({ width: '48%', flexGrow: 1, minHeight: 132, borderRadius: 20, padding: 14, gap: 8, borderWidth: 1, borderColor: on ? saydam(R.ana, 0.7) : gec ? 'rgba(255,107,90,0.55)' : 'rgba(255,255,255,0.10)', backgroundColor: on ? saydam(R.ana, 0.1) : 'rgba(255,255,255,0.05)', opacity: fam && !on ? 0.45 : 1, transform: [{ translateY: on ? -2 : 0 }, { scale: pressed ? 0.95 : 1 }] })}>
               <View style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: renk, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#1c1c1e', fontWeight: '700', fontSize: 15 }}>{harf}</Text></View>
               <Text style={{ color: R.yazi, fontSize: 14, lineHeight: 18, fontWeight: '600' }}>{ad}</Text>
               <Text style={s.sub}>{alt}</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 'auto' }}><Foto c={k} boy={20} halka={false} /><Text numberOfLines={1} style={{ flex: 1, color: '#c9c9cf', fontSize: 11.5 }}>{k ? k.ad + ' · ' + (KISA[id] || k.gorev) : ''}</Text></View>
+              {vz ? <Text numberOfLines={1} style={{ marginTop: 'auto', color: vz[1], fontSize: 11.5, fontWeight: '600' }}>{vz[0]}</Text>
+                : <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 'auto' }}><Foto c={k} boy={20} halka={false} /><Text numberOfLines={1} style={{ flex: 1, color: '#c9c9cf', fontSize: 11.5 }}>{k ? k.ad + ' · ' + (KISA[id] || k.gorev) : ''}</Text></View>}
             </Pressable>
           );
         })}
@@ -93,7 +103,7 @@ export function Ailem() {
 
 /** Ailem · pasif: kategoriler işlev simgeleriyle; çalışan rayı ve "Mesaj / Görev ver" yok */
 function AilemPasif() {
-  const fam = useGezinti((d) => d.aile.fam), sec = KAT.find((k) => k[0] === (fam || 'otto')) || KAT[0];
+  const fam = useGezinti((d) => d.aile.fam), sec = KAT.find((k) => k[0] === (fam || 'otto')) || KAT[0], g = useGorunum();
   return (
     <View style={{ gap: 14 }}>
       <SayfaBasligi ust="Bütçe, sağlık, menü, takvim" baslik="Ailem" sag={<View style={{ marginBottom: 4 }}><PdfDugme tur="butce" yazi="Bütçe PDF" /></View>} />
@@ -107,6 +117,7 @@ function AilemPasif() {
               <View style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: renk, alignItems: 'center', justifyContent: 'center' }}><Ikon ad={SIMGE[id]} boy={19} renk="#1c1c1e" kalin={2.2} /></View>
               <Text style={{ color: R.yazi, fontSize: 14, lineHeight: 18, fontWeight: '600' }}>{ad}</Text>
               <Text numberOfLines={2} style={s.sub}>{PASIF_IS[id]}</Text>
+              {VARLIK[id] && (() => { const v = VARLIK[id](g); return <Text numberOfLines={1} style={{ color: v[1], fontSize: 11.5, fontWeight: '600' }}>{v[0]}</Text>; })()}
             </Pressable>
           );
         })}

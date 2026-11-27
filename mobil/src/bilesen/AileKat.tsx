@@ -5,6 +5,7 @@
 // • Satın Alma: öneriler ve karar (oneri_ekle / oneri_karar)
 // • Ev İşleri: yapılacaklar (ev_ekle / ev_tik / ev_temizle)
 // • Aile Takvimi: yaklaşan etkinlik ve randevular (etkinlik)
+// • 0.9.14 Altın Hesabım, FuzulEv: salt okunur (bilesen/Varlik.tsx)
 // Veri masaüstünden gelir (orv-telefon.js → OT9.aile); olayları masaüstü OT9.aileOlay uygular, telefonda lib/ekip.ts → katUygula.
 import { ReactElement, useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
@@ -12,6 +13,7 @@ import { EtkinlikFormu } from '@/bilesen/AileOrtak';
 import { AltPencere, Bos, FinansFormu } from '@/bilesen/formlar';
 import { Dugme, Hap, Ikon, KartK, s } from '@/bilesen/ortak';
 import { bugunIlac, IlacSatiri, SekerSatiri, SporKarti } from '@/bilesen/Saglik';
+import { AltinPanel, FuzulEvPanel } from '@/bilesen/Varlik';
 import { useBugun } from '@/lib/bugun';
 import type { Etkinlik, Kisi, Oneri, Ozet } from '@/lib/depo';
 import { olayEkle, uid } from '@/lib/depo';
@@ -220,6 +222,8 @@ function Takvim({ o }: { o: Ozet }) {
 
 const PANEL: Record<string, [string, (p: { o: Ozet }) => ReactElement]> = {
   otto: ['BÜTÇE', Butce], iris: ['SAĞLIK', Saglik], marco: ['MENÜ & MARKET', Menu], nerya: ['SATIN ALMA', SatinAlma], mia: ['EV İŞLERİ', EvIsleri], remy: ['AİLE TAKVİMİ', Takvim],
+  // 0.9.14 salt okunur (bilesen/Varlik.tsx); yalnız Çağlar'ın profili, eşin Ailem'inde yok
+  altin: ['ALTIN HESABIM', AltinPanel], fuzulev: ['FUZULEV', FuzulEvPanel],
 };
 /** Seçili kategorinin içerik kartı */
 export function KatPanel({ id }: { id: string }) {

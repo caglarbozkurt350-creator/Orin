@@ -9,7 +9,7 @@
 //    Bankadan içe aktarılmış aynı ödeme (±7 gün, aynı tutar, "fuzul" geçen) varsa yeni kayıt yazılmaz, ona bağlanır (butceBag:true).
 //    Yazılan kayıt GG.ekle kuralıyla kasasına hemen işlenir (bakDus). İşaret kaldırılınca yalnız FuzulEv'in yazdığı kayıt GG.silKayit ile geri alınır.
 //    Ay devri (BKD.DEVIR, Kasım 2026) öncesi kapanmış aylara varsayılan yazılmaz; yazılırsa 0.9.12 kuralı gibi bakiyeye işlenmez, ay dengelenir (bakEk 'gecmis').
-//  • Telefona gönderilmez (şimdilik). İçe Aktar dosyasında "fuzulev" anahtarı varsa FE.iceUygula ile alınır.
+//  • 0.9.14: salt okunur özet yalnız Çağlar'ın telefonuna gider (orv-varlik-tel.js), eşe gitmez. İçe Aktar dosyasında "fuzulev" anahtarı varsa FE.iceUygula ile alınır.
 // ========================================================================
 var FE=window.FE||{};
 (function(){

@@ -27,7 +27,7 @@
 
 ## Altın Hesabım
 
-- Ailem altında ayrı sekme (0.9.12). Gram türleri gramla, adetli altınlar adetle girilir; her kaydın düzenlenebilir **İşlem tarihi** (alış tarihi) var, ileri tarih kabul edilmez. Birim fiyat satış fiyatı; bozdurma değeri ayrıca. Fiyat Truncgil; Otto'nun günlük verisi Kapalıçarşı kaynaklıysa gram ve çeyrek ondan. Veri `durum.json`'da (`S.orvA.altin`); Aile Bütçesine işlenmez, telefona gitmez.
+- Ailem altında ayrı sekme (0.9.12). Gram türleri gramla, adetli altınlar adetle girilir; her kaydın düzenlenebilir **İşlem tarihi** (alış tarihi) var, ileri tarih kabul edilmez. Birim fiyat satış fiyatı; bozdurma değeri ayrıca. Fiyat Truncgil; Otto'nun günlük verisi Kapalıçarşı kaynaklıysa gram ve çeyrek ondan. Veri `durum.json`'da (`S.orvA.altin`); Aile Bütçesine işlenmez. Telefona salt okunur özet gider, yalnız Çağlar'ın telefonuna (0.9.14).
 - **Alım gücü karşılaştırması (2026-11-27):** İşlem tarihi ve alış tutarı olan her kayıt için, işlem tarihinden bugüne:
   - **Nominal getiri:** bugünkü değer ÷ alış − 1.
   - **Reel getiri (TÜFE):** (bugünkü değer ÷ alış) ÷ (TÜFE son ay ÷ TÜFE işlem ayı) − 1. Kaynak: TÜİK TÜFE endeksi, BIS veri servisi üzerinden (ücretsiz, anahtarsız, güncel). Son yayımlanan ay içinde bulunulan aydan 2 aydan fazla gerideyse reel getiri gösterilmez.
@@ -38,7 +38,7 @@
 
 ## FuzulEv (0.9.13)
 
-- Ailem › FuzulEv: birikim/finansman sözleşmesi ve taksitleri `durum.json`'da (`S.orvA.fuzulev`) tutulur; telefona gönderilmez (şimdilik).
+- Ailem › FuzulEv: birikim/finansman sözleşmesi ve taksitleri `durum.json`'da (`S.orvA.fuzulev`) tutulur. Telefona salt okunur özet gider, yalnız Çağlar'ın telefonuna (0.9.14; sözleşme no ve plan kodu gitmez).
 - Bilinmeyen taksit tutarı uydurulmaz: boş kalır, "Tutar girilmedi" gösterilir; kullanıcı düzenler.
 - "Ödendi" işaretlenirken istenirse Aile Bütçesine "FuzulEv taksiti" gideri yazılır (kasa: Aile Bütçesi ya da Çağlar cep) ve hemen kasaya işlenir.
 - Çift sayma yok: kayıt kimliği taksite bağlı (`fe` + taksit id); bankadan içe aktarılmış aynı ödeme (aynı tutar, ±7 gün, "fuzul" geçen) varsa yeni gider yazılmaz, ona bağlanır.

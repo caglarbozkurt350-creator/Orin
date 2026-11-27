@@ -24,6 +24,7 @@ ORV.KAT=[
  {id:'aile',ad:'Ailem',bolum:'fav',ikon:'kalp',renk:['#ff9ad4','#e14fa0'],sinif:'ic-aile',alt:[
   {id:'butce',ad:'Bütçe',kisa:'Bütçe',renk:'#ff9ad4',hedef:['team','calisan','otto']},
   {id:'aylikbutce',ad:'Aylık Bütçe',kisa:'Aylık Bütçe',renk:'#ffb35b',hedef:['team','calisan','otto']},
+  {id:'altin',ad:'Altın Hesabım',kisa:'Altın Hesabım',renk:'#fde68a',hedef:['team','calisan','otto']},
   {id:'saglik',ad:'Sağlık',kisa:'Sağlık',renk:'#c4b5fd',hedef:['team','calisan','iris']},
   {id:'market',ad:'Menü & Market',kisa:'Menü & Market',renk:'#fda4af',hedef:['team','calisan','marco']},
   {id:'satinalma',ad:'Satın Alma',kisa:'Satın Alma',renk:'#f9a8d4',hedef:['team','calisan','nerya']},

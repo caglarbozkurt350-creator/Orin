@@ -3,11 +3,18 @@
 - "Şirket bakiyesi" adı → **Aile Bütçesi**. Banka adları kartlarda gösterilmez.
 - Aile Bütçesi = iki cep harçlığı + kalan toplamı (0.9.10). Cep harçlığı harcaması, Kübra harcaması ve eşin telefonundan gelen hareket hem kendi bakiyesine hem Aile Bütçesine işlenir.
 - Çağlar'ın cep harçlığı = kendi güncel bakiyesi ("bakiye" düzeni). Kübra'nın cebi %0 iken harcamaları Aile Bütçesinden düşer.
-- Bakiye bildir: beklenen = son bildirilen + gelirler − giderler. Fark → "Kayıt dışı harcama" / "Kayıt dışı gelir". Zaten işlenmiş hareketler iki kez sayılmaz. Kayıt dışı satırını düzenlemek bakiyeyi değiştirmez.
+- Bakiye bildir: beklenen = son bildirilen + gelirler − giderler. Düşükse fark → "Kayıt dışı harcama". Yüksekse kaydedilmez (aşağıda: kayıt dışı gelir olamaz). Zaten işlenmiş hareketler iki kez sayılmaz. Kayıt dışı satırını düzenlemek bakiyeyi değiştirmez.
 - Bordro Net Ödenen → Aile Bütçesine "Maaş · Ay Yıl" geliri; otomatik yalnız bu ay ve geçen ay, eski aylar düğmeyle; aynı ay iki kez eklenmez. Maaş satırında yalnız açıklama ve kişi değişir.
 - Aylık gelir ≤ Net Ödenen + SGK ödeneği.
 - Bakiye bildirimi gelire eklenmez; fark kayıt dışı harcama olarak yazılır.
-- Altın Hesabım sekmesi var (altın hesabı ayrı sekmede izlenir).
+- **Kayıt dışı gelir olamaz (kullanıcı kararı, 2026-11-27):** Gelir bellidir. Bildirilen bakiye beklenenden fazlaysa hesap hatası vardır (çift ya da fazla yazılmış gider, yanlış tutar, girilmemiş gelir). Bildirim kaydedilmez, bakiye değişmez; pencere nedeni yazar. Kayıt dışı harcama olabilir. Eski kayıt dışı gelir kayıtlarını denetim "kural dışı" diye listeler.
+- **Sınır dışı gelirler (2026-11-27):** Maaş avansı ve BES çıkışı gelirdir ama Bordro sınırına sayılmaz (avans sonraki bordrodan düşülür, BES birikimdir). Kalem adı "Maaş avansı" ya da "BES…" olmalı.
+- **Ay devri (2026-11-27):** Kasım 2026 ve sonrası: ayın kalanı (gelir − gider) sonraki aylara birikerek devreder; bu aylar net 0'a eşitlenmez, geçmişe girilen kayıt kasaya işlenir. Ekim 2026 ve öncesi banka dökümüyle net 0 kalır. Aile Bütçesi üst sınırı = devreden (artıysa) + bu ayın geliri. Dashboard gelir kartı devredeni gösterir.
+- **Gelir üst sınırı (2026-11-27 · 0.9.12):** Bir ayın geliri Bordrodaki Net Ödenen'i geçemez; tek istisna SGK Rapor Ödeneği (sınır = Net Ödenen + SGK ödeneği). Maaş ertesi ayın 5'inde yatar; A ayının sınırı A−1 bordrosundan gelir, maaş kaydı da o tarihe yazılır. Sınırı aşan elle girilen gelir kaydedilmez. Bordrosu olmayan ayda sınır yok.
+- **Bakiye bildir (0.9.12):** Bildirilen tutar gelire eklenmez; yalnız beklenenden düşükse fark kayıt dışı harcama olarak yazılır.
+- **Kasaya işleme (0.9.12):** Her yeni kişisel kayıt (Aylık Bütçe, "+ Gelir / + Gider", Kübra harcaması, ödenen beklenen ödeme, Çağlar'ın telefonu) girildiği anda kasasına ve Aile Bütçesine işlenir; silinince geri alınır. Kübra harcaması gider kaydı olur. İçe aktarılan banka kayıtları ve geçmiş ay kayıtları bakiye bildiriminde sayılmaz.
+- **Geçmiş aylar (0.9.12):** Devir öncesi (Ekim 2026 ve önce), net 0 olan kapanmış aya kayıt eklenir/düzeltilir/silinirse bakiye değişmez; ayın kayıt dışı harcaması farkı karşılar.
+- **Denetim (0.9.12):** Bütçe denetimi salt okunurdur; kurala aykırı kayıtları listeler, veriyi kendiliğinden düzeltmez. Veriyi düzeltmek kullanıcının kararıdır.
 - FuzulEv sekmesi var (Ailem altında; ayrıntılar aşağıda).
 
 ## Banka dökümü içe aktarma
@@ -18,13 +25,24 @@
 - İçinde bulunulan aya istenmedikçe ekleme yapılmaz.
 - İçe Aktar klasörü: `Belgeler\Orin\İçe Aktar` → açılışta bir kez işlenir, `İşlendi`'ye taşınır.
 
+## Altın Hesabım
+
+- Ailem altında ayrı sekme (0.9.12). Gram türleri gramla, adetli altınlar adetle girilir; her kaydın düzenlenebilir **İşlem tarihi** (alış tarihi) var, ileri tarih kabul edilmez. Birim fiyat satış fiyatı; bozdurma değeri ayrıca. Fiyat Truncgil; Otto'nun günlük verisi Kapalıçarşı kaynaklıysa gram ve çeyrek ondan. Veri `durum.json`'da (`S.orvA.altin`); Aile Bütçesine işlenmez, telefona gitmez.
+- **Alım gücü karşılaştırması (2026-11-27):** İşlem tarihi ve alış tutarı olan her kayıt için, işlem tarihinden bugüne:
+  - **Nominal getiri:** bugünkü değer ÷ alış − 1.
+  - **Reel getiri (TÜFE):** (bugünkü değer ÷ alış) ÷ (TÜFE son ay ÷ TÜFE işlem ayı) − 1. Kaynak: TÜİK TÜFE endeksi, BIS veri servisi üzerinden (ücretsiz, anahtarsız, güncel). Son yayımlanan ay içinde bulunulan aydan 2 aydan fazla gerideyse reel getiri gösterilmez.
+  - **Dolar / euro alınsaydı:** alış tutarı işlem günü kuruyla USD/EUR'a çevrilip bugünkü kurla TL'ye döner. Kaynak: ECB referans kuru (Frankfurter; hafta sonu → önceki iş günü).
+  - **Asgari ücret cinsinden:** alış ÷ o günkü net asgari ücret → bugünkü değer ÷ bugünkü net asgari ücret. Kaynak: Resmi Gazete/ÇSGB net tutarları, kod içinde sabit tablo (2023 Temmuz'dan beri doğrulanmış yıllar). Yeni yıl tutarı açıklanınca tabloya eklenir.
+  - Seçilmeyenler: TCMB EVDS (API anahtarı ister), OECD (TÜFE ~1 yıl geride), İTO/ENAG (resmî değil, ücretsiz API yok).
+  - **Veri yoksa ya da çekilemiyorsa** değer üretilmez; hücrede "veri yok" ve nedeni, kartta uyarı yazılır. Önbellek: TÜFE 24 saat, güncel kur 6 saat, geçmiş kur kalıcı (`alim-gucu.json`).
+
 ## FuzulEv (0.9.13)
 
 - Ailem › FuzulEv: birikim/finansman sözleşmesi ve taksitleri `durum.json`'da (`S.orvA.fuzulev`) tutulur; telefona gönderilmez (şimdilik).
 - Bilinmeyen taksit tutarı uydurulmaz: boş kalır, "Tutar girilmedi" gösterilir; kullanıcı düzenler.
 - "Ödendi" işaretlenirken istenirse Aile Bütçesine "FuzulEv taksiti" gideri yazılır (kasa: Aile Bütçesi ya da Çağlar cep) ve hemen kasaya işlenir.
 - Çift sayma yok: kayıt kimliği taksite bağlı (`fe` + taksit id); bankadan içe aktarılmış aynı ödeme (aynı tutar, ±7 gün, "fuzul" geçen) varsa yeni gider yazılmaz, ona bağlanır.
-- Geçmiş aya ait ödemede bütçeye yazma varsayılan kapalı (kapanmış ay net 0 kuralı).
+- Ay devri öncesi (Ekim 2026 ve önce) kapanmış aya ait ödemede bütçeye yazma varsayılan kapalı; yazılırsa bakiye değişmez, ayın kayıt dışı harcaması dengeler. Kasım 2026 ve sonrası açık aylar: varsayılan açık, kasaya işlenir.
 - "Geri al" yalnız FuzulEv'in yazdığı gideri ve bakiye etkisini geri alır; banka kaydı kalır. Taksit silinince bütçedeki gider kalır.
 - Teslimata kalan = teslimat taksitine kadar (o dahil) ödenmemiş taksit sayısı ve teslimat vadesine kalan gün.
 - Gerçek sözleşme bilgileri koda/testlere girmez; İçe Aktar JSON'undaki "fuzulev" anahtarıyla ya da sayfadan elle girilir.

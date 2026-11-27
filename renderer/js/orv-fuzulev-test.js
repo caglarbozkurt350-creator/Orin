@@ -63,13 +63,20 @@ window.__fuzulevTest=function(){var R=[];
   FE.odenmedi(t3.id);
   t('Banka kaydına bağlı taksit geri alınınca banka kaydı kalır',!!kay('bnTEST1')&&!t3.butceId&&bak('aile')==50000);
 
+  // Kapanmış (net 0) geçmiş ay: bakiye değişmez, ay net 0 kalır
+  t('Kapanmış geçmiş aya yazılırsa bakiye değişmez, ay net 0 kalır (bakEk gecmis)',function(){if(typeof BKR=='undefined')return true;var ay='2026-10';if(ay>=GG.buAy())return true;
+   fnKaydet({tur:'gelir',kim:'cagla',tutar:'20000',kalem:'Ek gelir',tarih:ay+'-05',not:'Örnek'},'tsG1').bakEk='banka';fnKaydet({tur:'gider',kim:'cagla',tutar:'15000',kalem:'Market',tarih:ay+'-06',not:'Örnek'},'tsG2').bakEk='banka';
+   var kd=fnKaydet({tur:'gider',kim:'cagla',tutar:'5000',kalem:'Kayıt dışı harcama',tarih:ay+'-30',not:'Örnek',kaynak:'bakiye'},'tsG3');kd.kd='aile';kd.bakEk='aile';if(!BKR.kapali(ay))throw new Error('ay kapalı değil');
+   var a0=bak('aile'),s=FE.odendi(t3.id,{tutar:'1.000',odemeTarih:ay+'-20',butce:true,kasa:'aile'}),r=kay('fe'+t3.id);var ok=s.butce.durum=='yazildi'&&r&&r.bakEk=='gecmis'&&!r.bakDus&&bak('aile')==a0&&Math.abs(BKR.ayNet(ay))<0.01;
+   FE.odenmedi(t3.id);var ok2=!kay('fe'+t3.id)&&bak('aile')==a0&&Math.abs(BKR.ayNet(ay))<0.01;fnS().kayit=fnS().kayit.filter(function(x){return !/^tsG/.test(x.id)});if(!(ok&&ok2))throw new Error(JSON.stringify({ok:ok,ok2:ok2,a:bak('aile'),a0:a0,n:BKR.ayNet(ay)}));return true});
+  t3.odenen=null;t3.tutar=11000;
   // Bütçesiz ödeme ve Çağlar cep kasası
   var t4=FE.st().taksit.filter(function(q){return q.no==4})[0];FE.odendi(t4.id,{odemeTarih:bugun,butce:false});
   t('Bütçeye yazmadan ödendi: kayıt yok, bakiye aynı',t4.odendi&&!t4.butceId&&!kay('fe'+t4.id)&&bak('aile')==50000);
   FE.odenmedi(t4.id);FE.odendi(t4.id,{odemeTarih:bugun,butce:true,kasa:'cagla'});
   t('Çağlar cep kasasından: cepten ve Aile Bütçesinden düşer',kay('fe'+t4.id).hk=='c'&&bak('cagla')==-7000&&bak('aile')==37000,bak('cagla')+' '+bak('aile'));
   FE.odenmedi(t4.id);
-  t('Geçmiş aya ait ödemede bütçe kutusu varsayılan kapalı',function(){var t5=FE.st().taksit.filter(function(q){return q.no==5})[0];FE.odeDlg(t5.id);var d=document.getElementById('feOd');d.value=gunEk(bugun.slice(0,7)+'-01',-1);FE.odeTarihDegis();var k=document.getElementById('feOb').checked;OA.dlgKapat();return !k});
+  t('Ay devri öncesi kapanmış aya ait ödemede bütçe kutusu varsayılan kapalı (Ekim 2026), bu ayda açık',function(){if(FE.varsayilanYaz('2026-10-15')||!FE.varsayilanYaz(bugun))return false;var t5=FE.st().taksit.filter(function(q){return q.no==5})[0];FE.odeDlg(t5.id);var d=document.getElementById('feOd');d.value='2026-10-15';FE.odeTarihDegis();var k=document.getElementById('feOb').checked;OA.dlgKapat();return !k});
 
   // Düzenleme
   t('Doğrulama: aynı taksit no ve hatalı vade reddedilir',!FE.ekle({no:3,tur:'Finansman',vade:'',tutar:'1000'})&&FE.dogrula({no:9,vade:'31-31-31'}).hata);

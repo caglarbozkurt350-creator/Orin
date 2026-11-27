@@ -8,7 +8,7 @@
 //  • Ödendi işaretlenirken istenirse Aile Bütçesine "FuzulEv taksiti" gideri yazılır (kayıt id 'fe'+taksit id → aynı taksit iki kez yazılmaz).
 //    Bankadan içe aktarılmış aynı ödeme (±7 gün, aynı tutar, "fuzul" geçen) varsa yeni kayıt yazılmaz, ona bağlanır (butceBag:true).
 //    Yazılan kayıt GG.ekle kuralıyla kasasına hemen işlenir (bakDus). İşaret kaldırılınca yalnız FuzulEv'in yazdığı kayıt GG.silKayit ile geri alınır.
-//    Geçmiş aylara varsayılan olarak yazılmaz (kapanmış ay net 0 kuralı); kutu elle işaretlenebilir.
+//    Ay devri (BKD.DEVIR, Kasım 2026) öncesi kapanmış aylara varsayılan yazılmaz; yazılırsa 0.9.12 kuralı gibi bakiyeye işlenmez, ay dengelenir (bakEk 'gecmis').
 //  • Telefona gönderilmez (şimdilik). İçe Aktar dosyasında "fuzulev" anahtarı varsa FE.iceUygula ile alınır.
 // ========================================================================
 var FE=window.FE||{};
@@ -76,12 +76,16 @@ FE.butceAdi=function(t){return 'FuzulEv · '+t.no+'. taksit ('+t.tur+')'};
 // Aynı ödeme bankadan içe aktarılmış mı: gider, aynı tutar, ±7 gün, kalem ya da açıklamada "fuzul"; başka taksite bağlı değil
 FE.bankaEsi=function(t,tutar,tarih){if(typeof fnS!='function')return null;var bagli={};FE.st().taksit.forEach(function(x){if(x.butceId&&x.id!=t.id)bagli[x.butceId]=1});
  return fnS().kayit.filter(function(k){return k.tur=='gider'&&k.kim!='sirket'&&!bagli[k.id]&&!/^fe/.test(k.id)&&Math.abs((+k.tutar||0)-tutar)<0.01&&FE.tarihOk(k.tarih)&&Math.abs(FE.gun(k.tarih,tarih))<=7&&/fuzul/i.test((k.kalem||'')+' '+(k.not||''))})[0]||null};
+// Kapanmış (net 0) geçmiş ay mı: 0.9.12 kuralı BKR.kapali (Ay devri BKD.DEVIR öncesi). Yoksa yalnız bu ay açık sayılır.
+FE.kapali=function(tarih){var ay=String(tarih||'').slice(0,7);return typeof BKR!='undefined'&&BKR.kapali?!!BKR.kapali(ay):false};
+FE.varsayilanYaz=function(tarih){var ay=String(tarih||'').slice(0,7),bu=FE.bugun().slice(0,7);if(ay>bu)return false;if(typeof BKD!='undefined'&&BKD.DEVIR)return ay>=BKD.DEVIR||ay==bu;return ay==bu};
 // Taksidi bütçeye yaz. Döner {durum:'yazildi'|'bagli'|'zaten'|'yok', kayit}
 FE.butceYaz=function(t,kasa){var tutar=t.odenen!=null?+t.odenen:+t.tutar;if(!(tutar>0))return{durum:'yok'};var tarih=FE.tarihOk(t.odemeTarih)?t.odemeTarih:FE.bugun();
  var var0=FE.kayitBul(t.butceId)||FE.kayitBul('fe'+t.id);if(var0){t.butceId=var0.id;return{durum:'zaten',kayit:var0}}
  var es=FE.bankaEsi(t,tutar,tarih);if(es){t.butceId=es.id;t.butceBag=true;return{durum:'bagli',kayit:es}}
- if(typeof fnKaydet!='function')return{durum:'yok'};var r=fnKaydet({tur:'gider',kim:'cagla',tutar:String(tutar),kalem:FE.KALEM,tarih:tarih,not:FE.butceAdi(t),kaynak:'masaustu'},'fe'+t.id);if(!r)return{durum:'yok'};
- r.kisi='ortak';if(kasa=='cagla')r.hk='c';var k=typeof GG!='undefined'&&GG.bakAnahtar?GG.bakAnahtar(kasa=='cagla'?'cagla':'aile'):(kasa=='cagla'?'cagla':'aile');if(OA.bakIsle(k,-tutar).length)r.bakDus=k;
+ if(typeof fnKaydet!='function')return{durum:'yok'};var kap=FE.kapali(tarih),r=fnKaydet({tur:'gider',kim:'cagla',tutar:String(tutar),kalem:FE.KALEM,tarih:tarih,not:FE.butceAdi(t),kaynak:'masaustu'},'fe'+t.id);if(!r)return{durum:'yok'};
+ r.kisi='ortak';if(kasa=='cagla')r.hk='c';
+ if(kap){r.bakEk='gecmis';BKR.dengele(tarih.slice(0,7),-tutar);save()}else{var k=typeof GG!='undefined'&&GG.bakAnahtar?GG.bakAnahtar(kasa=='cagla'?'cagla':'aile'):(kasa=='cagla'?'cagla':'aile');if(OA.bakIsle(k,-tutar).length)r.bakDus=k}
  t.butceId=r.id;delete t.butceBag;return{durum:'yazildi',kayit:r}};
 // FuzulEv'in yazdığı kaydı geri al (banka kaydına yalnız bağ kaldırılır)
 FE.butceGeriAl=function(t){var r=FE.kayitBul(t.butceId),sil=false;if(r&&!t.butceBag&&/^fe/.test(r.id)){if(typeof GG!='undefined'&&GG.silKayit)sil=GG.silKayit(r.id);else{fnS().kayit=fnS().kayit.filter(function(x){return x.id!=r.id});sil=true}}delete t.butceId;delete t.butceBag;return sil};
@@ -174,15 +178,15 @@ FE.planOlustur=function(){var n=FE.planUret();toast(n?n+' taksit satırı açıl
 FE.geriAl=function(id){var t=FE.bul(id);if(!t)return;confirmBox(t.no+'. taksit “ödenmedi” yapılsın mı?'+(t.butceId&&!t.butceBag?' Aile Bütçesine yazılan gider de geri alınır.':''),function(){var s=FE.odenmedi(id);toast(t.no+'. taksit ödenmedi'+(s&&s.silindi?' · bütçe gideri geri alındı':''));FE.cizYenile()},'Evet, geri al')};
 // Ödendi penceresi (tasarım: OdendiDialog). Geçmiş aya ait ödemede bütçe kutusu varsayılan kapalı (kapanmış ay net 0).
 FE.odeDlg=function(id){var t=FE.bul(id);if(!t)return;var bugun=FE.bugun(),tarih=t.odemeTarih||bugun,tutar=t.odenen!=null?t.odenen:t.tutar,yazili=!!FE.kayitBul(t.butceId);
- var buAy=tarih.slice(0,7)==bugun.slice(0,7);
+ var buAy=FE.varsayilanYaz(tarih);
  OA.dlg('<h3>'+t.no+'. taksit ödendi</h3><span class="oa-sub">'+E(t.tur)+' · vade '+FE.tarihYaz(t.vade)+'</span>'+
   '<label class="oa-zl">Ödenen tutar (₺)<input class="oa-in" id="feOt" inputmode="decimal" value="'+(tutar!=null?E(tl(tutar)):'')+'" placeholder="ör. 30.000"></label>'+
   '<label class="oa-zl">Ödeme tarihi<input class="oa-in" id="feOd" type="date" value="'+E(tarih)+'" onchange="FE.odeTarihDegis()"></label>'+
   (yazili?'<span class="oa-sub">Bu taksit Aile Bütçesine zaten yazılı; ikinci kez yazılmaz.</span>':
-  '<label class="fe-bk"><input type="checkbox" id="feOb"'+(buAy?' checked':'')+'><span><b>Aile Bütçesine gider olarak yaz</b><small>“'+FE.KALEM+'” · seçilen kasadan düşer. Bankadan içe aktarılan aynı ödeme varsa ikinci kez yazılmaz, ona bağlanır.<span id="feOn">'+(buAy?'':' Ödeme geçmiş aya ait: kapanmış ayın net 0 kalması için varsayılan kapalı.')+'</span></small></span></label>'+
+  '<label class="fe-bk"><input type="checkbox" id="feOb"'+(buAy?' checked':'')+'><span><b>Aile Bütçesine gider olarak yaz</b><small>“'+FE.KALEM+'” · seçilen kasadan düşer. Bankadan içe aktarılan aynı ödeme varsa ikinci kez yazılmaz, ona bağlanır.<span id="feOn">'+(buAy?'':' Ödeme kapanmış (net 0) bir aya ait: varsayılan kapalı; yazılırsa ayın kayıt dışı harcaması dengeler, bakiye değişmez.')+'</span></small></span></label>'+
   '<label class="oa-zl">Kasa<select class="oa-in" id="feOk"><option value="aile">Aile Bütçesi</option><option value="cagla">Çağlar cep</option></select></label>')+
   '<div class="acts"><button type="button" class="oa-btn ghost" onclick="OA.dlgKapat()">Vazgeç</button><button type="button" class="oa-btn" onclick="FE.odeKaydet(\''+E(id)+'\')">Ödendi olarak kaydet</button></div>')};
-FE.odeTarihDegis=function(){var d=document.getElementById('feOd'),b=document.getElementById('feOb'),n=document.getElementById('feOn');if(!d||!b)return;var bu=FE.tarihOk(d.value)&&d.value.slice(0,7)==FE.bugun().slice(0,7);b.checked=bu;if(n)n.textContent=bu?'':' Ödeme geçmiş aya ait: kapanmış ayın net 0 kalması için varsayılan kapalı.'};
+FE.odeTarihDegis=function(){var d=document.getElementById('feOd'),b=document.getElementById('feOb'),n=document.getElementById('feOn');if(!d||!b)return;var bu=FE.tarihOk(d.value)&&FE.varsayilanYaz(d.value);b.checked=bu;if(n)n.textContent=bu?'':' Ödeme kapanmış (net 0) bir aya ait: varsayılan kapalı; yazılırsa ayın kayıt dışı harcaması dengeler, bakiye değişmez.'};
 FE.odeKaydet=function(id){var g=function(x){var e=document.getElementById(x);return e?(e.type=='checkbox'?e.checked:e.value):''};var tt=g('feOt');if(String(tt).trim()===''&&FE.bul(id)&&FE.bul(id).tutar==null){toast('Ödenen tutarı yaz');return}
  var s=FE.odendi(id,{tutar:tt,odemeTarih:g('feOd'),butce:!!g('feOb'),kasa:g('feOk')||'aile'});if(!s)return;OA.dlgKapat();
  var b=s.butce.durum;toast(s.t.no+'. taksit ödendi'+(b=='yazildi'?' · Aile Bütçesine yazıldı':b=='bagli'?' · bankadan gelen kayda bağlandı (ikinci kez yazılmadı)':b=='zaten'?' · bütçede zaten vardı':''));FE.cizYenile()};

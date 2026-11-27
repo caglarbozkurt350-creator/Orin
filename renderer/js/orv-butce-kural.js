@@ -2,7 +2,10 @@
 // Orvane 0.9.13 · Aile Bütçesi kural katmanı (orv-butce.js'ten sonra yüklenir).
 // Var olan işlevler sarmalanır; hiçbir eski özellik silinmez. Kurallar KARARLAR.md › 6:
 //  • Aylık gelir ≤ Net Ödenen + SGK Rapor Ödeneği (maaş ertesi ayın 5'inde yatar: A ayının sınırı A−1 bordrosundan).
-//    Elle girilen gelir (Aylık Bütçe, Gelir/gider ekle) sınırı aşıyorsa kaydedilmez. Bakiye bildiriminin "Kayıt dışı gelir"i
+//    Elle girilen gelir (Aylık Bütçe, Gelir/gider ekle) sınırı aşıyorsa kaydedilmez. Maaş avansı ve BES çıkışı gelirdir, sınır dışıdır.
+//  • Kayıt dışı GELİR olamaz (kullanıcı kararı 2026-11-27): gelir bellidir. Bildirilen bakiye beklenenden fazlaysa hesap hatasıdır; bildirim kaydedilmez.
+//  • Ay devri: BKD.DEVIR (2026-11) ve sonrasında ayın kalanı sonraki aya devreder; net 0 dengesi yalnız önceki (banka dökümüyle kapanmış) aylarda.
+//    (eski not) Bakiye bildiriminin "Kayıt dışı gelir"i
 //    mevcut kuraldır, engellenmez; sınırı aşarsa Dashboard ve denetim uyarır.
 //  • Her yeni kişisel kayıt (Gelir/gider ekle, Kübra harcaması, beklenen ödeme ödendi, Çağlar'ın telefonu) girildiği anda kasasına
 //    işlenir (bakDus). Silinince etkisi geri alınır. Böylece Aile Bütçesi = iki cep + kalan her an doğru kalır.
@@ -19,15 +22,15 @@ BKR.st=function(){return {finans:typeof fnS=='function'?fnS():{kayit:[]},orvA:OA
 
 // ---------- 1) Gelir üst sınırı ----------
 BKR.sinir=function(ay){return BKD.sinir(BKR.st(),ay)};
-BKR.gelir=function(ay,haric){return r2(GG.kayitlar().filter(function(k){return k.tur=='gelir'&&ayK(k.tarih)==ay&&k.id!=haric}).reduce(function(n,k){return n+(+k.tutar||0)},0))};
+BKR.gelir=function(ay,haric){return r2(GG.kayitlar().filter(function(k){return k.tur=='gelir'&&ayK(k.tarih)==ay&&k.id!=haric&&!BKD.sinirDisi(k)}).reduce(function(n,k){return n+(+k.tutar||0)},0))};
 // ek: eklenecek gelir; haric: düzenlenen kaydın kimliği (eski tutarı sayılmaz)
-BKR.gelirOk=function(ay,ek,haric){var s=BKR.sinir(ay);if(!s)return{ok:true,s:null};var g=r2(BKR.gelir(ay,haric)+(+ek||0));return{ok:g<=s.sinir+0.005,gelir:g,s:s,asim:r2(g-s.sinir)}};
+BKR.gelirOk=function(ay,ek,haric,kalem){var s=BKR.sinir(ay);if(!s||BKD.sinirDisiKalem(kalem))return{ok:true,s:s};var g=r2(BKR.gelir(ay,haric)+(+ek||0));return{ok:g<=s.sinir+0.005,gelir:g,s:s,asim:r2(g-s.sinir)}};
 BKR.asimYazi=function(c){return 'Aylık gelir Bordro sınırını geçemez: '+GG.ayAd(c.s.ay)+' sınırı '+tl(c.s.sinir)+' ₺ (Net Ödenen '+tl(c.s.net)+(c.s.sgk?' + SGK ödeneği '+tl(c.s.sgk):'')+'). Bu kayıtla '+tl(c.gelir)+' ₺ olurdu.'};
 
 // ---------- 2) Kapanmış geçmiş ay ve net 0 dengesi ----------
 BKR.ayNet=function(ay,haric){return r2(GG.kayitlar().filter(function(k){return ayK(k.tarih)==ay&&k.id!=haric}).reduce(function(n,k){return n+isr(k)*(+k.tutar||0)},0))};
 // Kapalı ay: içinde bulunulan aydan önce, en az bir kaydı olan ve net 0 olan ay (banka dökümüyle eşitlenmiş)
-BKR.kapali=function(ay,haric){return /^\d{4}-\d{2}$/.test(ay||'')&&ay<GG.buAy()&&GG.kayitlar().some(function(k){return ayK(k.tarih)==ay&&k.id!=haric})&&Math.abs(BKR.ayNet(ay,haric))<0.01};
+BKR.kapali=function(ay,haric){return /^\d{4}-\d{2}$/.test(ay||'')&&ay<GG.buAy()&&ay<BKD.DEVIR&&GG.kayitlar().some(function(k){return ayK(k.tarih)==ay&&k.id!=haric})&&Math.abs(BKR.ayNet(ay,haric))<0.01};
 // dNet: ayın (gelir − gider) değişimi. Kayıt dışı harcama dNet kadar artar/azalır; karşılanamayan kısım döner (0 = net 0 korundu).
 BKR.dengele=function(ay,dNet){dNet=r2(dNet);if(!dNet)return 0;var L=GG.kayitlar().filter(function(k){return ayK(k.tarih)==ay&&GG.kd(k)}).sort(function(x,y){return (+y.tutar||0)-(+x.tutar||0)});
  if(dNet>0){if(L.length){L[0].tutar=r2((+L[0].tutar||0)+dNet);return 0}
@@ -45,17 +48,17 @@ var idler=function(){var o={};(typeof fnS=='function'?fnS().kayit:[]).forEach(fu
 var yeniler=function(once){return fnS().kayit.filter(function(x){return !once[x.id]})};
 
 // Bakiye bildiriminde sayılmayanlar: içe aktarılan banka kayıtları (bakiye anlık durumdur) ve geçmiş ay kayıtları (kapanmış, net 0)
-var _kk=OA.kayitKasa;OA.kayitKasa=function(r){if(r&&(r.kaynak=='banka'||(/^\d{4}-\d{2}/.test(r.tarih||'')&&ayK(r.tarih)<GG.buAy())))return null;return _kk(r)};
+var _kk=OA.kayitKasa;OA.kayitKasa=function(r){if(r&&(r.kaynak=='banka'||(/^\d{4}-\d{2}/.test(r.tarih||'')&&ayK(r.tarih)<GG.buAy()&&ayK(r.tarih)<BKD.DEVIR)))return null;return _kk(r)};
 
 // ---------- Sarmalanan giriş noktaları ----------
 // Aylık Bütçe › ekle / düzelt / sil
 var _ekle=GG.ekle;GG.ekle=function(o){var t=GG.tutarOku(o&&o.tutar),ay=/^\d{4}-\d{2}-\d{2}$/.test(o&&o.tarih||'')?ayK(o.tarih):GG.buAy();
- if(t&&o.tur=='gelir'){var c=BKR.gelirOk(ay,t);if(!c.ok){toast(BKR.asimYazi(c));return null}}
+ if(t&&o.tur=='gelir'){var c=BKR.gelirOk(ay,t,null,o.kalem);if(!c.ok){toast(BKR.asimYazi(c));return null}}
  var kap=BKR.kapali(ay),r=_ekle(o);if(!r||!kap)return r;
  if(r.bakDus){OA.bakIsle(r.bakDus,-isr(r)*r.tutar);delete r.bakDus}r.bakEk='gecmis';BKR.dengele(ay,isr(r)*r.tutar);save();return r};
 var _guncelle=GG.guncelle;GG.guncelle=function(id,o){var r=GG.bul(id);if(!r||GG.kilit(r)||GG.kdHer(r))return _guncelle(id,o);
  var t=GG.tutarOku(o&&o.tutar),ay1=/^\d{4}-\d{2}-\d{2}$/.test(o&&o.tarih||'')?ayK(o.tarih):ayK(r.tarih),ay0=ayK(r.tarih);
- if(t&&o.tur=='gelir'){var c=BKR.gelirOk(ay1,t,id);if(!c.ok){toast(BKR.asimYazi(c));return null}}
+ if(t&&o.tur=='gelir'){var c=BKR.gelirOk(ay1,t,id,o.kalem);if(!c.ok){toast(BKR.asimYazi(c));return null}}
  var kap0=BKR.kapali(ay0),kap1=ay1==ay0?kap0:BKR.kapali(ay1),e0=isr(r)*(+r.tutar||0);if(!kap0&&!kap1)return _guncelle(id,o);
  // Kapanmış ay: bakiye değişmez; işaretler geçici kaldırılır, sonra ay(lar)ın kayıt dışı harcaması farkı karşılar
  var bd=r.bakDus,be=r.bakEk;delete r.bakDus;delete r.bakEk;var y=_guncelle(id,o);
@@ -66,7 +69,7 @@ var _sil=GG.silKayit;GG.silKayit=function(id){var r=GG.bul(id);if(!r||GG.kilit(r
 
 // Ailem › Bütçe ve Şirketim › "Gelir / gider ekle" penceresi: kişisel kayıt kasasına işlenir; gelir sınırı denetlenir
 if(typeof fnKaydetDlg=='function'){var _fkd=fnKaydetDlg;fnKaydetDlg=function(){var g=function(id){var e=document.getElementById(id);return e?e.value:''},tr=document.querySelector('input[name=fnt]:checked'),tur=tr?tr.value:'gider',kim=g('fnk');
- if(kim!='sirket'&&tur=='gelir'){var tarih=/^\d{4}-\d{2}-\d{2}$/.test(g('fnd'))?g('fnd'):OA.bugunKey(),t=GG.tutarOku(g('fnu')),c=t?BKR.gelirOk(ayK(tarih),t):{ok:true};if(!c.ok){toast(BKR.asimYazi(c));return}}
+ if(kim!='sirket'&&tur=='gelir'){var tarih=/^\d{4}-\d{2}-\d{2}$/.test(g('fnd'))?g('fnd'):OA.bugunKey(),t=GG.tutarOku(g('fnu')),c=t?BKR.gelirOk(ayK(tarih),t,null,g('fnl')):{ok:true};if(!c.ok){toast(BKR.asimYazi(c));return}}
  var once=idler();_fkd();var y=yeniler(once);if(y.length){y.forEach(BKR.isle);save()}}}
 // Kayıt silme (Şirketim listesi): bakiyeye işlenmiş etkisi geri alınır; bordro maaşı silinirse bordro bağlantısı da kalkar
 BKR.silHer=function(id){var r=GG.bul(id);if(!r)return false;
@@ -90,6 +93,21 @@ if(typeof bulutUygula=='function'){var _bu=bulutUygula;bulutUygula=function(e){v
  if(yeni){var k=GG.bul(e.id);if(k&&!k.bakDus&&!k.bakEk){if(e.veri&&e.veri.hk=='c'&&k.tur=='gider')k.hk='c';if(BKR.isle(k))save()}}return r}}
 // İçe Aktar: dosyadaki bakiyeler anlık durumdur; kayıtlar bakiyeye ayrıca işlenmez ve bildirimde sayılmaz
 var _ice=OA.iceUygula;OA.iceUygula=function(o){var once=idler(),n=_ice(o);yeniler(once).forEach(function(r){if(r.kim!='sirket'&&!r.bakDus&&!r.bakEk)r.bakEk='banka'});OA.kaydet();return n};
+
+// ---------- Kayıt dışı gelir yok (kullanıcı kararı 2026-11-27) ----------
+// Gelir bellidir (maaş, SGK, avans, BES… kayıtlıdır). Bildirilen bakiye beklenenden fazlaysa hesap hatası vardır (çift girilmiş gider,
+// yanlış tutar, girilmemiş gelir kaydı). Fark gelir yazılmaz, bakiye değişmez; kullanıcı kayıtları düzeltip yeniden bildirir.
+// Düşükse fark eskisi gibi Kayıt dışı harcama olur.
+BKR.fazlaYazi=function(k,bek,t){return OA.KASA_AD[k]+' için bildirilen '+tl(t)+' ₺, beklenen '+tl(bek)+' ₺: '+tl(t-bek)+' ₺ fazla. Kayıt dışı gelir olamaz; gelir bellidir. Hesap hatası var: çift girilmiş ya da fazla yazılmış bir gider, yanlış tutar veya girilmemiş bir gelir kaydı olabilir. Kayıtları düzeltip yeniden bildir.'};
+var _bb=OA.bakBildir;OA.bakBildir=function(k,t,kim){var bek=OA.bakBeklenen(k);if(bek!=null&&r2(t-bek)>=0.01)return{bek:bek,fark:r2(t-bek),kayit:null,red:true,mesaj:BKR.fazlaYazi(k,bek,t)};return _bb(k,t,kim)};
+if(OA.bakKaydet){var _bk=OA.bakKaydet;OA.bakKaydet=function(k,onay){var e=document.getElementById('oaBt'),t=e?OA.okuTL(e.value):NaN,bek=OA.bakBeklenen(k);
+ if(e&&e.value!==''&&isFinite(t)&&bek!=null&&r2(t-bek)>=0.01){var u=document.getElementById('oaBu'),m=BKR.fazlaYazi(k,bek,t);if(u)u.innerHTML='<span style="color:#fca5a5" role="alert">'+m+'</span>';else toast(m);return}
+ return _bk(k,onay)}}
+
+// ---------- Ay devri ----------
+BKR.devreden=function(ay){return BKD.devreden(BKR.st(),ay)};
+// Aile Bütçesi üst sınırı: devir döneminde önceki aylardan devreden (artıysa) + bu ayın geliri
+if(OA.aileUst){var _au=OA.aileUst;OA.aileUst=function(){var ay=OA.bugunKey().slice(0,7);if(ay<=BKD.DEVIR)return _au();return r2(Math.max(0,BKR.devreden(ay))+OA.ayToplam(ay).gelir)}}
 
 // ---------- Denetim (salt okunur) ----------
 BKR.denetle=function(){return BKD.denetle(BKR.st(),GG.buAy())};

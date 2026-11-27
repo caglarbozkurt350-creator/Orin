@@ -16,6 +16,13 @@ BKD.ayKay=function(ay,d){var x=new Date(+ay.slice(0,4),+ay.slice(5,7)-1+d,1);ret
 BKD.KASA={aile:1,cagla:1,kubra:1};
 BKD.maas=function(k){return k&&k.tur=='gelir'&&(/^br\d{4}-\d{2}$/.test(k.id||'')||/^Maaş/i.test(k.kalem||''))};
 BKD.sgk=function(k){return k&&k.tur=='gelir'&&/SGK/i.test((k.kalem||'')+' '+(k.not||''))};
+// Kullanıcı kararı (2026-11-27): Maaş avansı ve BES çıkışı gelirdir ama Bordro sınırının dışındadır (avans sonraki bordrodan düşülür; BES birikimdir).
+BKD.sinirDisi=function(k){return k&&k.tur=='gelir'&&/^(Maaş avansı|BES)/i.test(k.kalem||'')};
+BKD.sinirDisiKalem=function(kalem){return /^(Maaş avansı|BES)/i.test(kalem||'')};
+// Ay devri (kullanıcı kararı 2026-11-27): bu aydan itibaren ayın kalanı (gelir − gider) sonraki aya devreder. Öncesi banka dökümüyle net 0.
+BKD.DEVIR='2026-11';
+BKD.devreden=function(st,ay){if(!ay||ay<=BKD.DEVIR)return 0;var n=0;BKD.kisisel(st).forEach(function(k){var a=ayK(k.tarih);if(a>=BKD.DEVIR&&a<ay)n+=(k.tur=='gelir'?1:-1)*(+k.tutar||0)});return r2(n)};
+BKD.sinirGelir=function(st,ay){return r2(BKD.kisisel(st).filter(function(k){return k.tur=='gelir'&&ayK(k.tarih)==ay&&!BKD.sinirDisi(k)}).reduce(function(n,k){return n+(+k.tutar||0)},0))};
 BKD.kdGelir=function(k){return k&&k.tur=='gelir'&&(k.kaynak=='bakiye'||/^Kayıt dışı gelir/.test(k.kalem||''))};
 BKD.kisisel=function(st){return ((st&&st.finans&&st.finans.kayit)||[]).filter(function(k){return k&&k.kim!='sirket'})};
 // Gelir ayı → {bordroAy, net, sgk, sinir}; o ay için bordro yoksa null
@@ -34,12 +41,12 @@ BKD.denetle=function(st,bugunAy){var B=[],K=BKD.kisisel(st),aylar={},bak=(st&&st
  K.forEach(function(k){var a=ayK(k.tarih);if(/^\d{4}-\d{2}$/.test(a))aylar[a]=1});
  Object.keys(aylar).sort().forEach(function(ay){var s=BKD.sinir(st,ay),T=BKD.ayToplam(st,ay),G=K.filter(function(k){return k.tur=='gelir'&&ayK(k.tarih)==ay});
   // 1) Gelir sınırı
-  if(s&&T.gelir>s.sinir+0.005){var sup=G.filter(function(k){return !(/^br\d{4}-\d{2}$/.test(k.id||'')&&k.id=='br'+s.bordroAy)&&!(BKD.sgk(k)&&s.sgk>0)});
-   B.push({kod:'gelir-siniri',ay:ay,tutar:r2(T.gelir-s.sinir),mesaj:ay+' geliri '+r2(T.gelir)+' ₺; sınır '+r2(s.sinir)+' ₺ ('+s.bordroAy+' bordrosu Net '+s.net+(s.sgk?' + SGK '+s.sgk:'')+'). Aşım '+r2(T.gelir-s.sinir)+' ₺.',kayitlar:sup.map(BKD.ozet)})}
+  var SG=BKD.sinirGelir(st,ay);if(s&&SG>s.sinir+0.005){var sup=G.filter(function(k){return !(/^br\d{4}-\d{2}$/.test(k.id||'')&&k.id=='br'+s.bordroAy)&&!(BKD.sgk(k)&&s.sgk>0)&&!BKD.sinirDisi(k)});
+   B.push({kod:'gelir-siniri',ay:ay,tutar:r2(SG-s.sinir),mesaj:ay+' geliri '+SG+' ₺'+(SG!=T.gelir?' (sınır dışı avans/BES hariç)':'')+'; sınır '+r2(s.sinir)+' ₺ ('+s.bordroAy+' bordrosu Net '+s.net+(s.sgk?' + SGK '+s.sgk:'')+'). Aşım '+r2(SG-s.sinir)+' ₺.',kayitlar:sup.map(BKD.ozet)})}
   // Çift maaş: aynı ayda birden fazla maaş geliri
   var M=G.filter(BKD.maas);if(M.length>1)B.push({kod:'cift-maas',ay:ay,tutar:r2(M.reduce(function(n,k){return n+(+k.tutar||0)},0)),mesaj:ay+' ayında '+M.length+' maaş geliri var.',kayitlar:M.map(BKD.ozet)});
   // 3) Geçmiş aylar net 0
-  if(bugunAy&&ay<bugunAy&&Math.abs(T.net)>=0.01)B.push({kod:'gecmis-net',ay:ay,tutar:T.net,mesaj:ay+' kapanmış ay ama net '+T.net+' ₺ (gelir '+T.gelir+', gider '+T.gider+').',kayitlar:[]})});
+  if(bugunAy&&ay<bugunAy&&ay<BKD.DEVIR&&Math.abs(T.net)>=0.01)B.push({kod:'gecmis-net',ay:ay,tutar:T.net,mesaj:ay+' kapanmış ay ama net '+T.net+' ₺ (gelir '+T.gelir+', gider '+T.gider+').',kayitlar:[]})});
  // Bordro ↔ maaş kaydı bağı
  BRA.forEach(function(m){var b=m&&m.butce;if(!b)return;var r=K.filter(function(k){return k.id==b.id})[0];
   if(!r)B.push({kod:'maas-bag',ay:m.ay,mesaj:m.ay+' bordrosu Aile Bütçesine eklenmiş görünüyor ama maaş kaydı ('+b.id+') yok.',kayitlar:[]});
@@ -48,7 +55,7 @@ BKD.denetle=function(st,bugunAy){var B=[],K=BKD.kisisel(st),aylar={},bak=(st&&st
   if(m.v&&+m.v.net>0&&Math.abs(+m.v.net-(+b.t||0))>=0.01)B.push({kod:'maas-bag',ay:m.ay,mesaj:m.ay+' bordro Net Ödenen '+m.v.net+' ₺ ama Aile Bütçesine '+b.t+' ₺ eklenmiş.',kayitlar:[]})});
  // 2) Bildirilen tutarın tamamı gelir yazılmış (beklenen 0)
  K.filter(function(k){return BKD.kdGelir(k)}).forEach(function(k){var bek=(String(k.not||'').match(/beklenen\s+([\d.,]+)/)||[])[1];var sifir=bek!=null&&+String(bek).replace(/\./g,'').replace(',','.')===0;
-  B.push({kod:'bildirim-gelir',ay:ayK(k.tarih),tutar:r2(k.tutar),mesaj:'Bakiye bildiriminden kayıt dışı GELİR yazılmış'+(sifir?' (beklenen 0 ₺: bildirilen tutarın tamamı gelir oldu)':'')+'.',kayitlar:[BKD.ozet(k)]})});
+  B.push({kod:'bildirim-gelir',ay:ayK(k.tarih),tutar:r2(k.tutar),mesaj:'Bakiye bildiriminden kayıt dışı GELİR yazılmış'+(sifir?' (beklenen 0 ₺: bildirilen tutarın tamamı gelir oldu)':'')+'. Kayıt dışı gelir olamaz (gelir bellidir); fazlalık hesap hatasıdır.',kayitlar:[BKD.ozet(k)]})});
  // Sonraki bakiye bildiriminde hesaba katılacak (işlenmemiş) kayıtlar
  var bek={},eski={};K.forEach(function(r){var k=BKD.kasa(st,r);if(!k||!bak[k])return;var bas=bak[k].bts||bak[k].ts||0;if((+r.ts||0)<=bas)return;if(BKD.sayilmaz(r,bugunAy))(eski[k]=eski[k]||[]).push(r);else (bek[k]=bek[k]||[]).push(r)});
  Object.keys(eski).forEach(function(k){var L=eski[k],net=r2(L.reduce(function(n,r){return n+(r.tur=='gelir'?1:-1)*(+r.tutar||0)},0));

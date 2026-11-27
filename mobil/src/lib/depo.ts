@@ -80,6 +80,8 @@ export type Ortak = {
   hareket: [string, 0 | 1, string, string, number, 'o' | 'c' | 'e', Kisi][];
   odeme: { ad: string; tutar: number; tarih: string }[];
   takvim: Etkinlik[]; ozel: OzelGun[]; izin: Record<string, string>;
+  /** 0.9.17 Aile Bütçesi güncel bakiyesi (masaüstü bak.aile; iki cep + kalan). Yoksa (eski masaüstü / bildirilmemiş) null */
+  aile?: { t: number; ts: number } | null;
 };
 export type Ozet = {
   v: 1; ts: number; olaySira: number;

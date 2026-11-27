@@ -59,6 +59,18 @@ if(OA.ayDuzelt){var _ad=OA.ayDuzelt;OA.ayDuzelt=function(ay,tur,yeni){var T=OA.a
 // ---------- 4) Cep harçlığı isteği bir kez ----------
 if(OA.cepIste){var _ci=OA.cepIste;OA.cepIste=function(k,t,kim,olay){if(olay&&BKK.izVar('ci'+olay))return null;var b=_ci(k,t,kim,olay);if(olay){BKK.izEkle('ci'+olay);if(b)kaydet()}return b}}
 
+// ---------- 4b) Cep harçlığı bakiye bildirimiyle eklenmez ----------
+// 0.9.10–0.9.11: cebi yüksek bildirmek (cep harçlığı eklemek) farkı "Kayıt dışı gelir" yazıp Aile Bütçesine de ekliyordu.
+// Şimdi yüksek bildirim reddedilir; Çağlar/Kübra cebinde fark tek tuşla "cep harçlığı" olarak eklenir: cep artar, Aile Bütçesi ve gelir değişmez.
+BKK.cepFark=function(k,t){if(k!='cagla'&&k!='kubra')return null;var bek=OA.bakBeklenen(k);if(bek==null||!(t>bek+0.005))return null;var fark=r2(t-bek);
+ var b=OA.cepIste(k=='cagla'?'c':'e',fark,'bakiye bildiriminden · gelir değil');if(!b)return null;var s=OA.bakBildir(k,t,k=='kubra'?'Çağlar bildirdi':'uygulamadan');return {fark:fark,s:s}};
+BKK.cepFarkKaydet=function(k){var e=document.getElementById('oaBt'),t=e?OA.okuTL(e.value):NaN;if(!isFinite(t))return;var r=BKK.cepFark(k,t);if(!r)return;
+ try{OA.dlgKapat()}catch(x){}try{toast(OA.KASA_AD[k]+' cebine '+tl(r.fark)+' ₺ cep harçlığı eklendi · Aile Bütçesi ve gelir değişmedi')}catch(x){}try{ORV.yenile()}catch(x){}};
+if(OA.bakKaydet){var _bk=OA.bakKaydet;OA.bakKaydet=function(k,onay){var r=_bk.apply(this,arguments);
+ if(k=='cagla'||k=='kubra'){var e=document.getElementById('oaBt'),u=document.getElementById('oaBu'),t=e?OA.okuTL(e.value):NaN,bek=OA.bakBeklenen(k);
+  if(u&&e&&isFinite(t)&&bek!=null&&t>bek+0.005&&!u.querySelector('.bkk-cep'))u.insertAdjacentHTML('beforeend',' <button type="button" class="oa-btn ghost sm bkk-cep" onclick="BKK.cepFarkKaydet(\''+k+'\')">Farkı ('+tl(t-bek)+' ₺) cep harçlığı olarak ekle · gelir sayılmaz</button>')}
+ return r}}
+
 // ---------- 6) Çift maaş ----------
 BKK.maasVar=function(ay,haric){return (typeof GG!='undefined'?GG.kayitlar():[]).filter(function(k){return k.id!=haric&&ayK(k.tarih)==ay&&BKD.maas(k)})[0]||null};
 if(typeof BR!='undefined'&&BR.butceEkle){var _be=BR.butceEkle;BR.butceEkle=function(m,zorla){

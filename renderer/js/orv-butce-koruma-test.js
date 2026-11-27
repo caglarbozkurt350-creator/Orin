@@ -5,7 +5,7 @@ window.__butceKorumaTest=function(){var R=[];
  function t(n,c,m){try{var ok=typeof c=='function'?c():c;R.push({n:'Gelir koruması: '+n,ok:!!ok,m:ok?'':String(typeof m=='function'?m():m||'beklenmeyen sonuç')})}catch(e){R.push({n:'Gelir koruması: '+n,ok:false,m:e.message})}}
  var y={fn:S.finans?JSON.stringify(S.finans):null,a:S.orvA?JSON.stringify(S.orvA):null,br:S.bordro?JSON.stringify(S.bordro):null,ui:JSON.stringify(GG.ui),bui:JSON.stringify(BR.ui),dv:BKD.DEVIR,bk:OA.bugunKey};
  var toast0=window.toast,toastlar=[];
- var p2=function(n){return String(n).padStart(2,'0')};
+ var p2=function(n){return String(n).padStart(2,'0')},r2t=function(n){return Math.round(n*100)/100};
  function bak(k){var b=OA.st().bak[k];return b?b.t:null}
  function kay(id){return fnS().kayit.filter(function(x){return x.id==id})[0]}
  function yeni(){var now=Date.now()-5000;delete S.finans;S.bordro={aylar:[]};
@@ -93,6 +93,14 @@ window.__butceKorumaTest=function(){var R=[];
    var n=FE.iceUygula({soz:{plan:'Örnek',taksitSay:2,teslimat:2},taksit:[{no:1,tur:'Tasarruf',vade:bugun,tutar:700,odendi:true,odenen:700,odemeTarih:bugun,butce:true,kasa:'aile'},{no:2,tur:'Tasarruf',vade:GG.ayKay(ay,1)+'-10',tutar:700}]});
    var ok=n.butce==1&&OA.ayToplam(ay).gelir==d0.gelir&&bak('aile')==a0-700;FE.iceUygula({taksit:[{no:1,tur:'Tasarruf',odendi:true,odenen:700,odemeTarih:bugun,butce:true}]});ok=ok&&bak('aile')==a0-700&&OA.ayToplam(ay).gelir==d0.gelir;
    var tk=FE.st().taksit[0];FE.butceGeriAl(tk);delete OA.st().fuzulev;return ok&&bak('aile')==a0},function(){return JSON.stringify(durum(ay))});
+
+  // ---------- 5b) Cep harçlığı eklemek gelir değildir ----------
+  t('Cep harçlığı: cebi yüksek bildirmek gelir yazmaz; “Farkı cep harçlığı olarak ekle” cebi artırır, Aile Bütçesi ve gelir değişmez',function(){var c0=bak('cagla'),bek=OA.bakBeklenen('cagla');
+   OA.bakDlg('cagla');document.getElementById('oaBt').value=String(bek+500);OA.bakKaydet('cagla');var red=bak('cagla')==c0&&!!document.querySelector('#oaBu .bkk-cep');
+   document.querySelector('#oaBu .bkk-cep').click();var d=durum(ay),ok=red&&d.cagla==r2t(bek+500)&&d.aile==d0.aile&&d.gelir==d0.gelir&&d.n==d0.n&&!GG.kayitlar().some(function(k){return k.tur=='gelir'&&/Kayıt dışı/.test(k.kalem||'')});
+   OA.st().bak.cagla.t=d0.cagla;try{OA.dlgKapat()}catch(e){}return ok},function(){return JSON.stringify(durum(ay))});
+  t('Cep harçlığı iste (masaüstü, Çağlar ve eşin telefonu): gelir ve Aile Bütçesi değişmez',function(){var b=OA.cepIste('e',250,'test');var e1={id:'kor-ci-x',tur:'cep_iste',ts:Date.now(),veri:{tutar:120}},e2={id:'kor-ci-y',tur:'es_cep_iste',ts:Date.now(),veri:{tutar:80}};bulutUygula(e1);OAI.uygula(e2,'es');
+   var d=durum(ay),ok=!!b&&d.aile==d0.aile&&d.gelir==d0.gelir&&d.n==d0.n&&d.kubra==d0.kubra+330&&d.cagla==d0.cagla+120;OA.st().bak.kubra.t=d0.kubra;OA.st().bak.cagla.t=d0.cagla;return ok},function(){return JSON.stringify(durum(ay))});
 
   // ---------- 9) 0.9.11 hatası: bakiye bildirimi gelir yazmaz ----------
   t('Bakiye bildir: ekrandaki bakiye, işlenmemiş banka/geçmiş kayıtlar varken aynen bildirilince gelir yazılmaz (0.9.11 48 bin ₺ “Kayıt dışı gelir” yazıyordu)',function(){

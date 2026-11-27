@@ -45,4 +45,5 @@
 - Ay devri öncesi (Ekim 2026 ve önce) kapanmış aya ait ödemede bütçeye yazma varsayılan kapalı; yazılırsa bakiye değişmez, ayın kayıt dışı harcaması dengeler. Kasım 2026 ve sonrası açık aylar: varsayılan açık, kasaya işlenir.
 - "Geri al" yalnız FuzulEv'in yazdığı gideri ve bakiye etkisini geri alır; banka kaydı kalır. Taksit silinince bütçedeki gider kalır.
 - Teslimata kalan = teslimat taksitine kadar (o dahil) ödenmemiş taksit sayısı ve teslimat vadesine kalan gün.
+- Ödenmiş taksitler Aile Bütçesine gider olarak yazılır (kullanıcı kararı, 2026-11-27). İçe Aktar JSON'unda taksite `"butce":true` verilirse içe aktarılırken yazılır; aynı kurallar geçerli (bir kez, banka kaydına bağlanma, kapanmış ayda bakiye değişmez).
 - Gerçek sözleşme bilgileri koda/testlere girmez; İçe Aktar JSON'undaki "fuzulev" anahtarıyla ya da sayfadan elle girilir.

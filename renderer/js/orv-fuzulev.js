@@ -45,15 +45,20 @@ FE.temizSoz=function(o){var s={};o=o||{};FE.SOZ.forEach(function(d){var v=o[d[0]
 
 // ---------- İçe aktarma ----------
 // o: {soz:{…}, taksit:[…]}. Aynı taksit no varsa ödendi işareti, bütçe bağı ve elle girilen tutar korunur; dosyadaki dolu alanlar boş olanları doldurur.
-FE.iceUygula=function(o){if(!o||typeof o!='object')throw new Error('FuzulEv verisi tanınmadı');var f=FE.st(),n={yeni:0,guncel:0};
+// Taksitte "butce":true ise ödenmiş taksit Aile Bütçesine "FuzulEv taksiti" gideri olarak yazılır (FE.butceYaz kurallarıyla: aynı taksit bir kez,
+// banka kaydı varsa ona bağlanır, kapanmış geçmiş ayda bakiye değişmez ve ay dengelenir). Kasa: "kasa":"cagla" değilse Aile Bütçesi.
+FE.iceUygula=function(o){if(!o||typeof o!='object')throw new Error('FuzulEv verisi tanınmadı');var f=FE.st(),n={yeni:0,guncel:0,butce:0},yaz=[];
  var s=FE.temizSoz(o.soz);Object.keys(s).forEach(function(k){f.soz[k]=s[k]});
  (Array.isArray(o.taksit)?o.taksit:[]).forEach(function(x,i){var t=FE.temizTaksit(x,i);if(!t)return;var v=f.taksit.filter(function(y){return y.no==t.no})[0];
-  if(!v){delete t.butceId;f.taksit.push(t);n.yeni++;return}
-  if(!v.vade&&t.vade)v.vade=t.vade;v.tur=t.tur;if(v.tutar==null&&t.tutar!=null)v.tutar=t.tutar;if(t.odendi&&!v.odendi){v.odendi=true;if(v.odenen==null)v.odenen=t.odenen;if(!v.odemeTarih)v.odemeTarih=t.odemeTarih}n.guncel++});
- FE.sirala();f.ts=Date.now();OA.kaydet();return n};
+  if(!v){delete t.butceId;f.taksit.push(t);n.yeni++;v=t}
+  else{if(!v.vade&&t.vade)v.vade=t.vade;v.tur=t.tur;if(v.tutar==null&&t.tutar!=null)v.tutar=t.tutar;if(t.odendi&&!v.odendi){v.odendi=true;v.odemeTarih=v.odemeTarih||t.odemeTarih}
+   if(v.odendi&&v.odenen==null&&t.odenen!=null)v.odenen=t.odenen;if(v.odendi&&!v.odemeTarih&&t.odemeTarih)v.odemeTarih=t.odemeTarih;n.guncel++}
+  if(x.butce===true&&v.odendi)yaz.push([v,x.kasa=='cagla'?'cagla':'aile'])});
+ FE.sirala();yaz.sort(function(a,b){return a[0].no-b[0].no}).forEach(function(z){var r=FE.butceYaz(z[0],z[1]);if(r.durum=='yazildi'||r.durum=='bagli')n.butce++});
+ f.ts=Date.now();OA.kaydet();return n};
 // İçe Aktar klasörü: OA.iceUygula'yı sarar; dosyada "fuzulev" anahtarı varsa ayrıca uygulanır
 (function(){var es=OA.iceUygula;if(!es||es.__fe)return;OA.iceUygula=function(o){var fe=o&&typeof o=='object'&&o.fuzulev?o.fuzulev:null,g=o;if(fe){g=Object.assign({},o);delete g.fuzulev}
- var n=es.call(this,g);if(fe){n.fe=FE.iceUygula(fe);try{toast('FuzulEv içe aktarıldı: '+(n.fe.yeni+n.fe.guncel)+' taksit')}catch(e){}}return n};OA.iceUygula.__fe=true})();
+ var n=es.call(this,g);if(fe){n.fe=FE.iceUygula(fe);try{toast('FuzulEv içe aktarıldı: '+(n.fe.yeni+n.fe.guncel)+' taksit'+(n.fe.butce?' · '+n.fe.butce+' taksit Aile Bütçesine yazıldı':''))}catch(e){}}return n};OA.iceUygula.__fe=true})();
 
 // ---------- Hesap ----------
 FE.satir=function(t,bugun){var tutar=t.tutar==null?null:+t.tutar,od=t.odendi?(t.odenen!=null?+t.odenen:tutar):(t.odenen!=null?+t.odenen:0);

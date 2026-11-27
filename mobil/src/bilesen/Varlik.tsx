@@ -48,7 +48,7 @@ const SaltOkunur = ({ yazi }: { yazi: string }) => <Text style={[s.sub, { fontSi
 
 // ======================= Altın Hesabım =======================
 // Tür tonları masaüstündeki AH.TON sırasıyla aynı (tür listesi sırası → ton)
-const TURLER = ['gram', 'has', 'bilezik22', 'ayar18', 'ayar14', 'ceyrek', 'yarim', 'tam', 'cumhuriyet', 'ata', 'resat', 'gremse', 'ikibucuk', 'besli'];
+const TURLER = ['gram', 'has', 'bilezik22', 'ayar18', 'ayar14', 'ceyrek', 'yarim', 'tam', 'cumhuriyet', 'ata', 'resat', 'gremse', 'ikibucuk', 'besli', 'bilezik', 'taki'];
 const TON = ['#fde68a', '#e0a32e', '#b7791f', '#f5c451', '#8a5a14', '#fff1b8'];
 const ton = (tur: string) => TON[Math.max(0, TURLER.indexOf(tur)) % TON.length];
 const FIYAT_AD: [string, string][] = [['gram', 'Gram altın'], ['ceyrek', 'Çeyrek altın'], ['yarim', 'Yarım altın'], ['tam', 'Tam altın'], ['cumhuriyet', 'Cumhuriyet altını']];
@@ -68,7 +68,11 @@ export function AltinPanel({ o }: { o: Ozet }) {
   const G: Record<string, { ad: string; v: number; tur: string }> = {};
   a.kalem.forEach((k) => { if (!(k.deger && k.deger > 0)) return; (G[k.tur] = G[k.tur] || { ad: k.ad, v: 0, tur: k.tur }).v += k.deger; });
   const dag = Object.values(G).sort((x, y) => y.v - x.v);
-  const birimler = [T.gram ? miktar(T.gram, 'gr') : '', T.adet ? miktar(T.adet, 'adet') : ''].filter(Boolean).join(' · ');
+  // 0.9.15: toplam gram (adetliler dahil) ve has karşılığı; eski masaüstü özetinde gramTop yoksa eski gösterim
+  const yak = T.gramStd ? '≈ ' : '';
+  const birimler = T.gramTop != null ? [T.adet ? miktar(T.adet, 'adet') : '', yak + miktar(T.gramTop, 'gr')].filter(Boolean).join(' · ')
+    : [T.gram ? miktar(T.gram, 'gr') : '', T.adet ? miktar(T.adet, 'adet') : ''].filter(Boolean).join(' · ');
+  const gramYaz = (k: Altin['kalem'][number]) => k.gram == null ? '' : (k.birim === 'adet' ? ' · ' + (k.gramStd ? '≈ ' : '') + miktar(k.gram, 'gr') : '') + (k.ayar ? ' · ' + k.ayar + ' ayar' : '') + (k.has != null ? ' · has ' + miktar(k.has, 'gr') : '');
   const agMap: Record<string, NonNullable<Altin['ag']>['satir'][number]> = {};
   (a.ag?.satir || []).forEach((x) => { agMap[x.id] = x; });
   return (
@@ -89,6 +93,12 @@ export function AltinPanel({ o }: { o: Ozet }) {
             </Text>
           </>
         ) : <Text style={s.soluk}>Fiyat bekleniyor · masaüstünde Altın Hesabım açılınca gelir.</Text>}
+        {T.gramTop != null && T.has != null && (
+          <Text accessibilityLabel={'Toplam ' + sayiTr(T.gramTop, 3) + ' gram, has altın karşılığı ' + sayiTr(T.has, 3) + ' gram'} style={[s.sub, { color: '#e6dcc4' }]}>
+            Toplam <Text style={{ color: R.yazi, fontWeight: '700' }}>{yak}{miktar(T.gramTop, 'gr')}</Text> · has altın karşılığı <Text style={{ color: R.yazi, fontWeight: '700' }}>{yak}{miktar(T.has, 'gr')}</Text>
+            {T.gramStd ? ' (' + T.gramStd + ' kayıt standart ağırlıkla)' : ''}
+          </Text>
+        )}
         {dag.length > 0 && T.deger > 0 && (
           <>
             <View accessibilityLabel="Türlere göre dağılım" style={{ flexDirection: 'row', height: 9, borderRadius: 5, overflow: 'hidden', gap: 2, marginTop: 2 }}>
@@ -135,12 +145,12 @@ export function AltinPanel({ o }: { o: Ozet }) {
       <View style={{ gap: 2 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}><Text style={[s.sub, { flex: 1 }]}>Altınlarım</Text><Hap yazi={a.kalem.length + ' kayıt'} /></View>
         {a.kalem.map((k, i) => (
-          <View key={k.id} accessible accessibilityLabel={k.ad + ', ' + miktar(k.miktar, k.birim) + (k.deger != null ? ', değer ' + tl(k.deger) : '')}
+          <View key={k.id} accessible accessibilityLabel={k.ad + ', ' + miktar(k.miktar, k.birim) + gramYaz(k).replace(/ · /g, ', ') + (k.deger != null ? ', değer ' + tl(k.deger) : '')}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 54, paddingVertical: 6, borderBottomWidth: i < a.kalem.length - 1 ? 1 : 0, borderBottomColor: 'rgba(255,255,255,0.05)' }}>
             <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: ton(k.tur), borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)' }} />
             <View style={{ flex: 1, gap: 1 }}>
               <Text numberOfLines={1} style={{ color: R.yazi, fontSize: 13.5, fontWeight: '600' }}>{k.ad}{k.not ? <Text style={{ color: R.soluk, fontWeight: '400', fontSize: 12 }}>  {k.not}</Text> : null}</Text>
-              <Text style={[s.sub, { fontSize: 11.5 }]}>{miktar(k.miktar, k.birim)} · {k.tarih ? tarihY(k.tarih) : 'işlem tarihi yok'}{k.alis != null ? ' · alış ' + tl(k.alis) : ''}</Text>
+              <Text style={[s.sub, { fontSize: 11.5 }]}>{miktar(k.miktar, k.birim)}{gramYaz(k)} · {k.tarih ? tarihY(k.tarih) : 'işlem tarihi yok'}{k.alis != null ? ' · alış ' + tl(k.alis) : ''}</Text>
             </View>
             <View style={{ alignItems: 'flex-end', gap: 1 }}>
               <Text style={{ color: R.yazi, fontSize: 13.5, fontWeight: '700' }}>{k.deger != null ? tl(k.deger) : '—'}</Text>

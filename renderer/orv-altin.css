@@ -26,3 +26,7 @@
 .ah-kr{background:linear-gradient(160deg,#fff1b8,var(--ah-t,#e0a32e))!important}
 .ah-dn{padding:2px 4px}
 .ah .gg-ts,.fe .gg-ts{position:relative} /* gizli tablo başlığı (position:absolute) kaydırma kutusunun dışına taşmasın: 1024 px yatay taşma */
+/* 0.9.15 · Gram · ayar sütunu ve formdaki Gram kutusu */
+.ah-grh small{display:block;font-size:11px;margin-top:1px}
+.ah-grg{min-width:110px}.ah-grg input,.ah-grg select{width:100%}.ah-grg small{display:block;font-size:11px;margin-top:3px;white-space:nowrap}
+.ah-gr b{color:var(--yazi);font-weight:700}

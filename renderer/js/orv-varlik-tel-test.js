@@ -23,6 +23,7 @@ window.__varlikTelTest=function(){var R=[];
   var kur={};kur[k1.tarih]={usd:30,eur:33,d:k1.tarih};AH._ag=AH.agOku({tufe:tf,kur:kur,bugun:{usd:36,eur:39,d:bugun}});
   var ag=bulutOzet().aile.altin.ag,A=AH.alimGucu(AH.hesap(),AH._ag);
   t('Altın: alım gücü özeti (nominal, reel, dolar/euro) masaüstüyle aynı',ag&&ag.satir.length==1&&ag.satir[0].id==k1.id&&ag.satir[0].nominal==A.satir.filter(function(o){return o.id==k1.id})[0].nominal&&ag.top.reel==A.top.reel&&ag.top.usd==10800&&ag.guncel==1,function(){return JSON.stringify(ag)});
+  t('Altın: gram, ayar ve has telefona gider; eski kayıt standart ağırlıkla (≈) işaretli',function(){var c=al.kalem[1],g=al.kalem[0];return g.gram==10&&g.ayar==24&&g.has==9.95&&!g.gramStd&&c.gram==3.5&&c.gramStd==1&&c.ayar==22&&c.has==3.206&&al.top.gramTop==13.5&&al.top.has==13.156&&al.top.gramStd==1&&al.top.gram==10},function(){return JSON.stringify(al.top)});
   t('Altın: özet kayıtları değiştirmez',JSON.stringify(OA.st().altin.kalem)==once);
 
   // FuzulEv: uydurma sözleşme (3. taksit 3 gün gecikmiş, 4. teslimat)

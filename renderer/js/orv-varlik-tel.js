@@ -4,7 +4,8 @@
 // Veri yalnız okunur: S.orvA.altin ve S.orvA.fuzulev değiştirilmez (fiyat önbelleği AH'nin kendi alanıdır).
 // Veri tasarrufu: özet bulut.js'te yalnız değişince gönderilir; burada zaman damgası yok, tutarlar kuruşa yuvarlanır.
 //  • aile.altin  = {fiyat:{t:{tur:[satis,alis,deg%,kapali?1:0]},kaynak,tarih,eski}, kalem:[{id,tur,ad,birim,miktar,tarih,alis,not,deger,kar,gunluk}],
-//                   top:{deger,bozdur,alis,karDeger,kar,karP,gunluk,gunlukP,gram,adet,eksik}, ag:{guncel,tufeSon,kurTarih,uyari,top,satir}|null}
+//                   (0.9.15 kalem: gram, gramStd (1 = standart ağırlıkla), ayar, has)
+//                   top:{deger,bozdur,alis,karDeger,kar,karP,gunluk,gunlukP,gram,adet,eksik,gramTop,has,gramStd}, ag:{guncel,tufeSon,kurTarih,uyari,top,satir}|null}
 //  • aile.fuzulev = {soz:{plan,tarih,kampanya,finTur,bedel,orgUcret,pesinat,taksitSay,teslimat,durum}, bugun, ozet:{…}, sonraki, geciken:[…], teslim, son,
 //                   taksit:[[no,tur,vade,tutar,odenen,kalan,durum,gecikmeGun,odemeTarih]]}
 // Telefondaki karşılığı: mobil/src/bilesen/Varlik.tsx (tipler lib/depo.ts → Altin, FuzulEv). Birini değiştirirken ötekini de güncelle.
@@ -28,8 +29,8 @@ OVT.altin=function(){if(typeof AH=='undefined')return null;var st=AH.st();if(!st
  if(f&&f.t){var t={},ist={};OVT.ANA.forEach(function(id){ist[id]=1});st.kalem.forEach(function(k){ist[k.tur]=1});
   Object.keys(ist).forEach(function(id){var p=f.t[id];if(p)t[id]=[r2(p.satis),r2(p.alis),r2(p.deg),p.kaynak=='Kapalıçarşı'?1:0]});
   fy={t:t,kaynak:String(f.kaynak||'Truncgil'),tarih:String(f.tarih||'').slice(0,16),eski:f.eski?1:0}}
- var kalem=T.satir.map(function(r){return{id:r.id,tur:r.k.tur,ad:r.ad,birim:r.birim=='gram'?'gr':'adet',miktar:r.miktar,tarih:r.k.tarih||'',alis:r2(r.alis),not:String(r.k.not||'').slice(0,80),deger:r2(r.deger),kar:r2(r.kar),gunluk:r2(r.gunluk)}});
- var top={};['deger','bozdur','alis','karDeger','kar','karP','gunluk','gunlukP','gram','adet','eksik'].forEach(function(k){top[k]=T[k]==null?null:k=='gram'?Math.round(T[k]*1000)/1000:r2(T[k])});
+ var kalem=T.satir.map(function(r){return{id:r.id,tur:r.k.tur,ad:r.ad,birim:r.birim=='gram'?'gr':'adet',miktar:r.miktar,tarih:r.k.tarih||'',alis:r2(r.alis),not:String(r.k.not||'').slice(0,80),deger:r2(r.deger),kar:r2(r.kar),gunluk:r2(r.gunluk),gram:r.gram,gramStd:r.gramStd?1:0,ayar:r.ayar,has:r.has}});
+ var top={};['deger','bozdur','alis','karDeger','kar','karP','gunluk','gunlukP','gram','adet','eksik','gramTop','has','gramStd'].forEach(function(k){top[k]=T[k]==null?null:k=='gram'||k=='gramTop'||k=='has'?Math.round(T[k]*1000)/1000:r2(T[k])});
  return{fiyat:fy,kalem:kalem,top:top,ag:OVT.ag(T)}};
 // Alım gücü: masaüstündeki AH.alimGucu sonucunun özeti; veri yoksa null (telefon "masaüstünde henüz alınmadı" yazar)
 OVT.ag=function(T){var ag=AH._ag;if(!ag)return null;var A=AH.alimGucu(T,ag),t=A.top,uy=[];

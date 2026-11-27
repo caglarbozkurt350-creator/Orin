@@ -5,6 +5,9 @@
 //  • Birim fiyat = satış fiyatı (Anasayfa'daki gram altın kartı gibi); "bozdurursan" değeri alış fiyatıyla ayrıca gösterilir.
 //  • Fiyat: Truncgil v4 (ücretsiz; ana süreç 'piyasa:altin'). KARARLAR › 4: Kapalıçarşı tercih edilir → Otto'nun bugünkü piyasa verisi
 //    Kapalıçarşı kaynaklıysa gram ve çeyrek satış fiyatı ondan alınır. Günlük değişim Truncgil'in günlük % değişiminden (▲ / ▼).
+//  • 0.9.15 gram ve ayar: kalem.gram (isteğe bağlı) adetli üründe toplam ağırlık (adet başı ağırlık × adet). Yoksa türün standart ağırlığıyla
+//    GÖSTERİLİR (≈), veriye yazılmaz. Standart ağırlığa eşit girilen gram da yazılmaz (aynı sonuç). kalem.ayar yalnız Bilezik/Takı'da (24/22/18/14);
+//    değeri o ayarın gram fiyatıyla (24 → gram altın, 22 → 22 ayar, 18, 14) hesaplanır, işçilik hesaba girmez. Has karşılığı = gram × milyem.
 //  • Altın Aile Bütçesine işlenmez. 0.9.14: salt okunur özet yalnız Çağlar'ın telefonuna gider (orv-varlik-tel.js), eşe gitmez.
 // ========================================================================
 var AH=window.AH||{};
@@ -14,9 +17,23 @@ var r2=function(n){return Math.round((+n||0)*100)/100};
 var tl=function(n){return Math.round(+n||0).toLocaleString('tr-TR')};
 var sayi=function(n,b){return (+n||0).toLocaleString('tr-TR',{maximumFractionDigits:b==null?3:b})};
 var SMOKE=function(){return typeof INFO!='undefined'&&INFO&&INFO.smoke};
-AH.TUR=[['gram','Gram altın','gram','GRA'],['has','Has altın (24 ayar)','gram','HAS'],['bilezik22','22 ayar bilezik','gram','YIA'],['ayar18','18 ayar altın','gram','18AYARALTIN'],['ayar14','14 ayar altın','gram','14AYARALTIN'],
+AH.TUR=[['gram','Gram altın','gram','GRA'],['has','Has altın (24 ayar)','gram','HAS'],['bilezik22','22 ayar altın','gram','YIA'],['ayar18','18 ayar altın','gram','18AYARALTIN'],['ayar14','14 ayar altın','gram','14AYARALTIN'],
  ['ceyrek','Çeyrek altın','adet','CEYREKALTIN'],['yarim','Yarım altın','adet','YARIMALTIN'],['tam','Tam altın','adet','TAMALTIN'],['cumhuriyet','Cumhuriyet altını','adet','CUMHURIYETALTINI'],['ata','Ata altın','adet','ATAALTIN'],
- ['resat','Reşat altın','adet','RESATALTIN'],['gremse','Gremse altın','adet','GREMSEALTIN'],['ikibucuk','İkibuçuk altın','adet','IKIBUCUKALTIN'],['besli','Beşli altın','adet','BESLIALTIN']];
+ ['resat','Reşat altın','adet','RESATALTIN'],['gremse','Gremse altın','adet','GREMSEALTIN'],['ikibucuk','İkibuçuk altın','adet','IKIBUCUKALTIN'],['besli','Beşli altın','adet','BESLIALTIN'],
+ ['bilezik','Bilezik','gram',''],['taki','Takı (kolye, küpe, yüzük)','gram','']];
+// 0.9.15 · Gram ve ayar. Sikkeler 22 ayar; adet başı standart (brüt) ağırlık gram. Milyem: 24 ayar gram altın 995, 22 → 916, 18 → 750, 14 → 585.
+// Yeni türler listenin SONUNDA (tür sırası → renk tonu; telefondaki TURLER ile aynı sıra). Formdaki sıra AH.SIRA.
+AH.AYAR={gram:24,has:24,bilezik22:22,ayar18:18,ayar14:14,ceyrek:22,yarim:22,tam:22,cumhuriyet:22,ata:22,resat:22,gremse:22,ikibucuk:22,besli:22};
+AH.STD={ceyrek:1.75,yarim:3.5,tam:7,cumhuriyet:7.216,ata:7.216,resat:7.216,gremse:17.54,ikibucuk:18.04,besli:36.08};
+AH.MILYEM={24:0.995,22:0.916,18:0.75,14:0.585};
+AH.AYARLI={bilezik:1,taki:1};
+AH.AYAR_FIYAT={24:'gram',22:'bilezik22',18:'ayar18',14:'ayar14'};
+AH.SIRA=['gram','has','bilezik22','ayar18','ayar14','bilezik','taki','ceyrek','yarim','tam','cumhuriyet','ata','resat','gremse','ikibucuk','besli'];
+var r3=function(n){return Math.round((+n||0)*1000)/1000};
+AH.ayarOf=function(k){return AH.AYARLI[k.tur]?(AH.MILYEM[+k.ayar]?+k.ayar:22):(AH.AYAR[k.tur]||null)};
+// Döner {gram, std}: std=true → kayıtta gram yok, standart ağırlıkla gösteriliyor (veriye yazılmaz)
+AH.gramOf=function(k){var d=AH.tur(k.tur),m=+k.miktar||0;if(!d)return{gram:null,std:false};if(d[2]=='gram')return{gram:r3(m),std:false};
+ if(+k.gram>0)return{gram:r3(k.gram),std:false};var s=AH.STD[k.tur];return s?{gram:r3(s*m),std:true}:{gram:null,std:false}};
 AH.tur=function(id){return AH.TUR.filter(function(x){return x[0]==id})[0]||null};
 AH.ui={edit:null,yeni:false};
 AH.st=function(){var a=OA.st();if(!a.altin||typeof a.altin!='object')a.altin={};if(!Array.isArray(a.altin.kalem))a.altin.kalem=[];return a.altin};
@@ -38,22 +55,26 @@ AH.cek=function(){var f=AH.fiyat();if(AH._yuk||SMOKE())return;if(!f||Date.now()-
 // ---------- Hesap ----------
 // Satır: değer = miktar × satış; bozdurma = miktar × alış; kâr/zarar = değer − alış tutarı (girildiyse); günlük = değer × d/(100+d)
 AH.hesap=function(f){f=f===undefined?AH.fiyat():f;var L=AH.st().kalem.map(function(k){var d=AH.tur(k.tur)||['?',k.tur,'adet',''],p=f&&f.t&&f.t[k.tur],m=+k.miktar||0;
-  var r={id:k.id,k:k,ad:d[1],birim:d[2],miktar:m,fiyat:p||null,deger:p?r2(m*p.satis):null,bozdur:p?r2(m*p.alis):null,alis:+k.alis>0?r2(k.alis):null,deg:p?p.deg:null};
+  var ay=AH.ayarOf(k),g=AH.gramOf(k);if(AH.AYARLI[k.tur])p=f&&f.t&&f.t[AH.AYAR_FIYAT[ay]];
+  var r={id:k.id,k:k,ad:d[1],birim:d[2],miktar:m,ayar:ay,gram:g.gram,gramStd:g.std,has:g.gram!=null&&ay?r3(g.gram*AH.MILYEM[ay]):null,fiyat:p||null,deger:p?r2(m*p.satis):null,bozdur:p?r2(m*p.alis):null,alis:+k.alis>0?r2(k.alis):null,deg:p?p.deg:null};
   r.kar=r.deger!=null&&r.alis!=null?r2(r.deger-r.alis):null;r.gunluk=r.deger!=null&&p?r2(r.deger*p.deg/(100+p.deg)):null;return r});
- var T={satir:L,deger:0,bozdur:0,alis:0,karDeger:0,gunluk:0,gram:0,adet:0,eksik:0};
- L.forEach(function(r){if(r.birim=='gram')T.gram+=r.miktar;else T.adet+=r.miktar;if(r.deger==null){T.eksik++;return}T.deger+=r.deger;T.bozdur+=r.bozdur;T.gunluk+=r.gunluk;if(r.alis!=null){T.alis+=r.alis;T.karDeger+=r.deger}});
- ['deger','bozdur','alis','karDeger','gunluk'].forEach(function(k){T[k]=r2(T[k])});T.gram=Math.round(T.gram*1000)/1000;T.kar=T.alis?r2(T.karDeger-T.alis):null;T.karP=T.alis?Math.round((T.karDeger-T.alis)/T.alis*1000)/10:null;
+ var T={satir:L,deger:0,bozdur:0,alis:0,karDeger:0,gunluk:0,gram:0,adet:0,eksik:0,gramTop:0,has:0,gramStd:0};
+ // gram: yalnız gram türlerinin miktarı (eski anlam, telefon uyumu); gramTop: tüm kayıtların toplam ağırlığı; has: has altın karşılığı
+ L.forEach(function(r){if(r.birim=='gram')T.gram+=r.miktar;else T.adet+=r.miktar;if(r.gram!=null)T.gramTop+=r.gram;if(r.has!=null)T.has+=r.has;if(r.gramStd)T.gramStd++;if(r.deger==null){T.eksik++;return}T.deger+=r.deger;T.bozdur+=r.bozdur;T.gunluk+=r.gunluk;if(r.alis!=null){T.alis+=r.alis;T.karDeger+=r.deger}});
+ ['deger','bozdur','alis','karDeger','gunluk'].forEach(function(k){T[k]=r2(T[k])});T.gram=Math.round(T.gram*1000)/1000;T.gramTop=r3(T.gramTop);T.has=r3(T.has);T.kar=T.alis?r2(T.karDeger-T.alis):null;T.karP=T.alis?Math.round((T.karDeger-T.alis)/T.alis*1000)/10:null;
  T.gunlukP=T.deger&&T.deger-T.gunluk?Math.round(T.gunluk/(T.deger-T.gunluk)*10000)/100:0;return T};
 
 // ---------- Ekle / düzelt / sil ----------
 AH.dogrula=function(o){var d=AH.tur(o&&o.tur);if(!d)return{hata:'Altın türünü seç'};var m=AH.miktarOku(o.miktar,d[2]);if(!m)return{hata:d[2]=='adet'?'Adedi tam sayı olarak yaz':'Gramı yaz (ör. 12,5)'};
  var tr=String(o.tarih||'').trim();var dt=new Date(tr+'T00:00:00Z');if(tr&&(!/^\d{4}-\d{2}-\d{2}$/.test(tr)||isNaN(dt)||dt.toISOString().slice(0,10)!==tr||tr>OA.bugunKey()||tr<'1950-01-01'))return{hata:'İşlem tarihi geçerli ve bugünden ileri olmayan bir tarih olmalı'};
  var a=String(o.alis==null?'':o.alis).trim(),al=a===''?null:GG.tutarOku(a);if(a!==''&&!al)return{hata:'Alış tutarını TL olarak yaz ya da boş bırak'};
- return{tur:d[0],miktar:m,alis:al,tarih:/^\d{4}-\d{2}-\d{2}$/.test(o.tarih||'')?o.tarih:'',not:String(o.not||'').replace(/[\u0000-\u001f]/g,' ').trim().slice(0,80)}};
-AH.ekle=function(o){var v=AH.dogrula(o);if(v.hata){toast(v.hata);return null}var k={id:'au'+(typeof uid=='function'?uid():Date.now().toString(36)),tur:v.tur,miktar:v.miktar,tarih:v.tarih,not:v.not,ts:Date.now()};if(v.alis)k.alis=v.alis;
+ var ay=null,gr=null;if(AH.AYARLI[d[0]]){ay=o.ayar==null||o.ayar===''?22:+o.ayar;if(!AH.MILYEM[ay])return{hata:'Ayarı seç (24, 22, 18 ya da 14)'}}
+ if(d[2]=='adet'){var gs=String(o.gram==null?'':o.gram).trim();if(gs!==''){gr=AH.miktarOku(gs,'gram');if(!gr)return{hata:'Gramı yaz (ör. 1,75) ya da boş bırak'};var sd=AH.STD[d[0]];if(sd&&Math.abs(gr-r3(sd*m))<0.0005)gr=null}}
+ return{tur:d[0],miktar:m,alis:al,gram:gr,ayar:ay,tarih:/^\d{4}-\d{2}-\d{2}$/.test(o.tarih||'')?o.tarih:'',not:String(o.not||'').replace(/[\u0000-\u001f]/g,' ').trim().slice(0,80)}};
+AH.ekle=function(o){var v=AH.dogrula(o);if(v.hata){toast(v.hata);return null}var k={id:'au'+(typeof uid=='function'?uid():Date.now().toString(36)),tur:v.tur,miktar:v.miktar,tarih:v.tarih,not:v.not,ts:Date.now()};if(v.alis)k.alis=v.alis;if(v.gram)k.gram=v.gram;if(v.ayar)k.ayar=v.ayar;
  AH.st().kalem.push(k);OA.kaydet();return k};
 AH.guncelle=function(id,o){var k=AH.st().kalem.filter(function(x){return x.id==id})[0];if(!k)return null;var v=AH.dogrula(o);if(v.hata){toast(v.hata);return null}
- k.tur=v.tur;k.miktar=v.miktar;k.tarih=v.tarih;k.not=v.not;if(v.alis)k.alis=v.alis;else delete k.alis;k.ts=Date.now();OA.kaydet();return k};
+ k.tur=v.tur;k.miktar=v.miktar;k.tarih=v.tarih;k.not=v.not;if(v.alis)k.alis=v.alis;else delete k.alis;if(v.gram)k.gram=v.gram;else delete k.gram;if(v.ayar)k.ayar=v.ayar;else delete k.ayar;k.ts=Date.now();OA.kaydet();return k};
 AH.silKayit=function(id){var x=AH.st(),n=x.kalem.length;x.kalem=x.kalem.filter(function(k){return k.id!=id});if(x.kalem.length==n)return false;OA.kaydet();return true};
 
 // ---------- Alım gücü karşılaştırması (işlem tarihinden bugüne) ----------
@@ -116,10 +137,11 @@ AH.sayfa=function(){AH.cek();AH.agCek();var f=AH.fiyat(),T=AH.hesap(f),say=funct
  var kyn=f?'<span class="gg-pil g ah-kyn" title="Fiyat zamanı">'+E((f.eski?'Son bilinen · ':'')+(f.t.gram&&f.t.gram.kaynak=='Kapalıçarşı'?'Kapalıçarşı + Truncgil':f.kaynak||'Truncgil')+(f.tarih?' · '+f.tarih.slice(0,16):''))+'</span>':'<span class="gg-pil ah-kyn">Fiyat bekleniyor</span>';
  var ust='<header class="gg-ust"><div class="gg-mk"><span class="gg-lg ah-lg" aria-hidden="true">Au</span><div><b>Altın Hesabım</b><small>Ailem · altın birikimi ve güncel değer</small></div></div><div class="gg-sag">'+kyn+'<button type="button" class="gg-btn cerceve kucuk" onclick="AH.yenile(true)"'+(AH._yuk?' disabled':'')+'>↻ Fiyatları yenile</button><button type="button" class="gg-btn kucuk" onclick="AH.yeniAc()">+ Altın ekle</button></div></header>';
  var bos=!T.satir.length;
- var k1='<div class="gg-r"><span class="gg-et"><span class="gg-nok" style="background:#e0a32e"></span>Toplam değer · satış fiyatıyla</span>'+(T.satir.length?'<span class="gg-pil">'+(T.gram?sayi(T.gram)+' gr':'')+(T.gram&&T.adet?' · ':'')+(T.adet?sayi(T.adet,0)+' adet':'')+'</span>':'')+'</div>'+
+ var k1='<div class="gg-r"><span class="gg-et"><span class="gg-nok" style="background:#e0a32e"></span>Toplam değer · satış fiyatıyla</span>'+(T.satir.length?'<span class="gg-pil">'+(T.adet?sayi(T.adet,0)+' adet · ':'')+(T.gramStd?'≈ ':'')+sayi(T.gramTop)+' gr</span>':'')+'</div>'+
   (bos?'<div class="gg-buyuk soluk"><span>—</span></div><div class="gg-alt">Henüz altın yok. Aşağıdan “+ Altın ekle” ile türünü ve miktarını gir.</div>'
    :f?'<div class="gg-buyuk"><span>'+say(T.deger,'tl')+'</span><i>₺</i></div><div class="gg-alt">Bugün '+degY(T.gunluk,T.gunlukP)+' · bozdurursan ≈ <b>'+say(T.bozdur,'tl',.15)+' ₺</b>'+(T.eksik?' · '+T.eksik+' türün fiyatı yok':'')+'</div>'
    :'<div class="gg-buyuk soluk"><span>—</span></div><div class="gg-alt">Fiyat bekleniyor · “Fiyatları yenile”ye bas (internet gerekir).</div>')+
+  (T.satir.length?'<div class="gg-alt ah-gr">Toplam <b>'+(T.gramStd?'≈ ':'')+sayi(T.gramTop)+' gr</b> · has altın karşılığı <b>'+(T.gramStd?'≈ ':'')+sayi(T.has)+' gr</b>'+(T.gramStd?' <span class="soluk" title="Gramı girilmemiş adetli kayıtlar türün standart ağırlığıyla sayıldı">('+T.gramStd+' kayıt standart ağırlıkla)</span>':'')+'</div>':'')+
   AH.dagilim(T);
  var k2='<div class="gg-r gg-et"><span>Kâr / zarar</span><span>alış tutarına göre</span></div>'+(T.kar!=null?'<div class="gg-orta ah-kar" style="color:'+renk(T.kar)+'">'+ok(T.kar)+' '+say(Math.abs(T.kar),'tl',.25)+' ₺</div><div class="gg-alt">Alış '+tl(T.alis)+' ₺ → bugün '+tl(T.karDeger)+' ₺ · <b style="color:'+renk(T.kar)+'">%'+sayi(Math.abs(T.karP),1)+'</b>'+(T.karDeger<T.deger?' <span class="soluk">(alış tutarı girilen satırlar)</span>':'')+'</div>'
   :'<div class="gg-orta ah-kar soluk">—</div><div class="gg-alt">Satırlara alış tutarı girersen kâr/zarar burada hesaplanır.</div>')+'<div class="gg-alt2">Alış tutarı girilmeyen satırlar kâr/zarara katılmaz.</div>';
@@ -132,25 +154,42 @@ AH.ton=function(tur){var i=AH.TUR.map(function(x){return x[0]}).indexOf(tur);ret
 AH.dagilim=function(T){var G={},L=[];T.satir.forEach(function(r){if(!(r.deger>0))return;if(!G[r.k.tur]){G[r.k.tur]={ad:r.ad,v:0,tur:r.k.tur};L.push(G[r.k.tur])}G[r.k.tur].v+=r.deger});if(!L.length)return '';L.sort(function(a,b){return b.v-a.v});
  return '<div class="ah-dag" role="img" aria-label="Türlere göre dağılım">'+L.map(function(x){return '<span style="flex:'+x.v.toFixed(2)+';background:'+AH.ton(x.tur)+'"></span>'}).join('')+'</div><div class="ah-dl">'+L.map(function(x){return '<span><i style="background:'+AH.ton(x.tur)+'"></i>'+E(x.ad)+' <b>%'+sayi(x.v/T.deger*100,0)+'</b></span>'}).join('')+'</div>'};
 AH.tablo=function(T){T=T||AH.hesap();var u=AH.ui;
- var th='<thead><tr><th scope="col" style="text-align:left">Tür</th><th scope="col" style="text-align:left">İşlem tarihi</th><th scope="col" style="text-align:right">Miktar</th><th scope="col" style="text-align:right">Birim fiyat</th><th scope="col" style="text-align:right">Değer</th><th scope="col" style="text-align:right">Alış</th><th scope="col" style="text-align:right">Kâr / zarar</th><th scope="col" style="text-align:right">Günlük</th><th scope="col" style="width:48px"><span class="gg-gz">İşlem</span></th></tr></thead>';
+ var th='<thead><tr><th scope="col" style="text-align:left">Tür</th><th scope="col" style="text-align:left">İşlem tarihi</th><th scope="col" style="text-align:right">Miktar</th><th scope="col" style="text-align:right">Gram · ayar</th><th scope="col" style="text-align:right">Birim fiyat</th><th scope="col" style="text-align:right">Değer</th><th scope="col" style="text-align:right">Alış</th><th scope="col" style="text-align:right">Kâr / zarar</th><th scope="col" style="text-align:right">Günlük</th><th scope="col" style="width:48px"><span class="gg-gz">İşlem</span></th></tr></thead>';
  var s=T.satir.map(function(r){if(u.edit==r.id)return AH.duzenSatir(r.k);
-  return '<tr class="gg-tr"><td><span class="gg-kal"><span class="gg-kr ah-kr" style="--ah-t:'+AH.ton(r.k.tur)+'" aria-hidden="true"></span><b>'+E(r.ad)+'</b>'+(r.k.not?'<span class="soluk ah-not">'+E(r.k.not)+'</span>':'')+'</span></td><td class="nw soluk">'+(r.k.tarih?AH.tarihYaz(r.k.tarih):'—')+'</td><td class="nw" style="text-align:right">'+sayi(r.miktar,r.birim=='adet'?0:3)+' '+(r.birim=='gram'?'gr':'adet')+'</td>'+
+  return '<tr class="gg-tr"><td><span class="gg-kal"><span class="gg-kr ah-kr" style="--ah-t:'+AH.ton(r.k.tur)+'" aria-hidden="true"></span><b>'+E(r.ad)+'</b>'+(r.k.not?'<span class="soluk ah-not">'+E(r.k.not)+'</span>':'')+'</span></td><td class="nw soluk">'+(r.k.tarih?AH.tarihYaz(r.k.tarih):'—')+'</td><td class="nw" style="text-align:right">'+sayi(r.miktar,r.birim=='adet'?0:3)+' '+(r.birim=='gram'?'gr':'adet')+'</td>'+AH.gramHucre(r)+
    '<td class="nw" style="text-align:right">'+(r.fiyat?tl(r.fiyat.satis)+' ₺<small class="soluk"> · alış '+tl(r.fiyat.alis)+'</small>':'<span class="soluk">—</span>')+'</td><td class="gg-tt nw" style="text-align:right">'+(r.deger!=null?tl(r.deger)+' ₺':'—')+'</td>'+
    '<td class="nw soluk" style="text-align:right">'+(r.alis!=null?tl(r.alis)+' ₺':'—')+'</td><td class="nw" style="text-align:right">'+(r.kar!=null?'<span style="color:'+renk(r.kar)+'">'+ok(r.kar)+' '+tl(Math.abs(r.kar))+' ₺</span>':'<span class="soluk">—</span>')+'</td>'+
    '<td class="nw" style="text-align:right">'+degY(r.gunluk,null)+'</td><td class="gg-is"><button type="button" class="gg-kalem" aria-label="'+E(r.ad+' satırını düzenle')+'" onclick="AH.duzenle(\''+E(r.id)+'\')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button></td></tr>'}).join('');
- if(u.yeni)s=AH.duzenSatir(null)+s;if(!s)s='<tr><td colspan="9" class="gg-bos">Henüz altın yok. “+ Altın ekle” ile başla.</td></tr>';
- return '<div class="gg-ts"><table class="gg-tab ah-tab"><caption class="gg-gz">Altınlarım</caption>'+th+'<tbody>'+s+'</tbody></table></div>'+(T.satir.length?'<div class="gg-top">'+T.satir.length+' satır · değer '+tl(T.deger)+' ₺'+(T.alis?' · alış '+tl(T.alis)+' ₺':'')+'</div>':'')+'<div class="gg-alt2 ah-dn">Altın Aile Bütçesine işlenmez · fiyat 15 dakikada bir yenilenir · ▲ / ▼ günlük değişim</div>'};
+ if(u.yeni)s=AH.duzenSatir(null)+s;if(!s)s='<tr><td colspan="10" class="gg-bos">Henüz altın yok. “+ Altın ekle” ile başla.</td></tr>';
+ return '<div class="gg-ts"><table class="gg-tab ah-tab"><caption class="gg-gz">Altınlarım</caption>'+th+'<tbody>'+s+'</tbody></table></div>'+(T.satir.length?'<div class="gg-top">'+T.satir.length+' satır · değer '+tl(T.deger)+' ₺'+(T.alis?' · alış '+tl(T.alis)+' ₺':'')+' · toplam '+(T.gramStd?'≈ ':'')+sayi(T.gramTop)+' gr · has '+(T.gramStd?'≈ ':'')+sayi(T.has)+' gr</div>':'')+'<div class="gg-alt2 ah-dn">Altın Aile Bütçesine işlenmez · fiyat 15 dakikada bir yenilenir · ▲ / ▼ günlük değişim</div>'};
 AH.duzenSatir=function(k){var o=k||{tur:'gram',miktar:'',alis:'',tarih:'',not:''};
- var opt=AH.TUR.map(function(x){return '<option value="'+x[0]+'"'+(x[0]==o.tur?' selected':'')+'>'+E(x[1])+' ('+x[2]+')</option>'}).join('');
- return '<tr class="gg-ed" id="ahEd" data-id="'+E(k?k.id:'')+'"><td><select id="ahETu" aria-label="Altın türü">'+opt+'</select></td><td><input type="date" id="ahETa" aria-label="İşlem tarihi (alış tarihi)" title="İşlem tarihi (alış tarihi)" max="'+OA.bugunKey()+'" value="'+E(o.tarih||'')+'"></td><td><input type="text" id="ahEMi" inputmode="decimal" aria-label="Miktar (gram ya da adet)" value="'+E(o.miktar===''?'':String(o.miktar).replace('.',','))+'" placeholder="Miktar" class="gg-tin"></td>'+
+ var opt=AH.SIRA.map(AH.tur).map(function(x){return '<option value="'+x[0]+'"'+(x[0]==o.tur?' selected':'')+'>'+E(x[1])+' ('+x[2]+')</option>'}).join('');
+ return '<tr class="gg-ed" id="ahEd" data-id="'+E(k?k.id:'')+'"><td><select id="ahETu" aria-label="Altın türü" onchange="AH.formTur()">'+opt+'</select></td><td><input type="date" id="ahETa" aria-label="İşlem tarihi (alış tarihi)" title="İşlem tarihi (alış tarihi)" max="'+OA.bugunKey()+'" value="'+E(o.tarih||'')+'"></td><td><input type="text" id="ahEMi" inputmode="decimal" aria-label="Miktar (gram ya da adet)" value="'+E(o.miktar===''?'':String(o.miktar).replace('.',','))+'" placeholder="Miktar" class="gg-tin" data-once="'+E(String(+o.miktar||''))+'" oninput="AH.formMiktar()"></td>'+AH.gramGiris(o)+
   '<td colspan="2"><input type="text" id="ahENo" aria-label="Not" value="'+E(o.not||'')+'" maxlength="80" placeholder="Not (ör. düğün takısı)"></td><td><input type="text" id="ahEAl" inputmode="decimal" aria-label="Toplam alış tutarı (TL, isteğe bağlı)" value="'+E(o.alis?String(o.alis).replace('.',','):'')+'" placeholder="Alış ₺" class="gg-tin"></td>'+
   '<td colspan="2"></td><td></td></tr>'+
-  '<tr class="gg-ed2"><td colspan="9"><div class="gg-edd"><span class="gg-edn">Gram türlerinde gram, adetli altınlarda adet yaz. İşlem tarihi ve alış tutarı girersen kâr/zarar ve alım gücü karşılaştırması hesaplanır.</span>'+(k?'<button type="button" class="gg-btn sil kucuk" onclick="AH.sil()">Sil</button>':'')+'<button type="button" class="gg-btn cerceve kucuk" onclick="AH.vazgec()">Vazgeç</button><button type="button" class="gg-btn kucuk" onclick="AH.kaydet()">Kaydet</button></div></td></tr>'};
+  '<tr class="gg-ed2"><td colspan="10"><div class="gg-edd"><span class="gg-edn">Gram türlerinde gram, adetli altınlarda adet yaz; adetlide gram adet başı standart ağırlıkla dolar, değiştirebilirsin. Bilezik ve takıda ayarı seç (değer o ayarın gram fiyatıyla; işçilik girmez). İşlem tarihi ve alış tutarı girersen kâr/zarar ve alım gücü karşılaştırması hesaplanır.</span>'+(k?'<button type="button" class="gg-btn sil kucuk" onclick="AH.sil()">Sil</button>':'')+'<button type="button" class="gg-btn cerceve kucuk" onclick="AH.vazgec()">Vazgeç</button><button type="button" class="gg-btn kucuk" onclick="AH.kaydet()">Kaydet</button></div></td></tr>'};
+// 0.9.15 · Gram · ayar hücresi ve formdaki Gram kutusu
+AH.gramHucre=function(r){if(r.gram==null)return '<td class="nw soluk" style="text-align:right">—</td>';var adb=r.birim=='adet'&&r.miktar?r3(r.gram/r.miktar):null;
+ return '<td class="nw ah-grh" style="text-align:right"'+(r.gramStd?' title="Gram girilmedi; türün standart ağırlığıyla gösteriliyor (adet başı '+sayi(adb)+' gr). Düzeltmek için satırı düzenle."':adb?' title="Adet başı '+sayi(adb)+' gr"':'')+'>'+(r.gramStd?'≈ ':'')+sayi(r.gram)+' gr<small class="soluk">'+(r.ayar?r.ayar+' ayar':'')+(r.has!=null?' · has '+sayi(r.has)+' gr':'')+'</small></td>'};
+AH.gramGiris=function(o){var d=AH.tur(o.tur)||AH.TUR[0],g=AH.gramOf(o),ad=d[2]=='adet',ay=AH.AYARLI[o.tur]&&AH.MILYEM[+o.ayar]?+o.ayar:22;
+ var aopt=[24,22,18,14].map(function(a){return '<option value="'+a+'"'+(a==ay?' selected':'')+'>'+a+' ayar</option>'}).join('');
+ return '<td class="ah-grg"><input type="text" id="ahEGr" inputmode="decimal" aria-label="Gram (toplam ağırlık)" title="Toplam ağırlık: adet başı ağırlık × adet" placeholder="Gram" class="gg-tin" data-el="'+(+o.gram>0?1:0)+'" oninput="this.setAttribute(\'data-el\',\'1\')"'+(ad?'':' hidden')+' value="'+E(ad&&g.gram?String(g.gram).replace('.',','):'')+'">'+
+  '<select id="ahEAy" aria-label="Ayar"'+(AH.AYARLI[o.tur]?'':' hidden')+'>'+aopt+'</select><small id="ahEAn" class="soluk">'+E(AH.ayarNot(d[0]))+'</small></td>'};
+AH.ayarNot=function(tur){if(AH.AYARLI[tur])return '';var a=AH.AYAR[tur],s=AH.STD[tur];return (a?a+' ayar':'')+(s?' · adet başı ≈ '+sayi(s)+' gr':'')};
+// Tür değişince: Gram kutusu yalnız adetli türde görünür ve standart ağırlık × adetle dolar; ayar seçimi yalnız Bilezik/Takı'da
+AH.formTur=function(){var tu=document.getElementById('ahETu'),gr=document.getElementById('ahEGr'),ay=document.getElementById('ahEAy'),an=document.getElementById('ahEAn'),mi=document.getElementById('ahEMi');if(!tu||!gr)return;
+ var d=AH.tur(tu.value),ad=!!d&&d[2]=='adet';gr.hidden=!ad;if(ay)ay.hidden=!AH.AYARLI[tu.value];if(an)an.textContent=AH.ayarNot(tu.value);
+ var m=AH.miktarOku(mi&&mi.value,'adet'),s=AH.STD[tu.value];gr.value=ad&&m&&s?String(r3(s*m)).replace('.',','):'';gr.setAttribute('data-el','0');if(mi)mi.setAttribute('data-once',m||'')};
+// Adet değişince gram, adet başı ağırlık korunarak ölçeklenir (adet başı = kutudaki gram ÷ önceki adet; kutu boşsa standart)
+AH.formMiktar=function(){var tu=document.getElementById('ahETu'),gr=document.getElementById('ahEGr'),mi=document.getElementById('ahEMi');if(!tu||!gr||!mi)return;var d=AH.tur(tu.value);if(!d||d[2]!='adet')return;
+ var m=AH.miktarOku(mi.value,'adet'),m0=+mi.getAttribute('data-once')||0,g0=AH.miktarOku(gr.value,'gram'),adb=g0&&m0?g0/m0:AH.STD[tu.value];if(!m)return;
+ if(adb)gr.value=String(r3(adb*m)).replace('.',',');mi.setAttribute('data-once',m)};
 AH.cizYenile=function(){if(typeof pg!='undefined'&&pg=='altin'){AH._sessiz=true;ORV.yenile();AH._sessiz=false}};
 AH.yeniAc=function(){AH.ui.yeni=true;AH.ui.edit=null;AH.cizYenile();var e=document.getElementById('ahEMi');if(e)e.focus()};
 AH.duzenle=function(id){AH.ui.edit=id;AH.ui.yeni=false;AH.cizYenile();var e=document.getElementById('ahEMi');if(e)e.focus()};
 AH.vazgec=function(){AH.ui.edit=null;AH.ui.yeni=false;AH.cizYenile()};
-AH.oku=function(){var g=function(id){var e=document.getElementById(id);return e?e.value:''};return{tur:g('ahETu'),miktar:g('ahEMi'),alis:g('ahEAl'),tarih:g('ahETa'),not:g('ahENo')}};
+// Gram yalnız kullanıcı kutuya dokunduysa ya da kayıtta zaten gram varsa gönderilir; dokunulmamış ön dolu değer veriye yazılmaz (standart ağırlık adetle birlikte değişir)
+AH.oku=function(){var g=function(id){var e=document.getElementById(id);return e?e.value:''};var ge=document.getElementById('ahEGr');return{tur:g('ahETu'),miktar:g('ahEMi'),gram:ge&&ge.getAttribute('data-el')=='1'?ge.value:'',ayar:g('ahEAy'),alis:g('ahEAl'),tarih:g('ahETa'),not:g('ahENo')}};
 AH.kaydet=function(){var ed=document.getElementById('ahEd'),id=ed&&ed.getAttribute('data-id'),o=AH.oku(),k=id?AH.guncelle(id,o):AH.ekle(o);if(!k)return;
  var d=AH.tur(k.tur);toast((id?'Güncellendi: ':'Eklendi: ')+d[1]+' · '+sayi(k.miktar,d[2]=='adet'?0:3)+' '+(d[2]=='gram'?'gr':'adet'));AH.ui.edit=null;AH.ui.yeni=false;AH.cizYenile()};
 AH.sil=function(){var ed=document.getElementById('ahEd'),id=ed&&ed.getAttribute('data-id'),k=AH.st().kalem.filter(function(x){return x.id==id})[0];if(!k)return;var d=AH.tur(k.tur)||['','Altın'];

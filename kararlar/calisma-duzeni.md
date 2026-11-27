@@ -6,7 +6,7 @@
 - Her iş ayrı **alt sekmede** (yeni oturum, kendi dalı/worktree'si) yapılır.
 - Raporlar **"Orvane · Raporlar"** alt sekmesinde toplanır; ana sekmeye yalnız tek satırlık sonuç gelir.
 - Ana sekme alt sekmeleri denetler. İşi biten alt sekme, raporu Raporlar sekmesine alınıp dalı birleştikten sonra sıkıştırılır veya silinir (kullanıcının kalıcı izni). Rapor alınmadan silinmez; Raporlar sekmesi silinmez.
-- Karar dosyaları: `KARARLAR.md` (genel kurallar + dizin) ve `kararlar/*.md` (konu başına). Yeni karar ilgili konu dosyasına eklenir.
+- Karar dosyaları: `KARARLAR.md` (genel kurallar + dizin) ve `kararlar/*.md` (konu başına) yalnız kayıttır. Alt sekmeler okumaz: en önemli 10 kural `CLAUDE.md`'de kendiliğinden yüklenir, işe özel kuralları ana sekme brief'e yazar (2026-11-27). Yeni karar ilgili konu dosyasına eklenir.
 - Dal adları: `ozellik/…`, `duzeltme/…`, `surum/x.y.z`, `claude/…`; birleştirme `main`'e PR ile.
 - Sürüm notu: her sürümde `surum-notlari/<sürüm>.md`; kısa, Türkçe, "Masaüstü / Telefon" başlıkları, telefonda değişiklik yoksa "Değişiklik yok".
 - Bilgi notları kısa: yalnız kimin ne yaptığı.

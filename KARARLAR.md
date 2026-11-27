@@ -13,6 +13,7 @@ Son güncelleme: 2026-11-27 · Sürüm 0.9.11
 6. Bordro verisi ve şirket hesabı kayıtları buluta/telefona gitmez; eşe yalnız aile verisi gider.
 7. Yapay zekâ çalışanları varsayılan KAPALI (manuel mod).
 8. İçinde bulunulan aya, istenmedikçe banka dökümü eklenmez.
+9. Kayıt dışı gelir olmaz; gelir bellidir (Bordro Net + SGK; avans ve BES sınır dışı gelir). Bildirimde fazla görünen bakiye hesap hatasıdır. Kasım 2026'dan itibaren ay kalanı devreder.
 
 ## Konu dosyaları
 
